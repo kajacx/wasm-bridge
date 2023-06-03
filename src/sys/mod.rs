@@ -1,1 +1,1 @@
-struct Engine {}
+pub use wasmtime::*;

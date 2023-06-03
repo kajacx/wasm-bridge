@@ -4,4 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-wasm-bridge = { path = "../../../src", features = ["js"] }
+wasm-bridge = { path = "../../..", features = ["js"] }
+# wasm-bindgen = { version = "0.2.86" }
+# console_error_panic_hook = { version = "0.1.7" }
+
+[dev-dependencies]
+wasm-bindgen-test = { version = "0.3.36" }

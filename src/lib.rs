@@ -20,6 +20,6 @@ mod sys;
 pub use sys::*;
 
 #[cfg(all(feature = "js", not(feature = "sys")))]
-mod sys;
+mod js;
 #[cfg(all(feature = "js", not(feature = "sys")))]
-pub use sys::*;
+pub use js::*;
