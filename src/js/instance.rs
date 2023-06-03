@@ -11,3 +11,13 @@ impl Instance {
         Ok(Self {})
     }
 }
+
+impl Instance {
+    pub fn get_typed_func<Params, Results>(
+        &self,
+        _store: &mut Store<()>,
+        _name: &str,
+    ) -> Result<TypedFunc<Params, Results>, Error> {
+        todo!()
+    }
+}
