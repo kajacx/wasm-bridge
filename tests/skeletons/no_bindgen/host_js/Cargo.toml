@@ -1,0 +1,7 @@
+[package]
+name = "no-bindgen-host-js"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wasm-bridge = { path = "../../../src", features = ["js"] }
