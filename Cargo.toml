@@ -1,0 +1,14 @@
+[package]
+name = "wasm-bridge"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+wasmtime = { version = "9.0.3", optional = true }
+js-sys = { version = "0.3.63", optional = true }
+
+[features]
+sys = ["wasmtime"]
+js = ["js-sys"]
