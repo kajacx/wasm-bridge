@@ -1,4 +1,7 @@
-fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
+use std::error::Error;
+use wasm_bridge::*;
+
+pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
     let mut store = Store::<()>::default();
 
     let module = Module::new(&store.engine(), bytes)?;
