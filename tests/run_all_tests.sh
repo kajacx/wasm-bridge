@@ -1,15 +1,6 @@
 #!/usr/bin/sh
 
 for test in no_bindgen/*; do
-  # test=$(echo $test | sed -E 's#no_bindgen/##')
-  # rm -rf instance # && mkdir instance
-  # #cd instance && mkdir plugin && cd ..
-  # cp -r skeletons/no_bindgen ./instance
-  # cp no_bindgen/$test/plugin.rs instance/plugin/src/lib.rs
-  
-  # clear previous instance
-  # rm -rf instance
-
   # create the instance folder if it doesn't exist
   mkdir -p instance
 
