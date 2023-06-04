@@ -8,4 +8,5 @@ wasmtime = { version = "9.0.3" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = { version = "0.3.63" }
-
+console_log = "1.0.0" # TODO: remove before publishing
+log = "0.4.18" # TODO: remove before publishing

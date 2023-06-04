@@ -25,8 +25,9 @@ impl Instance {
         _store: &mut Store<()>,
         _name: &str,
     ) -> Result<TypedFunc<Params, Results>, Error> {
-        println!("Hello?");
-        self.exports.iter().for_each(|x| println!("{x:?}"));
+        console_log::init_with_level(log::Level::Debug).unwrap();
+        log::info!("Hello?");
+        self.exports.iter().for_each(|x| log::info!("{x:?}"));
         todo!()
     }
 }
