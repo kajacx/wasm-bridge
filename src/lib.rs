@@ -1,25 +1,9 @@
-#[cfg(all(not(feature = "sys"), not(feature = "js")))]
-compile_error!("Enable `sys` feature to run on the desktop, or `js` feature to run on the web.");
-#[cfg(all(not(feature = "sys"), not(feature = "js")))]
-mod invalid;
-#[cfg(all(not(feature = "sys"), not(feature = "js")))]
-pub use invalid::*;
-
-#[cfg(all(feature = "sys", feature = "js"))]
-compile_error!(
-    "Cannot have both `sys` and `js` features enabled at the same time. Please, pick one."
-);
-#[cfg(all(feature = "sys", feature = "js"))]
-mod invalid;
-#[cfg(all(feature = "sys", feature = "js"))]
-pub use invalid::*;
-
-#[cfg(all(feature = "sys", not(feature = "js")))]
+#[cfg(not(target_arch = "wasm32"))]
 mod sys;
-#[cfg(all(feature = "sys", not(feature = "js")))]
+#[cfg(not(target_arch = "wasm32"))]
 pub use sys::*;
 
-#[cfg(all(feature = "js", not(feature = "sys")))]
+#[cfg(target_arch = "wasm32")]
 mod js;
-#[cfg(all(feature = "js", not(feature = "sys")))]
+#[cfg(target_arch = "wasm32")]
 pub use js::*;
