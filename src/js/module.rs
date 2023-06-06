@@ -10,7 +10,7 @@ impl Module {
     pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self, Error> {
         // TODO: safety?
         let bytes = unsafe { Uint8Array::view(bytes.as_ref()) };
-        let module = WebAssembly::Module::new(&bytes.into()).expect("TODO");
+        let module = WebAssembly::Module::new(&bytes.into()).expect("TODO: new module");
         Ok(Self { module })
     }
 }
