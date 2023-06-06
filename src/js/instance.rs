@@ -1,9 +1,10 @@
 use crate::*;
 use js_sys::{Object, Reflect, WebAssembly};
+use wasm_bindgen::JsValue;
 
 pub struct Instance {
     instance: WebAssembly::Instance,
-    // exports: Array,
+    exports: JsValue,
 }
 
 impl Instance {
@@ -13,11 +14,9 @@ impl Instance {
         _: impl AsRef<[()]>,
     ) -> Result<Self, Error> {
         let imports = Object::new();
-        let instance =
-            WebAssembly::Instance::new(&module.module, &imports).expect("TODO: instantiate");
-        // let exports = WebAssembly::Module::exports(&module.module);
-        // Ok(Self { instance, exports })
-        Ok(Self { instance })
+        let instance = WebAssembly::Instance::new(&module.module, &imports)?;
+        let exports = Reflect::get(&instance.as_ref(), &"exports".into())?;
+        Ok(Self { instance, exports })
     }
 }
 
@@ -27,13 +26,13 @@ impl Instance {
         _store: &mut Store<()>,
         name: &str,
     ) -> Result<TypedFunc<i32, i32>, Error> {
-        let exports =
-            Reflect::get(&self.instance.as_ref(), &"exports".into()).expect("TODO: get exports");
+        let function = Reflect::get(&self.exports, &name.into())?;
 
-        let function = Reflect::get(&exports, &name.into())
-            .expect("TODO: get function")
-            .into();
+        if !function.is_function() {
+            // TODO: better error here?
+            return Err(Error::JsError(function));
+        }
 
-        Ok(TypedFunc::new(&self.instance, function))
+        Ok(TypedFunc::new(&self.instance, function.into()))
     }
 }

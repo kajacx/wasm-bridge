@@ -8,10 +8,10 @@ pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
 
     let instance = Instance::new(&mut store, &module, &[])?;
 
-    let rate_number = instance.get_typed_func::<i32, i32>(&mut store, "add_five_i32")?;
+    let add_five_i32 = instance.get_typed_func::<i32, i32>(&mut store, "add_five_i32")?;
 
     for number in [-10, -1, 0, 10, i32::MIN + 1, i32::MAX - 2] {
-        let returned = rate_number.call(&mut store, number)?;
+        let returned = add_five_i32.call(&mut store, number)?;
         assert_eq!(returned, number.wrapping_add(5));
     }
 

@@ -4,6 +4,7 @@ use crate::*;
 
 use std::marker::PhantomData;
 
+#[derive(Clone, Debug)]
 pub struct TypedFunc<'a, Params, Results> {
     _phantom: PhantomData<fn(params: Params) -> Results>,
     instance: &'a WebAssembly::Instance,
@@ -22,10 +23,7 @@ impl<'a> TypedFunc<'a, i32, i32> {
     pub fn call(&self, _store: &Store<()>, params: i32) -> Result<i32, Error> {
         let as_js_value = wasm_bindgen::JsValue::from(params);
         let args = Array::of1(&as_js_value);
-        let result = self
-            .function
-            .apply(self.instance.as_ref(), &args)
-            .expect("TODO: call function");
+        let result = self.function.apply(self.instance.as_ref(), &args)?;
         Ok(result.as_f64().unwrap() as _)
     }
 }

@@ -11,7 +11,7 @@ impl Module {
         // TODO: view might be faster than from, but its unsafe
         // Uint8Array::view(bytes.as_ref());
         let bytes = Uint8Array::from(bytes.as_ref());
-        let module = WebAssembly::Module::new(&bytes.into()).expect("TODO: new module");
+        let module = WebAssembly::Module::new(&bytes.into())?;
         Ok(Self { module })
     }
 }

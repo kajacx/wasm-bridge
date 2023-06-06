@@ -1,24 +1,24 @@
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 
-#[derive(Clone, Debug, Default)]
-pub struct Error;
+use wasm_bindgen::JsValue;
 
-impl std::error::Error for Error {
-    fn cause(&self) -> Option<&dyn std::error::Error> {
-        todo!()
-    }
+#[derive(Debug)]
+pub enum Error {
+    JsError(JsValue),
+}
 
-    fn description(&self) -> &str {
-        todo!()
-    }
-
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        todo!()
+impl From<JsValue> for Error {
+    fn from(v: JsValue) -> Self {
+        Self::JsError(v)
     }
 }
 
+impl std::error::Error for Error {}
+
 impl Display for Error {
-    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::JsError(value) => write!(f, "{:?}", value),
+        }
     }
 }
