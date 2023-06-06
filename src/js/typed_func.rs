@@ -1,4 +1,4 @@
-use js_sys::{Array, Function, Number, WebAssembly};
+use js_sys::{Array, Function, WebAssembly};
 
 use crate::*;
 
@@ -19,11 +19,9 @@ impl<'a> TypedFunc<'a, i32, i32> {
         }
     }
 
-    pub fn call(&self, store: &Store<()>, params: i32) -> Result<i32, Error> {
-        // let number = Number::from(params);
-        // let args = Array::of1(number.as_ref().clone());
-        let args = Array::of1(&(params.into()));
-        log::info!("calling {:?} {:?}", self.instance, self.function,);
+    pub fn call(&self, _store: &Store<()>, params: i32) -> Result<i32, Error> {
+        let as_js_value = wasm_bindgen::JsValue::from(params);
+        let args = Array::of1(&as_js_value);
         let result = self
             .function
             .apply(self.instance.as_ref(), &args)

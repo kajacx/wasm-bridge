@@ -1,5 +1,5 @@
 use crate::*;
-use js_sys::{Array, Object, Reflect, WebAssembly};
+use js_sys::{Object, Reflect, WebAssembly};
 
 pub struct Instance {
     instance: WebAssembly::Instance,
@@ -22,34 +22,18 @@ impl Instance {
 }
 
 impl Instance {
-    pub fn get_typed_func(
+    pub fn get_typed_func<Params, Results>(
         &self,
         _store: &mut Store<()>,
         name: &str,
     ) -> Result<TypedFunc<i32, i32>, Error> {
-        console_log::init_with_level(log::Level::Debug).unwrap();
-        log::info!("Hello?");
-        // self.exports.iter().for_each(|x| log::info!("{x:?}"));
-
-        // let function = self.exports.iter().find(|obj| {
-        //     let obj_name = Reflect::get(obj.as_ref(), &"name".into()).unwrap();
-        //     let obj_kind = Reflect::get(obj.as_ref(), &"kind".into()).unwrap();
-        //     obj_name == name && obj_kind == "function"
-        // });
-
         let exports =
             Reflect::get(&self.instance.as_ref(), &"exports".into()).expect("TODO: get exports");
+
         let function = Reflect::get(&exports, &name.into())
             .expect("TODO: get function")
             .into();
 
-        log::info!("function is: {function:?}");
-
         Ok(TypedFunc::new(&self.instance, function))
-
-        // match function {
-        //     Some(_) => Ok(TypedFunc::new()),
-        //     None => Err(Error),
-        // }
     }
 }
