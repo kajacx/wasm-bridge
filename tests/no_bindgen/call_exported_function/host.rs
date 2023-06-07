@@ -22,5 +22,19 @@ pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
         assert_eq!(returned, number.wrapping_add(5));
     }
 
+    let add_five_f32 = instance.get_typed_func::<f32, f32>(&mut store, "add_five_f32")?;
+
+    for number in [0.0, 10.25, -2.5, 1_000_000.5, -1_000_000.5] {
+        let returned = add_five_f32.call(&mut store, number)?;
+        assert_eq!(returned, number + 5.0);
+    }
+
+    let add_five_f64 = instance.get_typed_func::<f64, f64>(&mut store, "add_five_f64")?;
+
+    for number in [0.0, 10.25, -2.5, 10_000_000_000.5, -10_000_000_000.5] {
+        let returned = add_five_f64.call(&mut store, number)?;
+        assert_eq!(returned, number + 5.0);
+    }
+
     Ok(())
 }

@@ -33,3 +33,12 @@ impl FromJsValue for f32 {
         }
     }
 }
+
+impl FromJsValue for f64 {
+    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+        match value.as_f64() {
+            Some(number) => Ok(number),
+            None => Err(Error::JsError(value.clone())),
+        }
+    }
+}
