@@ -4,7 +4,7 @@ use wasm_bridge::*;
 pub fn run_test(wat: &[u8]) -> Result<(), Box<dyn Error>> {
     let mut store = Store::<()>::default();
 
-    let module = Module::new(&store.engine(), bytes)?;
+    let module = Module::new(&store.engine(), wat).unwrap();
 
     let instance = Instance::new(&mut store, &module, &[])?;
 
