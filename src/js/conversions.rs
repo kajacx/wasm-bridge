@@ -17,10 +17,7 @@ impl FromJsValue for i32 {
 
 impl FromJsValue for i64 {
     fn from_js_value(value: &JsValue) -> Result<Self, Error> {
-        match value.as_f64() {
-            Some(number) => Ok(number as _),
-            None => Err(Error::JsError(value.clone())),
-        }
+        Ok(value.clone().try_into()?)
     }
 }
 
@@ -31,6 +28,13 @@ impl FromJsValue for u32 {
             Some(number) => Ok(number as i32 as _),
             None => Err(Error::JsError(value.clone())),
         }
+    }
+}
+
+impl FromJsValue for u64 {
+    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+        // Conversion to u32 first needed to handle "negative" numbers
+        Ok(i64::try_from(value.clone())? as _)
     }
 }
 
@@ -45,9 +49,6 @@ impl FromJsValue for f32 {
 
 impl FromJsValue for f64 {
     fn from_js_value(value: &JsValue) -> Result<Self, Error> {
-        match value.as_f64() {
-            Some(number) => Ok(number),
-            None => Err(Error::JsError(value.clone())),
-        }
+        Ok(value.try_into()?)
     }
 }
