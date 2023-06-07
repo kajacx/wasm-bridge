@@ -17,6 +17,18 @@ pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
         .get_typed_func::<i32, i32>(&mut store, "non-existing")
         .expect_err("should not get function");
 
+    // TODO: Type checking is kind of hard, because the function types are not exposed by the js-sys API
+
+    // // Getting a function with the wrong input should return an error
+    // instance
+    //     .get_typed_func::<f32, i32>(&mut store, "add_five_i32")
+    //     .expect_err("should not get function");
+
+    // // Getting a function with the wrong output should return an error
+    // instance
+    //     .get_typed_func::<i32, f32>(&mut store, "add_five_i32")
+    //     .expect_err("should not get function");
+
     let add_five_i32 = instance.get_typed_func::<i32, i32>(&mut store, "add_five_i32")?;
 
     // Implementation panics

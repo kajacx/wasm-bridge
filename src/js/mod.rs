@@ -15,3 +15,6 @@ pub use store::*;
 
 mod typed_func;
 pub use typed_func::*;
+
+mod conversions;
+pub use conversions::*;

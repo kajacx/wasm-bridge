@@ -21,11 +21,11 @@ impl Instance {
 }
 
 impl Instance {
-    pub fn get_typed_func<Params, Results>(
+    pub fn get_typed_func<Params: Into<JsValue>, Results: FromJsValue>(
         &self,
         _store: &mut Store<()>,
         name: &str,
-    ) -> Result<TypedFunc<i32, i32>, Error> {
+    ) -> Result<TypedFunc<Params, Results>, Error> {
         let function = Reflect::get(&self.exports, &name.into())?;
 
         if !function.is_function() {
