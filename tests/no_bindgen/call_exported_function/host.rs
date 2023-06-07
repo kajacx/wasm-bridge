@@ -15,6 +15,13 @@ pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
         assert_eq!(returned, number.wrapping_add(5));
     }
 
+    let add_five_i64 = instance.get_typed_func::<i64, i64>(&mut store, "add_five_i64")?;
+
+    for number in [-10, -1, 0, 10, i64::MIN + 1, i64::MAX - 2] {
+        let returned = add_five_i64.call(&mut store, number)?;
+        assert_eq!(returned, number.wrapping_add(5));
+    }
+
     let add_five_u32 = instance.get_typed_func::<u32, u32>(&mut store, "add_five_i32")?;
 
     for number in [0, 10, u32::MAX / 2 - 1, u32::MAX - 2] {

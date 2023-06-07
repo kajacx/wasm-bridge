@@ -4,6 +4,11 @@ pub fn add_five_i32(number: i32) -> i32 {
 }
 
 #[no_mangle]
+pub fn add_five_i64(number: i64) -> i64 {
+    number.wrapping_add(5)
+}
+
+#[no_mangle]
 pub fn add_five_f32(number: f32) -> f32 {
     number + 5.0
 }

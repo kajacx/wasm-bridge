@@ -15,6 +15,15 @@ impl FromJsValue for i32 {
     }
 }
 
+impl FromJsValue for i64 {
+    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+        match value.as_f64() {
+            Some(number) => Ok(number as _),
+            None => Err(Error::JsError(value.clone())),
+        }
+    }
+}
+
 impl FromJsValue for u32 {
     fn from_js_value(value: &JsValue) -> Result<Self, Error> {
         match value.as_f64() {
