@@ -7,3 +7,6 @@ pub use sys::*;
 mod js;
 #[cfg(target_arch = "wasm32")]
 pub use js::*;
+
+#[cfg(test)]
+mod test;
