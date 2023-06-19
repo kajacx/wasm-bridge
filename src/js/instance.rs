@@ -21,7 +21,7 @@ impl Instance {
 }
 
 impl Instance {
-    pub fn get_typed_func<Params: Into<JsValue>, Results: FromJsValue>(
+    pub fn get_typed_func<Params: ToJsParams, Results: FromJsValue>(
         &self,
         _store: &mut Store<()>,
         name: &str,

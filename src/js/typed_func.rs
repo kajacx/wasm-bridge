@@ -1,5 +1,4 @@
-use js_sys::{Array, Function, WebAssembly};
-use wasm_bindgen::JsValue;
+use js_sys::{Function, WebAssembly};
 
 use crate::*;
 
@@ -12,7 +11,7 @@ pub struct TypedFunc<'a, Params, Results> {
     function: Function,
 }
 
-impl<'a, Params: Into<JsValue>, Results: FromJsValue> TypedFunc<'a, Params, Results> {
+impl<'a, Params: ToJsParams, Results: FromJsValue> TypedFunc<'a, Params, Results> {
     pub(crate) fn new(instance: &'a WebAssembly::Instance, function: Function) -> Self {
         Self {
             _phantom: PhantomData,
@@ -22,8 +21,7 @@ impl<'a, Params: Into<JsValue>, Results: FromJsValue> TypedFunc<'a, Params, Resu
     }
 
     pub fn call(&self, _store: &Store<()>, params: Params) -> Result<Results, Error> {
-        let as_js_value = params.into();
-        let args = Array::of1(&as_js_value);
+        let args = params.to_js_params();
         let result = self.function.apply(self.instance.as_ref(), &args)?;
         Results::from_js_value(&result)
     }
