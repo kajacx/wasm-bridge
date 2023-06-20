@@ -2,12 +2,17 @@ use js_sys::{Array, Reflect};
 use wasm_bindgen::JsValue;
 
 pub trait ToJsParams: Copy {
+    fn number_of_args() -> u32;
     fn to_js_params(self) -> Array;
 }
 
 macro_rules! to_js_params_single {
     ($ty: ty) => {
         impl ToJsParams for $ty {
+            fn number_of_args() -> u32 {
+                1
+            }
+
             fn to_js_params(self) -> Array {
                 Array::of1(&self.into())
             }
@@ -25,6 +30,10 @@ to_js_params_single!(f64);
 macro_rules! to_js_params_many {
     ($count: literal, $(($index: tt, $name: ident)),*) => {
         impl<$($name: Into<JsValue> + Copy),*> ToJsParams for ($($name, )*) {
+            fn number_of_args() -> u32 {
+                $count
+            }
+
             fn to_js_params(self) -> Array {
                 let result = Array::new_with_length($count);
                 $( Reflect::set_u32(&result, $index, &self.$index.into()).unwrap(); )*

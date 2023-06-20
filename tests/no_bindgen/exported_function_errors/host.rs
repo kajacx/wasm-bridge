@@ -32,6 +32,12 @@ pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
     //     .get_typed_func::<i32, f32>(&mut store, "add_five_i32")
     //     .expect_err("should not get function");
 
+    // But we can at least check that the number of arguments is correct
+    instance
+        .get_typed_func::<(i32, i32), f32>(&mut store, "add_five_i32")
+        .map(|_| ())
+        .expect_err("should not get function");
+
     let add_five_i32 = instance.get_typed_func::<i32, i32>(&mut store, "add_five_i32")?;
 
     // Implementation panics

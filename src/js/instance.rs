@@ -1,5 +1,5 @@
 use crate::*;
-use js_sys::{Object, Reflect, WebAssembly};
+use js_sys::{Function, Object, Reflect, WebAssembly};
 use wasm_bindgen::JsValue;
 
 pub struct Instance {
@@ -33,6 +33,13 @@ impl Instance {
             return Err(Error::JsError(function));
         }
 
-        Ok(TypedFunc::new(&self.instance, function.into()))
+        let function: Function = function.into();
+
+        if function.length() != Params::number_of_args() {
+            // TODO: *definitely* need a better error here
+            return Err(Error::JsError(function.into()));
+        }
+
+        Ok(TypedFunc::new(&self.instance, function))
     }
 }
