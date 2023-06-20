@@ -5,12 +5,6 @@ pub trait ToJsParams: Copy {
     fn to_js_params(self) -> Array;
 }
 
-// impl<T: Into<JsValue> + Copy> ToJsParams for T {
-//     fn to_js_params(self) -> Array {
-//         Array::of1(&self.into())
-//     }
-// }
-
 impl<T: Into<JsValue> + Copy, U: Into<JsValue> + Copy> ToJsParams for (T, U) {
     fn to_js_params(self) -> Array {
         Array::of2(&self.0.into(), &self.1.into())

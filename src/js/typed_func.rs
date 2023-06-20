@@ -11,7 +11,7 @@ pub struct TypedFunc<'a, Params, Results> {
     function: Function,
 }
 
-impl<'a, Params: ToJsParams, Results: FromJsValue> TypedFunc<'a, Params, Results> {
+impl<'a, Params: ToJsParams, Results: FromJsResults> TypedFunc<'a, Params, Results> {
     pub(crate) fn new(instance: &'a WebAssembly::Instance, function: Function) -> Self {
         Self {
             _phantom: PhantomData,
@@ -23,6 +23,6 @@ impl<'a, Params: ToJsParams, Results: FromJsValue> TypedFunc<'a, Params, Results
     pub fn call(&self, _store: &Store<()>, params: Params) -> Result<Results, Error> {
         let args = params.to_js_params();
         let result = self.function.apply(self.instance.as_ref(), &args)?;
-        Results::from_js_value(&result)
+        Results::from_js_results(&result)
     }
 }
