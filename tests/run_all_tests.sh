@@ -13,7 +13,7 @@ for test in no_bindgen/*; do
   cp $test/plugin.rs instance/plugin/src/lib.rs
 
   # build the plugin
-  cd instance/plugin && cargo build --target=wasm32-unknown-unknown && cd ../..
+  cd instance/plugin && cargo rustc --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && cd ../..
   if [ $? -ne 0 ]; then
     echo
     echo "Oh no, there is an error in the $test plugin."

@@ -1,3 +1,4 @@
+use js_sys::Reflect;
 use wasm_bindgen::JsValue;
 
 use crate::*;
@@ -6,11 +7,17 @@ pub trait FromJsResults: Sized {
     fn from_js_results(results: &JsValue) -> Result<Self, Error>;
 }
 
-// impl<T: Into<JsValue> + Copy, U: Into<JsValue> + Copy> ToJsParams for (T, U) {
-//     fn to_js_params(self) -> Array {
-//         Array::of2(&self.0.into(), &self.1.into())
-//     }
-// }
+impl<T: FromJsValue, U: FromJsValue> FromJsResults for (T, U) {
+    fn from_js_results(results: &JsValue) -> Result<Self, Error> {
+        let first = Reflect::get_u32(results, 0)?;
+        let first = T::from_js_value(&first)?;
+
+        let second = Reflect::get_u32(results, 1)?;
+        let second = U::from_js_value(&second)?;
+
+        Ok((first, second))
+    }
+}
 
 macro_rules! from_js_results_single {
     ($ty: ty) => {
