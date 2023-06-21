@@ -9,18 +9,11 @@ pub struct Module {
 impl Module {
     pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self, Error> {
         let bytes = bytes.as_ref();
-        Self::from_bytes(bytes.as_ref()).or_else(|err| Self::wat_to_module(bytes, err))
+        Self::from_bytes(bytes.as_ref()).or_else(|err| Self::from_wat(bytes, err))
     }
 
-    #[cfg(not(feature = "wat"))]
-    fn wat_to_module(_wat: &[u8], err: Error) -> Result<Self, Error> {
-        // TODO: how to display warning?
-        Err(err)
-    }
-
-    #[cfg(feature = "wat")]
-    fn wat_to_module(wat: &[u8], _err: Error) -> Result<Self, Error> {
-        let bytes = wat::parse_bytes(wat).unwrap();
+    fn from_wat(wat: &[u8], err: Error) -> Result<Self, Error> {
+        let bytes = wat::parse_bytes(wat).map_err(|_| err)?;
 
         Self::from_bytes(&bytes)
     }
