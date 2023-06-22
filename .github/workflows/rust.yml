@@ -16,7 +16,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build
+    - name: Build sys
       run: cargo build --verbose
+    - name: Install wasm32 target
+      run: rustup target add wasm32-unknown-unknown
+    - name: Build js
+      run: cargo build --target wasm32-unknown-unknown --verbose
+    - name: Install wasm-pack
+      run: cargo install wasm-pack
     - name: Run tests
-      run: cargo test --verbose
+      run: cd tests && bash run_all_tests.sh
