@@ -12,8 +12,11 @@ impl Module {
         Self::from_bytes(bytes).or_else(|err| Self::from_wat(bytes, err))
     }
 
-    fn from_wat(wat: &[u8], err: Error) -> Result<Self, Error> {
-        let bytes = wat::parse_bytes(wat).map_err(|_| err)?;
+    fn from_wat(wat: &[u8], oriringal_err: Error) -> Result<Self, Error> {
+        // If it's not text, give back the original error, it's probably more useful
+        let text: &str = std::str::from_utf8(wat).map_err(move |_| oriringal_err)?;
+
+        let bytes = wat::parse_str(text).map_err(|err| format!("{err:?}"))?;
 
         Self::from_bytes(&bytes)
     }

@@ -47,8 +47,11 @@ impl Instance {
         let function: Function = function.into();
 
         if function.length() != Params::number_of_args() {
-            // TODO: *definitely* need a better error here
-            return Err(Error::JsError(function.into()));
+            return Err(Error::IncorrectNumOfArgs(
+                name.into(),
+                Params::number_of_args(),
+                function.length(),
+            ));
         }
 
         Ok(TypedFunc::new(&self.instance, function))
