@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use js_sys::{Object, Reflect};
-use wasm_bindgen::{prelude::Closure, JsValue};
+use wasm_bindgen::JsValue;
 
 use crate::*;
 
@@ -23,20 +23,22 @@ impl Linker {
         Instance::new_with_imports(module, &imports, self.closures.clone())
     }
 
-    pub fn func_wrap<F>(&mut self, module: &str, name: &str, func: F) -> Result<&mut Self, Error>
+    pub fn func_wrap<P, R, F>(
+        &mut self,
+        module: &str,
+        name: &str,
+        func: F,
+    ) -> Result<&mut Self, Error>
     where
-        F: Fn(Caller<()>, i32) -> i32 + 'static + Send + Sync,
+        F: IntoClosure<dyn Fn(R) -> P>,
     {
         let module = self.module(module)?;
 
-        let closure =
-            Closure::<dyn Fn(i32) -> i32 + 'static>::new(move |arg: i32| func(Caller::new(), arg));
+        let (js_val, handler) = func.into_closure();
 
-        let as_js_val: JsValue = closure.as_ref().into();
+        Reflect::set(&module, &name.into(), &js_val)?;
 
-        Reflect::set(&module, &name.into(), &as_js_val)?;
-
-        self.closures.push(DropHandler::new(closure));
+        self.closures.push(handler);
 
         Ok(self)
     }
@@ -56,10 +58,10 @@ impl Linker {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct DropHandler(Rc<dyn std::fmt::Debug + 'static>);
+pub struct DropHandler(Rc<dyn std::fmt::Debug>);
 
 impl DropHandler {
-    fn new<T: std::fmt::Debug + 'static>(value: T) -> Self {
+    pub fn new<T: std::fmt::Debug + 'static>(value: T) -> Self {
         Self(Rc::new(value))
     }
 }
