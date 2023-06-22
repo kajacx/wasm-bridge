@@ -1,21 +1,26 @@
-use js_sys::{Function, Object, Reflect};
+use std::rc::Rc;
+
+use js_sys::{Object, Reflect};
 use wasm_bindgen::{prelude::Closure, JsValue};
 
-use crate::{Caller, Error};
-
-use super::caller;
+use crate::*;
 
 pub struct Linker {
     import_object: JsValue,
-    closures: Vec<Closure<dyn Fn(i32) -> i32>>,
+    closures: Vec<Rc<Closure<dyn Fn(i32) -> i32>>>,
 }
 
 impl Linker {
-    pub fn new() -> Self {
+    pub fn new(_engine: &Engine) -> Self {
         Self {
             import_object: Object::new().into(),
             closures: vec![],
         }
+    }
+
+    pub fn instantiate(&self, _store: &mut Store<()>, module: &Module) -> Result<Instance, Error> {
+        let imports = self.import_object.clone().into();
+        Instance::new_with_imports(module, &imports, self.closures.clone())
     }
 
     pub fn func_wrap<F>(&mut self, module: &str, name: &str, func: F) -> Result<&mut Self, Error>
@@ -24,13 +29,14 @@ impl Linker {
     {
         let module = self.module(module)?;
 
-        // let func = Function::new_with_args(args, body)
         let closure =
             Closure::<dyn Fn(i32) -> i32 + 'static>::new(move |arg: i32| func(Caller::new(), arg));
 
         let as_js_val: JsValue = closure.as_ref().into();
 
         Reflect::set(&module, &name.into(), &as_js_val)?;
+
+        self.closures.push(Rc::new(closure));
 
         Ok(self)
     }
