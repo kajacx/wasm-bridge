@@ -14,10 +14,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Cache installation of tools
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo
+            ~/.rustup
+          key: ${{ runner.os }}-installation
+
       - name: Install wasm32 target
         run: rustup target add wasm32-unknown-unknown
+
       - name: Install wasm-pack
         run: cargo install wasm-pack
+
       - name: Run tests
         run: cd tests && bash run_all_tests.sh
