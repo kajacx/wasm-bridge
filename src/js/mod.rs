@@ -18,3 +18,9 @@ pub use typed_func::*;
 
 mod conversions;
 pub use conversions::*;
+
+mod linker;
+pub use linker::*;
+
+mod caller;
+pub use caller::*;
