@@ -7,7 +7,7 @@ use crate::*;
 
 pub struct Linker {
     import_object: JsValue,
-    closures: Vec<Rc<Closure<dyn Fn(i32) -> i32>>>,
+    closures: Vec<DropHandler>,
 }
 
 impl Linker {
@@ -36,7 +36,7 @@ impl Linker {
 
         Reflect::set(&module, &name.into(), &as_js_val)?;
 
-        self.closures.push(Rc::new(closure));
+        self.closures.push(DropHandler::new(closure));
 
         Ok(self)
     }
@@ -52,5 +52,14 @@ impl Linker {
             Reflect::set(&self.import_object, &module_str, &new_module)?;
             Ok(new_module)
         }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct DropHandler(Rc<dyn std::fmt::Debug + 'static>);
+
+impl DropHandler {
+    fn new<T: std::fmt::Debug + 'static>(value: T) -> Self {
+        Self(Rc::new(value))
     }
 }

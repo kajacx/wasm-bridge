@@ -1,13 +1,11 @@
-use std::rc::Rc;
-
 use crate::*;
 use js_sys::{Function, Object, Reflect, WebAssembly};
-use wasm_bindgen::{prelude::Closure, JsValue};
+use wasm_bindgen::JsValue;
 
 pub struct Instance {
     instance: WebAssembly::Instance,
     exports: JsValue,
-    _closures: Vec<Rc<Closure<dyn Fn(i32) -> i32>>>, // Never "used", but needed for drop
+    _closures: Vec<DropHandler>,
 }
 
 impl Instance {
@@ -23,14 +21,14 @@ impl Instance {
     pub(crate) fn new_with_imports(
         module: &Module,
         imports: &Object,
-        _closures: Vec<Rc<Closure<dyn Fn(i32) -> i32>>>,
+        closures: Vec<DropHandler>,
     ) -> Result<Self, Error> {
         let instance = WebAssembly::Instance::new(&module.module, &imports)?;
         let exports = Reflect::get(&instance.as_ref(), &"exports".into())?;
         Ok(Self {
             instance,
             exports,
-            _closures,
+            _closures: closures,
         })
     }
 
