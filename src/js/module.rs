@@ -9,7 +9,7 @@ pub struct Module {
 impl Module {
     pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self, Error> {
         let bytes = bytes.as_ref();
-        Self::from_bytes(bytes.as_ref()).or_else(|err| Self::from_wat(bytes, err))
+        Self::from_bytes(bytes).or_else(|err| Self::from_wat(bytes, err))
     }
 
     fn from_wat(wat: &[u8], err: Error) -> Result<Self, Error> {
@@ -22,7 +22,7 @@ impl Module {
         // TODO: view might be faster than from, but its unsafe
         // Uint8Array::view(bytes.as_ref());
 
-        let byte_array = Uint8Array::from(bytes.as_ref());
+        let byte_array = Uint8Array::from(bytes);
         let module = WebAssembly::Module::new(&byte_array.into())?;
         Ok(Self { module })
     }

@@ -23,8 +23,8 @@ impl Instance {
         imports: &Object,
         closures: Vec<DropHandler>,
     ) -> Result<Self, Error> {
-        let instance = WebAssembly::Instance::new(&module.module, &imports)?;
-        let exports = Reflect::get(&instance.as_ref(), &"exports".into())?;
+        let instance = WebAssembly::Instance::new(&module.module, imports)?;
+        let exports = Reflect::get(instance.as_ref(), &"exports".into())?;
         Ok(Self {
             instance,
             exports,

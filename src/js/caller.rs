@@ -11,3 +11,9 @@ impl<T> Caller<T> {
         }
     }
 }
+
+impl<T> Default for Caller<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
