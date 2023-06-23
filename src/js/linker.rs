@@ -23,14 +23,14 @@ impl Linker {
         Instance::new_with_imports(module, &imports, self.closures.clone())
     }
 
-    pub fn func_wrap<P, R, F>(
+    pub fn func_wrap<Params, Results, F>(
         &mut self,
         module: &str,
         name: &str,
         func: F,
     ) -> Result<&mut Self, Error>
     where
-        F: IntoClosure<dyn Fn(R) -> P>,
+        F: IntoClosure<Params, Results>,
     {
         let module = self.module(module)?;
 
