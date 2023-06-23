@@ -20,6 +20,7 @@ jobs:
           path: |
             ~/.cargo
             ~/.rustup
+            ./tests/instance
           key: ${{ runner.os }}-installation
 
       - name: Install wasm32 target
