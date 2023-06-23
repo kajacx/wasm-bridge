@@ -1,5 +1,7 @@
+use js_sys::Array;
 use wasm_bindgen::{
-    convert::{FromWasmAbi, ReturnWasmAbi},
+    convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi, WasmAbi},
+    describe::WasmDescribe,
     prelude::Closure,
     JsValue,
 };
@@ -71,18 +73,23 @@ where
     }
 }
 
-// pub struct MyPair(i32, f32);
+pub struct MyPair(pub i32, pub i32);
 
-// impl WasmDescribe for MyPair {
-//     fn describe() {}
-// }
+impl WasmDescribe for MyPair {
+    fn describe() {
+        // panic!("I am being described :)")
+        // inform(wasm_bindgen::describe::EXTERNREF)
+        JsValue::describe();
+    }
+}
 
-// unsafe impl WasmAbi for MyPair {}
+unsafe impl WasmAbi for MyPair {}
 
-// impl ReturnWasmAbi for MyPair {
-//     type Abi = Self;
+impl ReturnWasmAbi for MyPair {
+    type Abi = <JsValue as IntoWasmAbi>::Abi;
 
-//     fn return_abi(self) -> Self::Abi {
-//         self
-//     }
-// }
+    fn return_abi(self) -> Self::Abi {
+        let result: JsValue = Array::of2(&self.0.into(), &self.1.into()).into();
+        result.into_abi()
+    }
+}
