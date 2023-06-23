@@ -1,4 +1,7 @@
 use wasm_bindgen::convert::ReturnWasmAbi;
+use wasm_bindgen::JsValue;
+
+use crate::TupleWrapper2;
 
 pub trait IntoImportResults {
     type Results: ReturnWasmAbi;
@@ -40,3 +43,17 @@ impl_into_import_results_single!(u32);
 impl_into_import_results_single!(u64);
 impl_into_import_results_single!(f32);
 impl_into_import_results_single!(f64);
+
+macro_rules! impl_into_import_results_many {
+    ($count: ident, $(($index: tt, $name: ident)),*) => {
+        impl<$($name: Into<JsValue>),*> IntoImportResults for ($($name),*) {
+            type Results = $count<$($name),*>;
+
+            fn into_import_results(self) -> Self::Results {
+                $count($(self.$index),*)
+            }
+        }
+    };
+}
+
+impl_into_import_results_many!(TupleWrapper2, (0, T0), (1, T1));

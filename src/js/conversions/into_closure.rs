@@ -12,33 +12,18 @@ pub trait IntoClosure<Params, Results> {
     fn into_closure(self) -> (JsValue, DropHandler);
 }
 
-// impl<P, R, F> IntoClosure<P, R> for F
-// where
-//     F: Fn(Caller<()>, P) -> R + 'static,
-//     P: FromWasmAbi + 'static,
-//     R: ReturnWasmAbi + 'static,
-// {
-//     fn into_closure(self) -> (JsValue, DropHandler) {
-//         let closure =
-//             Closure::<dyn Fn(P) -> R + 'static>::new(move |arg: P| self(Caller::new(), arg));
-
-//         let js_val: JsValue = closure.as_ref().into();
-
-//         (js_val, DropHandler::new(closure))
-//     }
-// }
-
 macro_rules! impl_into_closure_single {
     ($ty:ty) => {
         impl<R, F> IntoClosure<$ty, R> for F
         where
             F: Fn(Caller<()>, $ty) -> R + 'static,
-            R: ReturnWasmAbi + 'static,
+            R: IntoImportResults + 'static,
         {
             fn into_closure(self) -> (JsValue, DropHandler) {
-                let closure = Closure::<dyn Fn($ty) -> R + 'static>::new(move |arg: $ty| {
-                    self(Caller::new(), arg)
-                });
+                let closure =
+                    Closure::<dyn Fn($ty) -> R::Results + 'static>::new(move |arg: $ty| {
+                        self(Caller::new(), arg).into_import_results()
+                    });
 
                 let js_val: JsValue = closure.as_ref().into();
 
@@ -60,36 +45,16 @@ where
     F: Fn(Caller<()>, P0, P1) -> R + 'static,
     P0: FromWasmAbi + 'static,
     P1: FromWasmAbi + 'static,
-    R: ReturnWasmAbi + 'static,
+    R: IntoImportResults + 'static,
 {
     fn into_closure(self) -> (JsValue, DropHandler) {
-        let closure = Closure::<dyn Fn(P0, P1) -> R + 'static>::new(move |arg0: P0, arg1: P1| {
-            self(Caller::new(), arg0, arg1)
-        });
+        let closure =
+            Closure::<dyn Fn(P0, P1) -> R::Results + 'static>::new(move |arg0: P0, arg1: P1| {
+                self(Caller::new(), arg0, arg1).into_import_results()
+            });
 
         let js_val: JsValue = closure.as_ref().into();
 
         (js_val, DropHandler::new(closure))
-    }
-}
-
-pub struct MyPair(pub i32, pub i32);
-
-impl WasmDescribe for MyPair {
-    fn describe() {
-        // panic!("I am being described :)")
-        // inform(wasm_bindgen::describe::EXTERNREF)
-        JsValue::describe();
-    }
-}
-
-unsafe impl WasmAbi for MyPair {}
-
-impl ReturnWasmAbi for MyPair {
-    type Abi = <JsValue as IntoWasmAbi>::Abi;
-
-    fn return_abi(self) -> Self::Abi {
-        let result: JsValue = Array::of2(&self.0.into(), &self.1.into()).into();
-        result.into_abi()
     }
 }

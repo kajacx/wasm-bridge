@@ -15,7 +15,7 @@ pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
     linker.func_wrap(
         "imported_fns",
         "add_sub_ten_import",
-        |_: Caller<()>, num: i32| MyPair(num.wrapping_add(10), num.wrapping_sub(10)),
+        |_: Caller<()>, num: i32| (num.wrapping_add(10), num.wrapping_sub(10)),
     )?;
     let instance = linker.instantiate(&mut store, &module)?;
 
