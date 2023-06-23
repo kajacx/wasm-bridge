@@ -4,9 +4,11 @@ use wasm_bindgen::JsValue;
 
 #[derive(Debug)]
 pub enum Error {
-    JsError(JsValue),
+    InvalidWatText(String),
+    ImportedFnNotFound(String),
     IncorrectNumOfArgs(String, u32, u32), // Name, expected, actual
-    Other(String),
+    JsError(JsValue),
+    // Other(String),
 }
 
 impl From<JsValue> for Error {
@@ -15,23 +17,30 @@ impl From<JsValue> for Error {
     }
 }
 
-impl From<String> for Error {
-    fn from(value: String) -> Self {
-        Self::Other(value)
-    }
-}
+// impl From<String> for Error {
+//     fn from(value: String) -> Self {
+//         Self::Other(value)
+//     }
+// }
 
 impl std::error::Error for Error {}
 
 impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::JsError(value) => write!(f, "{value:?}"),
+            Error::InvalidWatText(err) => write!(
+                f,
+                "Module bytes are valid text, but parsing it in wat format gave error: {err}"
+            ),
+            Error::ImportedFnNotFound(name) => {
+                write!(f, "Imported fn `{name}` not found in the module")
+            }
             Error::IncorrectNumOfArgs(name, expected, actual) => write!(
                 f,
                 "Expected `{name}` to have {expected} arguments, but it has {actual} instead"
             ),
-            Error::Other(value) => write!(f, "Other error: {value:?}"),
+            Error::JsError(value) => write!(f, "{value:?}"),
+            // Error::Other(value) => write!(f, "Other error: {value:?}"),
         }
     }
 }

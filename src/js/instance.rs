@@ -40,8 +40,7 @@ impl Instance {
         let function = Reflect::get(&self.exports, &name.into())?;
 
         if !function.is_function() {
-            // TODO: better error here?
-            return Err(Error::JsError(function));
+            return Err(Error::ImportedFnNotFound(name.into()));
         }
 
         let function: Function = function.into();
