@@ -35,6 +35,7 @@ macro_rules! to_js_params_many {
             }
 
             fn to_js_params(self) -> Array {
+                // TODO: test is "ofN" is faster, and by how much
                 let result = Array::new_with_length($count);
                 $( Reflect::set_u32(&result, $index, &self.$index.into()).unwrap(); )*
                 result
