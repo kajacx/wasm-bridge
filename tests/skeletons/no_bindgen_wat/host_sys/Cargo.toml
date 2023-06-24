@@ -1,7 +1,0 @@
-[package]
-name = "no-bindgen-wat-host-sys"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-wasm-bridge = { path = "../../.." }
