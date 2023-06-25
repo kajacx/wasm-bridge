@@ -8,6 +8,7 @@ pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
 
     single_value(&mut store, &instance)?;
     few_values(&mut store, &instance)?;
+    errors(bytes)?;
 
     Ok(())
 }
@@ -80,6 +81,46 @@ fn few_values(mut store: &mut Store<()>, instance: &Instance) -> Result<(), Box<
     let add_five_f64 = instance.get_typed_func::<(f64,), (f64,)>(&mut store, "add_five_f64")?;
     let returned = add_five_f64.call(&mut store, (5.5,))?;
     assert_eq!(returned, (5.5 + 5.0,));
+
+    Ok(())
+}
+
+fn errors(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
+    let mut store = Store::<()>::default();
+
+    // Bad binary bytes
+    Module::new(&store.engine(), &[1, 5])
+        .map(|_| ())
+        .expect_err("should not create module");
+
+    // Bad text bytes
+    Module::new(&store.engine(), "not a valit wat module".as_bytes())
+        .map(|_| ())
+        .expect_err("should not create module");
+
+    let module = Module::new(&store.engine(), bytes)?;
+    let instance = Instance::new(&mut store, &module, &[])?;
+
+    // Non-existing function
+    instance
+        .get_typed_func::<i32, i32>(&mut store, "non_existing")
+        .map(|_| ())
+        .expect_err("should not get function");
+
+    // TODO: Number of arguments in currently the only type info avaliable
+    // Maybe look into how wasmer does it?
+    // Bad number of arguments
+    instance
+        .get_typed_func::<(i32, i32), i32>(&mut store, "add_five_i32")
+        .map(|_| ())
+        .expect_err("should not get function");
+
+    let panics = instance.get_typed_func::<(), ()>(&mut store, "panics")?;
+
+    // Implementation panics
+    panics
+        .call(&mut store, ())
+        .expect_err("should not get result");
 
     Ok(())
 }
