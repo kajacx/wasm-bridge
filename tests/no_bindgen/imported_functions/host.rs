@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::sync::{Arc, Mutex};
 use wasm_bridge::*;
 
 pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
@@ -10,7 +11,7 @@ pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
 
     // Single value
     linker.func_wrap("imported_fns", "add_one_i32", |_: Caller<()>, val: i32| {
-        val.wrapping_add(1)
+        (val.wrapping_add(1),) // Test single-value tuple
     })?;
     linker.func_wrap("imported_fns", "add_one_i64", |_: Caller<()>, val: i64| {
         val.wrapping_add(1)
@@ -34,14 +35,18 @@ pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
         |_: Caller<()>, num: i32| (num.wrapping_add(10), num.wrapping_sub(10)),
     )?;
 
-    // No arguments (interion mutability), ... TODO
-    // let global_value = Rc::new(Cell::new(5i32));
-    // let global_clone = global_value.clone();
+    // No arguments - use interior mutability, must be Send + Sync + 'static
+    let global_value = Arc::new(Mutex::new(5i32));
+    let global_clone = global_value.clone();
+    linker.func_wrap("imported_fns", "increment", move |_| {
+        let mut lock = global_clone.lock().unwrap();
+        *lock = *lock + 1;
+    })?;
 
     let instance = linker.instantiate(&mut store, &module)?;
 
     single_value(&mut store, &instance)?;
-    few_values(&mut store, &instance)?;
+    few_values(&mut store, &instance, global_value)?;
     many_values(&mut store)?;
 
     Ok(())
@@ -96,7 +101,11 @@ fn single_value(mut store: &mut Store<()>, instance: &Instance) -> Result<(), Bo
     Ok(())
 }
 
-fn few_values(mut store: &mut Store<()>, instance: &Instance) -> Result<(), Box<dyn Error>> {
+fn few_values(
+    mut store: &mut Store<()>,
+    instance: &Instance,
+    global_value: Arc<Mutex<i32>>,
+) -> Result<(), Box<dyn Error>> {
     // Two arguments
     let add_i32 = instance.get_typed_func::<(i32, i32), i32>(&mut store, "add_i32")?;
     let returned = add_i32.call(&mut store, (5, 15))?;
@@ -106,6 +115,11 @@ fn few_values(mut store: &mut Store<()>, instance: &Instance) -> Result<(), Box<
     let add_sub_ten = instance.get_typed_func::<i32, (i32, i32)>(&mut store, "add_sub_ten")?;
     let returned = add_sub_ten.call(&mut store, 20)?;
     assert_eq!(returned, (30, 10));
+
+    // No arguments
+    let increment_twice = instance.get_typed_func::<(), ()>(&mut store, "increment_twice")?;
+    increment_twice.call(&mut store, ())?;
+    assert_eq!(*global_value.lock().unwrap(), 7); // Initialized to 5 originally
 
     Ok(())
 }

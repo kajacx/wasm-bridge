@@ -32,12 +32,13 @@ pub fn add_sub_ten(num: i32) -> (i32, i32) {
 }
 
 // No arguments
-// pub fn increment_twice() {
-//     unsafe {
-//         increment();
-//         increment();
-//     }
-// }
+#[no_mangle]
+pub fn increment_twice() {
+    unsafe {
+        increment();
+        increment();
+    }
+}
 
 // // Panic in imported fn
 // #[no_mangle]
@@ -58,6 +59,6 @@ extern "C" {
     #[allow(improper_ctypes)]
     fn add_sub_ten_import(num: i32) -> (i32, i32);
 
-    // fn increment();
+    fn increment();
     // fn panics_import();
 }
