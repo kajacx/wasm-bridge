@@ -20,7 +20,6 @@ jobs:
           path: |
             ~/.cargo
             ~/.rustup
-            ./tests/instance
           key: ${{ runner.os }}-installation
 
       - name: Install wasm32 target
@@ -30,6 +29,14 @@ jobs:
         run: cargo install wasm-pack
 
       - uses: actions/checkout@v3
+
+      - name: Cache build folders
+        uses: actions/cache@v3
+        with:
+          path: |
+            target
+            tests/instance
+          key: ${{ runner.os }}-build-folders
 
       - name: Run tests
         run: cd tests && bash run_all_tests.sh
