@@ -38,5 +38,13 @@ jobs:
             tests/instance
           key: ${{ runner.os }}-build-folders
 
+      - name: Check compile warnings
+        env:
+          RUSTFLAGS: "-D warnings"
+        run: cargo check && cargo check --target=wasm32-unknown-unknown
+
+      - name: Check clippy warnings
+        run: cargo clippy -- -D clippy::all && cargo clippy --target=wasm32-unknown-unknown -- -D clippy::all
+
       - name: Run tests
         run: cd tests && bash run_all_tests.sh
