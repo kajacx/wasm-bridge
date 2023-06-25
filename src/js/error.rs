@@ -5,7 +5,7 @@ use wasm_bindgen::JsValue;
 #[derive(Debug)]
 pub enum Error {
     InvalidWatText(String),
-    ImportedFnNotFound(String),
+    ExportedFnNotFound(String),
     IncorrectNumOfArgs(String, u32, u32), // Name, expected, actual
     JsError(JsValue),
     // Other(String),
@@ -32,8 +32,8 @@ impl Display for Error {
                 f,
                 "Module bytes are valid text, but parsing it in wat format gave error: {err}"
             ),
-            Error::ImportedFnNotFound(name) => {
-                write!(f, "Imported fn `{name}` not found in the module")
+            Error::ExportedFnNotFound(name) => {
+                write!(f, "Exported fn `{name}` not found in the module")
             }
             Error::IncorrectNumOfArgs(name, expected, actual) => write!(
                 f,
