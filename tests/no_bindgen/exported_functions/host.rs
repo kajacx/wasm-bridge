@@ -8,6 +8,7 @@ pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
 
     single_value(&mut store, &instance)?;
     few_values(&mut store, &instance)?;
+    many_values(&mut store)?;
     errors(bytes)?;
 
     Ok(())
@@ -81,6 +82,35 @@ fn few_values(mut store: &mut Store<()>, instance: &Instance) -> Result<(), Box<
     let add_five_f64 = instance.get_typed_func::<(f64,), (f64,)>(&mut store, "add_five_f64")?;
     let returned = add_five_f64.call(&mut store, (5.5,))?;
     assert_eq!(returned, (5.5 + 5.0,));
+
+    Ok(())
+}
+
+fn many_values(mut store: &mut Store<()>) -> Result<(), Box<dyn Error>> {
+    let wat = r#"(module
+        (func $add_ten_all (export "add_ten_all")
+          (param $p0 i32) (param $p1 i64) (param $p2 i32) (param $p3 i64) (param $p4 f32) (param $p5 f64) (result i32 i64 i32 i64 f32 f64)
+          (i32.add (local.get $p0) (i32.const 10))
+          (i64.add (local.get $p1) (i64.const 10))
+          (i32.add (local.get $p2) (i32.const 10))
+          (i64.add (local.get $p3) (i64.const 10))
+          (f32.add (local.get $p4) (f32.const 10))
+          (f64.add (local.get $p5) (f64.const 10))
+        )
+      )
+    "#;
+
+    let module = Module::new(&store.engine(), wat.as_bytes())?;
+
+    let instance = Instance::new(&mut store, &module, &[])?;
+
+    let add_ten_all = instance
+        .get_typed_func::<(i32, i64, u32, u64, f32, f64), (i32, i64, u32, u64, f32, f64)>(
+            &mut store,
+            "add_ten_all",
+        )?;
+    let returned = add_ten_all.call(&mut store, (5, 15, 25, 35, 45.5, 55.5))?;
+    assert_eq!(returned, (15, 25, 35, 45, 55.5, 65.5));
 
     Ok(())
 }
