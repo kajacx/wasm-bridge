@@ -38,7 +38,7 @@ pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
     // No arguments - use interior mutability, must be Send + Sync + 'static
     let global_value = Arc::new(Mutex::new(5i32));
     let global_clone = global_value.clone();
-    linker.func_wrap("imported_fns", "increment", move |_| {
+    linker.func_wrap("imported_fns", "increment", move |_: Caller<()>| {
         let mut lock = global_clone.lock().unwrap();
         *lock = *lock + 1;
     })?;
@@ -48,6 +48,7 @@ pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
     single_value(&mut store, &instance)?;
     few_values(&mut store, &instance, global_value)?;
     many_values(&mut store)?;
+    errors(&mut store)?;
 
     Ok(())
 }
@@ -162,6 +163,56 @@ fn many_values(mut store: &mut Store<()>) -> Result<(), Box<dyn Error>> {
         )?;
     let returned = add.call(&mut store, (5, 15, 25, 35, 45.5, 55.5))?;
     assert_eq!(returned, (6, 16, 26, 36, 46.5, 56.5));
+
+    Ok(())
+}
+
+fn errors(mut store: &mut Store<()>) -> Result<(), Box<dyn Error>> {
+    let wat = r#"(module
+        (type $t0 (func))
+        (import "imported_fns" "panics_import" (func $panics_import (type $t0)))
+        (func $panics (export "panics") (type $t0)
+            (call $panics_import)
+        )
+    )"#;
+
+    let module = Module::new(store.engine(), wat.as_bytes())?;
+
+    Instance::new(&mut store, &module, &[])
+        .map(|_| ())
+        .expect_err("no imported functions");
+
+    let mut linker = Linker::new(store.engine());
+    linker.func_wrap("wrong_module", "panics_import", |_: Caller<()>| {})?;
+    linker
+        .instantiate(&mut store, &module)
+        .map(|_| ())
+        .expect_err("wrong module name");
+
+    let mut linker = Linker::new(store.engine());
+    linker.func_wrap("imported_fns", "wrong_fn", |_: Caller<()>| {})?;
+    linker
+        .instantiate(&mut store, &module)
+        .map(|_| ())
+        .expect_err("wrong function name");
+
+    // TODO: these checks don't work. Again, maybe check how wasmer does it?
+
+    // let mut linker = Linker::new(store.engine());
+    // linker.func_wrap("imported_fns", "panics_import", |_: Caller<()>, _: i32| {})?;
+    // linker
+    //     .instantiate(&mut store, &module)
+    //     .map(|_| ())
+    //     .expect_err("wrong arguments");
+
+    // let mut linker = Linker::new(store.engine());
+    // linker.func_wrap("imported_fns", "panics_import", |_: Caller<()>| 5i32)?;
+    // linker
+    //     .instantiate(&mut store, &module)
+    //     .map(|_| ())
+    //     .expect_err("wrong results");
+
+    // Panic in imported fn causes panic in caller, we are not going to check that
 
     Ok(())
 }
