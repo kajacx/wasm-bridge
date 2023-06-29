@@ -1,0 +1,5 @@
+package wasm-bridge:protocol
+
+world test-world {
+  export add-hello: func(text: string) -> string
+}
