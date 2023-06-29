@@ -36,6 +36,7 @@ jobs:
           path: |
             target
             tests/instance
+            Cargo.lock
           key: ${{ runner.os }}-build-folders
 
       # TODO: checks should run first, but they take longer
