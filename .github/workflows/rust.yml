@@ -38,6 +38,10 @@ jobs:
             tests/instance
           key: ${{ runner.os }}-build-folders
 
+      # TODO: checks should run first, but they take longer
+      - name: Run tests
+        run: cd tests && bash run_all_tests.sh
+
       - name: Check compile warnings
         env:
           RUSTFLAGS: "-D warnings"
@@ -45,6 +49,3 @@ jobs:
 
       - name: Check clippy warnings
         run: cargo clippy -- -D clippy::all && cargo clippy --target=wasm32-unknown-unknown -- -D clippy::all
-
-      - name: Run tests
-        run: cd tests && bash run_all_tests.sh
