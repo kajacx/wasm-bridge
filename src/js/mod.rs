@@ -24,3 +24,9 @@ pub use linker::*;
 
 mod caller;
 pub use caller::*;
+
+mod config;
+pub use config::*;
+
+#[cfg(feature = "component-model")]
+pub mod component;

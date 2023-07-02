@@ -7,6 +7,13 @@ pub struct Store<T> {
 }
 
 impl<T> Store<T> {
+    pub fn new(engine: &Engine, data: T) -> Self {
+        Self {
+            engine: engine.clone(),
+            _data: data,
+        }
+    }
+
     pub fn engine(&self) -> &Engine {
         &self.engine
     }
