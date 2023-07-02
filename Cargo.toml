@@ -1,7 +1,13 @@
 [package]
 name = "wasm-bridge"
+description = "Run WASM modules on desktop or on the web using wasmtime's API"
 version = "0.1.0"
 edition = "2021"
+exclude = [".github", ".vscode", ".gitignore", "tests"]
+repository = "https://github.com/kajacx/wasm-bridge"
+license = "MIT"
+keywords = ["WASM", "wasmtime", "web"]
+categories = ["wasm", "web-programming"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 wasmtime = { version = "10.0.0" }
