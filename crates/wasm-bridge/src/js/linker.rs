@@ -18,7 +18,11 @@ impl Linker {
         }
     }
 
-    pub fn instantiate(&self, _store: &mut Store<()>, module: &Module) -> Result<Instance, Error> {
+    pub fn instantiate(
+        &self,
+        _store: impl AsContextMut,
+        module: &Module,
+    ) -> Result<Instance, Error> {
         let imports = self.import_object.clone().into();
         Instance::new_with_imports(module, &imports, self.closures.clone())
     }
