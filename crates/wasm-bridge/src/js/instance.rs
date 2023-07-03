@@ -10,7 +10,7 @@ pub struct Instance {
 
 impl Instance {
     pub fn new(
-        _store: &mut Store<()>,
+        _store: impl AsContextMut,
         module: &Module,
         _: impl AsRef<[()]>,
     ) -> Result<Self, Error> {
@@ -34,7 +34,7 @@ impl Instance {
 
     pub fn get_typed_func<Params: ToJsParams, Results: FromJsResults>(
         &self,
-        _store: &mut Store<()>,
+        _store: impl AsContextMut,
         name: &str,
     ) -> Result<TypedFunc<Params, Results>, Error> {
         let function = Reflect::get(&self.exports, &name.into())?;

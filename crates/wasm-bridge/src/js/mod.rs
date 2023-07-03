@@ -28,5 +28,8 @@ pub use caller::*;
 mod config;
 pub use config::*;
 
+mod context;
+pub use context::*;
+
 #[cfg(feature = "component-model")]
 pub mod component;
