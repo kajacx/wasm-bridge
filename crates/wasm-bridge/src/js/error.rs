@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use wasm_bindgen::JsValue;
+use wasm_bindgen::{JsValue, JsError};
 
 #[derive(Debug)]
 pub enum Error {
@@ -14,6 +14,12 @@ pub enum Error {
 impl From<JsValue> for Error {
     fn from(value: JsValue) -> Self {
         Self::JsError(value)
+    }
+}
+
+impl From<JsError> for Error {
+    fn from(value: JsError) -> Self {
+        Self::JsError(value.into())
     }
 }
 
