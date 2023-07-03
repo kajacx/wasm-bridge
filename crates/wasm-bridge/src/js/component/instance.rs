@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 
-pub struct Linker<T> {
+pub struct Instance {}
+
+pub struct InstancePre<T> {
     _phantom: PhantomData<T>,
 }

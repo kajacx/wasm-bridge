@@ -4,6 +4,9 @@ pub use component::*;
 mod linker;
 pub use linker::*;
 
+mod instance;
+pub use instance::*;
+
 mod func;
 pub use func::*;
 
@@ -12,6 +15,6 @@ pub use typed_func::*;
 
 pub use wasm_bridge_macros::*;
 
-mod __internal {
+pub mod __internal {
     pub use anyhow;
 }
