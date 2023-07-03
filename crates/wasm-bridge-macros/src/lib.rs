@@ -21,13 +21,13 @@ pub fn bindgen(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
             /// Instantiates a pre-instantiated module using the specified
             /// parameters, wrapping up the result in a structure that
             /// translates between wasm and the host.
-            pub fn instantiate_pre<T>(
-                mut store: impl wasm_bridge::AsContextMut<Data = T>,
-                instance_pre: &wasm_bridge::component::InstancePre<T>,
-            ) -> wasm_bridge::Result<(Self, wasm_bridge::component::Instance)> {
-                let instance = instance_pre.instantiate(&mut store)?;
-                Ok((Self::new(store, &instance)?, instance))
-            }
+            // pub fn instantiate_pre<T>(
+            //     mut store: impl wasm_bridge::AsContextMut<Data = T>,
+            //     instance_pre: &wasm_bridge::component::InstancePre<T>,
+            // ) -> wasm_bridge::Result<(Self, wasm_bridge::component::Instance)> {
+            //     let instance = instance_pre.instantiate(&mut store)?;
+            //     Ok((Self::new(store, &instance)?, instance))
+            // }
             /// Low-level creation wrapper for wrapping up the exports
             /// of the `instance` provided in this structure of wasm
             /// exports.
