@@ -1,15 +1,13 @@
-use std::marker::PhantomData;
+
+use wasm_bindgen::JsValue;
 
 pub struct Instance {
     exports: JsValue,
 }
 
 impl Instance {
-    fn new(exports: JsValue) -> Self {
+    pub(crate) fn new(exports: JsValue) -> Self {
         Self { exports }
     }
 }
 
-// pub struct InstancePre<T> {
-//     _phantom: PhantomData<T>,
-// }

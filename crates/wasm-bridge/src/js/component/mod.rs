@@ -13,6 +13,8 @@ pub use func::*;
 mod typed_func;
 pub use typed_func::*;
 
+mod helpers;
+
 pub use wasm_bridge_macros::*;
 
 pub mod __internal {
