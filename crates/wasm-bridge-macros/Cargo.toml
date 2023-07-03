@@ -1,0 +1,8 @@
+[package]
+name = "wasm-bridge-macros"
+description = "Helper crate to define proc macros for wasm-bridge"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
