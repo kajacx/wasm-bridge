@@ -8,9 +8,9 @@ Since wasmtime cannot actually *run* on the web, the goal is to **provide a unif
 
 ## How to use
 
-The provided API is identical to wasmtime's API, so read wasmtime's documentation on how to use this crate.
+The provided API is identical to wasmtime's API, so read [wasmtime's documentation](https://docs.wasmtime.dev/) on how to use this crate.
 
-For example, here is a simple use case of adding 3 using a WASM module compiled from WAT (WebAssembly text):
+Here is an example of adding three using a WASM module compiled from WAT, using `wasm-bridge` version `0.1.1`:
 
 ```rust
 use wasm_bride::*;
@@ -38,10 +38,11 @@ fn add_three(number: i32) -> Result<i32> {
 
 ## Switching from `wasmtime`
 
-Simply replace the `wasmtime` dependency and imports with `wasm-bridge`, and you "should" be good to go.
+Simply replace the `wasmtime` dependency and imports with `wasm-bridge`, and you *should* be good to go.
 
 Most of wasmtime's API is still not implemented, so you will likely run into compile errors when compiling to wasm.
-Create an issue with a code snippet, so I can add the implementation.
+
+Create an issue with a code snippet describing your use case.
 
 ## Using `component-model`
 
