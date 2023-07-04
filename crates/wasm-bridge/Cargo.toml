@@ -9,18 +9,11 @@ license = "MIT"
 keywords = ["WASM", "wasmtime", "web"]
 categories = ["wasm", "web-programming"]
 
-[dependencies]
-wasm-bridge-macros = { path = "../wasm-bridge-macros" }
-anyhow = { version = "1.0.22" }
-
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 wasmtime = { version = "10.0.1" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-js-sys = { version = "0.3.64" }
-wasm-bindgen = "0.2.87"
-wasm-bindgen-futures = { version = "0.4.37" }
-wat = { version = "1.0.66" }
+wasm-bridge-js = { path = "../wasm-bridge-js" }
 
 [features]
-component-model = ["wasmtime/component-model"]
+component-model = ["wasmtime/component-model", "wasm-bridge-js/component-model"]
