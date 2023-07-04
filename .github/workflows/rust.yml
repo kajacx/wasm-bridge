@@ -42,14 +42,15 @@ jobs:
             Cargo.lock
           key: ${{ runner.os }}-build-folders
 
-      # TODO: checks should run first, but they take longer
-      - name: Run tests
-        run: cd tests && bash run_all_tests.sh
-
       - name: Check compile warnings
         env:
           RUSTFLAGS: "-D warnings"
-        run: cargo check --all-features && cargo check --all-features --target=wasm32-unknown-unknown
+        run: cargo check --all-features --target=wasm32-unknown-unknown
 
       - name: Check clippy warnings
-        run: cargo clippy --all-features -- -D clippy::all && cargo clippy --all-features --target=wasm32-unknown-unknown -- -D clippy::all
+        env:
+          RUSTFLAGS: "-D warnings"
+        run: cargo clippy --all-features --target=wasm32-unknown-unknown -- -D clippy::all
+
+      - name: Run tests
+        run: cd tests && bash run_all_tests.sh
