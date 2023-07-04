@@ -1,8 +1,7 @@
-use std::error::Error;
 use std::sync::{Arc, Mutex};
 use wasm_bridge::*;
 
-pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
+pub fn run_test(bytes: &[u8]) -> Result<()> {
     let mut store = Store::<()>::default();
 
     let module = Module::new(&store.engine(), bytes)?;
@@ -53,7 +52,7 @@ pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn single_value(mut store: &mut Store<()>, instance: &Instance) -> Result<(), Box<dyn Error>> {
+fn single_value(mut store: &mut Store<()>, instance: &Instance) -> Result<()> {
     // Signed integers
     let add_three_i32 = instance.get_typed_func::<i32, i32>(&mut store, "add_three_i32")?;
 
@@ -106,7 +105,7 @@ fn few_values(
     mut store: &mut Store<()>,
     instance: &Instance,
     global_value: Arc<Mutex<i32>>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     // Two arguments
     let add_i32 = instance.get_typed_func::<(i32, i32), i32>(&mut store, "add_i32")?;
     let returned = add_i32.call(&mut store, (5, 15))?;
@@ -125,7 +124,7 @@ fn few_values(
     Ok(())
 }
 
-fn many_values(mut store: &mut Store<()>) -> Result<(), Box<dyn Error>> {
+fn many_values(mut store: &mut Store<()>) -> Result<()> {
     let wat = r#"(module
         (type $t0 (func (param i32 i64 i32 i64 f32 f64) (result i32 i64 i32 i64 f32 f64)))
         (import "imported_fns" "add_import" (func $add_import (type $t0)))
@@ -167,7 +166,7 @@ fn many_values(mut store: &mut Store<()>) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn errors(mut store: &mut Store<()>) -> Result<(), Box<dyn Error>> {
+fn errors(mut store: &mut Store<()>) -> Result<()> {
     let wat = r#"(module
         (type $t0 (func))
         (import "imported_fns" "panics_import" (func $panics_import (type $t0)))

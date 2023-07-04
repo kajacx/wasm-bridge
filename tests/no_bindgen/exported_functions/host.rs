@@ -1,7 +1,6 @@
-use std::error::Error;
 use wasm_bridge::*;
 
-pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
+pub fn run_test(bytes: &[u8]) -> Result<()> {
     let mut store = Store::<()>::default();
     let module = Module::new(&store.engine(), bytes)?;
     let instance = Instance::new(&mut store, &module, &[])?;
@@ -14,7 +13,7 @@ pub fn run_test(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn single_value(mut store: &mut Store<()>, instance: &Instance) -> Result<(), Box<dyn Error>> {
+fn single_value(mut store: &mut Store<()>, instance: &Instance) -> Result<()> {
     // Signed integers
     let add_five_i32 = instance.get_typed_func::<i32, i32>(&mut store, "add_five_i32")?;
 
@@ -63,7 +62,7 @@ fn single_value(mut store: &mut Store<()>, instance: &Instance) -> Result<(), Bo
     Ok(())
 }
 
-fn few_values(mut store: &mut Store<()>, instance: &Instance) -> Result<(), Box<dyn Error>> {
+fn few_values(mut store: &mut Store<()>, instance: &Instance) -> Result<()> {
     // Multiple arguments
     let add_i32 = instance.get_typed_func::<(i32, i32), i32>(&mut store, "add_i32")?;
 
@@ -86,7 +85,7 @@ fn few_values(mut store: &mut Store<()>, instance: &Instance) -> Result<(), Box<
     Ok(())
 }
 
-fn many_values(mut store: &mut Store<()>) -> Result<(), Box<dyn Error>> {
+fn many_values(mut store: &mut Store<()>) -> Result<()> {
     let wat = r#"(module
         (func $add_ten_all (export "add_ten_all")
           (param $p0 i32) (param $p1 i64) (param $p2 i32) (param $p3 i64) (param $p4 f32) (param $p5 f64) (result i32 i64 i32 i64 f32 f64)
@@ -115,7 +114,7 @@ fn many_values(mut store: &mut Store<()>) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn errors(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
+fn errors(bytes: &[u8]) -> Result<()> {
     let mut store = Store::<()>::default();
 
     // Bad binary bytes
@@ -137,7 +136,7 @@ fn errors(bytes: &[u8]) -> Result<(), Box<dyn Error>> {
         .map(|_| ())
         .expect_err("should not get function");
 
-    // TODO: Number of arguments in currently the only type info avaliable
+    // TODO: Number of arguments in currently the only type info available
     // Maybe look into how wasmer does it?
     // Bad number of arguments
     instance
