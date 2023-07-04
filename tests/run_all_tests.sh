@@ -63,7 +63,7 @@ for test in wit_components/*; do
   cd instance/plugin && cargo rustc --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && \
   cd target/wasm32-unknown-unknown/debug && \
   wasm-tools component new wit_components_plugin.wasm -o component.wasm && \
-  jco transpile component.wasm --instantiation -o out-dir && \
+  # jco transpile component.wasm --instantiation -o out-dir && \
   cd ../../../../..
   if [ $? -ne 0 ]; then
     echo
