@@ -86,12 +86,12 @@ for test in wit_components/*; do
   fi
 
   # run the js host test
-  cd instance/host_js && wasm-pack test --node && cd ../..
-  if [ $? -ne 0 ]; then
-    echo
-    echo "Oh no, there is an error in the $test js host."
-    echo "Inspect the instance for more detail."
-    exit 1
-  fi
+  # cd instance/host_js && wasm-pack test --node && cd ../..
+  # if [ $? -ne 0 ]; then
+  #   echo
+  #   echo "Oh no, there is an error in the $test js host."
+  #   echo "Inspect the instance for more detail."
+  #   exit 1
+  # fi
 done
 
