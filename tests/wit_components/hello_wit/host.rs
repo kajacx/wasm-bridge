@@ -1,7 +1,6 @@
-use std::error::Error;
 use wasm_bridge::{
     component::{Component, Linker},
-    Config, Engine, Store,
+    Config, Engine, Store, Result,
 };
 
 wasm_bridge::component::bindgen!({
@@ -9,7 +8,7 @@ wasm_bridge::component::bindgen!({
     world: "test-world"
 });
 
-pub fn run_test(component_bytes: &[u8]) -> Result<(), Box<dyn Error>> {
+pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
     config.wasm_component_model(true);
 
