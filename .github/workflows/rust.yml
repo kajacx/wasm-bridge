@@ -49,7 +49,7 @@ jobs:
       - name: Check compile warnings
         env:
           RUSTFLAGS: "-D warnings"
-        run: cargo check && cargo check --target=wasm32-unknown-unknown
+        run: cargo check --all-features && cargo check --all-features --target=wasm32-unknown-unknown
 
       - name: Check clippy warnings
-        run: cargo clippy -- -D clippy::all && cargo clippy --target=wasm32-unknown-unknown -- -D clippy::all
+        run: cargo clippy --all-features -- -D clippy::all && cargo clippy --all-features --target=wasm32-unknown-unknown -- -D clippy::all
