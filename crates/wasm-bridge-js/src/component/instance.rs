@@ -1,13 +1,11 @@
-
 use wasm_bindgen::JsValue;
 
 pub struct Instance {
-    exports: JsValue,
+    _exports: JsValue,
 }
 
 impl Instance {
-    pub(crate) fn new(exports: JsValue) -> Self {
-        Self { exports }
+    pub(crate) fn new(_exports: JsValue) -> Self {
+        Self { _exports }
     }
 }
-
