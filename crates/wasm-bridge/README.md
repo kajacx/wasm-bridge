@@ -58,4 +58,4 @@ Work on supporting the component model has only just begun, but it will hopefull
 - Multivalue returns from exported and imported functions
 - Supported value types: `i32`, `i64`, `u32`, `u64`, `f32`, `f64`
 
-See the [`no_bindgen`](tests/no_bindgen) folder for supported example usages.
+See the [`no_bindgen`](/tests/no_bindgen) folder for supported example usages.
