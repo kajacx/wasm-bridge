@@ -1,6 +1,6 @@
 # wasm-bridge change log
 
-## [unreleased] yyyy-mm-dd
+## [0.1.1] 2023-07-05
 
 ### Added
 - Export `Result` type
