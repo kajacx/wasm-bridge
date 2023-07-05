@@ -16,10 +16,13 @@ for test in wit_components/*; do
   cp $test/plugin.rs instance/plugin/src/lib.rs
 
   # build the plugin
+  # TODO: Used "7z" as a command, should be fixed with a custom "wasm-bridge" cargo tool
   cd instance/plugin && cargo rustc --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && \
   cd target/wasm32-unknown-unknown/debug && \
   wasm-tools component new wit_components_plugin.wasm -o component.wasm && \
   jco transpile component.wasm --instantiation -o out-dir && \
+  cp ../../../../../$test/sync_component.js out-dir/sync_component.rs && \
+  rm -f out-dir.zip && 7z a -r out-dir.zip out-dir && \
   cd ../../../../..
   if [ $? -ne 0 ]; then
     echo
