@@ -1,5 +1,7 @@
 # wasm-bridge
 
+<img src="/wasm-bridge-banner.png" alt="image banner" width="600" />
+
 ## Goals
 
 The goal of this crate is to "run wasmtime on the web".
@@ -59,3 +61,7 @@ Work on supporting the component model has only just begun, but it will hopefull
 - Supported value types: `i32`, `i64`, `u32`, `u64`, `f32`, `f64`
 
 See the [`no_bindgen`](/tests/no_bindgen) folder for supported example usages.
+
+## Acknowledgments
+
+Some icons in the banner image are from [flaticon](https://www.flaticon.com/).
