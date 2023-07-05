@@ -11,7 +11,7 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub(crate) fn new(_exports: JsValue) -> Self {
+    pub(crate) fn _new(_exports: JsValue) -> Self {
         Self { _exports }
     }
 
@@ -28,7 +28,7 @@ pub struct InstancePre<T> {
 
 impl<T> InstancePre<T> {
     pub fn instantiate(&self, _store: impl AsContextMut<Data = T>) -> Result<Instance> {
-        Ok(Instance::new(todo!()))
+        todo!()
     }
 }
 

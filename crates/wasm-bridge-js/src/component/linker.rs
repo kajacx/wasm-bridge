@@ -1,5 +1,3 @@
-use wasm_bindgen::JsValue;
-
 use crate::component::*;
 use crate::{AsContextMut, Engine, Result};
 use std::marker::PhantomData;

@@ -1,11 +1,11 @@
-use js_sys::{Function, Reflect};
+use js_sys::Function;
 use wasm_bindgen::JsValue;
 
-use crate::{AsContext, Engine, Result};
+use crate::{Engine, Result};
 
 pub struct Component {
-    pub(crate) component: JsValue,
-    pub(crate) instantiate: Function,
+    pub(crate) _component: JsValue,
+    pub(crate) _instantiate: Function,
 }
 
 impl Component {

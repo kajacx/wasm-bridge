@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use wasm_bindgen::{JsValue, JsError};
+use wasm_bindgen::{JsError, JsValue};
 
 #[derive(Debug)]
 pub enum Error {

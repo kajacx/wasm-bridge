@@ -9,7 +9,8 @@ fn test() {
     panic!("To test `wasm-bridge`, run the `run_all_tests.sh` script from the `tests` folder.");
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+// TODO: for testing only, remove later
+#[cfg(all(not(target_arch = "wasm32"), feature = "component-model"))]
 mod host {
     use std::error::Error;
 

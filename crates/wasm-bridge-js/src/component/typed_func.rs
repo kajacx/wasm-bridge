@@ -17,6 +17,8 @@ impl<Params, Return> TypedFunc<Params, Return> {
         }
     }
 
+    /// # Safety
+    /// This function is 100% safe, it just needs to match wasmtime's API
     pub unsafe fn new_unchecked(func: Func) -> Self {
         Self::new(func)
     }
