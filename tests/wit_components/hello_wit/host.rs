@@ -9,7 +9,7 @@ mod wasmtime {
 
 wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
-    world: "test-world"
+    world: "test-world",
 });
 
 pub fn run_test(component_bytes: &[u8]) -> Result<()> {

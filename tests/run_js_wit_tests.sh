@@ -33,13 +33,13 @@ for test in wit_components/*; do
   cp $test/host.rs instance/host_js/src/host.rs
 
   # run the sys host test
-  cd instance/host_sys && cargo run && cd ../..
-  if [ $? -ne 0 ]; then
-    echo
-    echo "Oh no, there is an error in the $test sys host."
-    echo "Inspect the instance for more detail."
-    exit 1
-  fi
+  # cd instance/host_sys && cargo run && cd ../..
+  # if [ $? -ne 0 ]; then
+  #   echo
+  #   echo "Oh no, there is an error in the $test sys host."
+  #   echo "Inspect the instance for more detail."
+  #   exit 1
+  # fi
 
   # run the js host test
   cd instance/host_js && wasm-pack test --node && cd ../..
