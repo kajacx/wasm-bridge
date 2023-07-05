@@ -1,7 +1,11 @@
 use wasm_bridge::{
     component::{Component, Linker},
-    Config, Engine, Store, Result,
+    Config, Engine, Result, Store,
 };
+
+mod wasmtime {
+    pub use wasm_bridge::*;
+}
 
 wasm_bridge::component::bindgen!({
     path: "../protocol.wit",

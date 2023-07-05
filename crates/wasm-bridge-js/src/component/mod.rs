@@ -16,7 +16,8 @@ pub use typed_func::*;
 
 mod helpers;
 
-pub use wasm_bridge_macros::*;
+// pub use wasm_bridge_macros::*;
+pub use wasmtime_component_macro::*;
 
 pub mod __internal {
     pub use anyhow;
