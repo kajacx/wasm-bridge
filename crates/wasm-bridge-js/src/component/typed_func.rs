@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use wasm_bindgen::JsValue;
 
-use crate::{AsContextMut, FromJsResults, FromJsValue, Result, ToJsParams};
+use crate::{AsContextMut, FromJsResults, Result, ToJsParams};
 
 use super::Func;
 

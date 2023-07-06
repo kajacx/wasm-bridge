@@ -28,15 +28,27 @@ impl ExportsRoot {
     }
 
     pub fn typed_func<Params, Return>(&self, name: &str) -> Result<TypedFunc<Params, Return>> {
-        // TODO: proper name conversion
-        let name = if name == "add-hello" {
-            "addHello"
-        } else {
-            name
-        };
+        // TODO: translate it in the opposite direction for better caching?
+        let name = Self::translate_func_name(name);
+
         // TODO: convert unwrap to user error
         // panic!("Getting export: {}, HASH MAP: {:?}", name, self.exports);
-        let func = Func::new(*self.exports.get(name).unwrap());
+        let func = Func::new(*self.exports.get(&name).unwrap());
         Ok(TypedFunc::new(func))
+    }
+
+    fn translate_func_name(name: &str) -> String {
+        use std::fmt::Write;
+
+        let mut parts = name.split("-").into_iter();
+        let mut result = parts.next().expect("non-empty name").to_string();
+
+        for next in parts {
+            let first = &next[0..1];
+            let rest = &next[1..];
+            write!(result, "{}{}", first.to_uppercase(), rest).unwrap();
+        }
+
+        result
     }
 }
