@@ -42,6 +42,7 @@ pub(crate) struct FunctionsStore {
 
 #[derive(Clone, Debug)]
 pub(crate) enum FunctionHandle {
+    #[allow(dead_code)] // TODO:
     Free(FuncId), // Next free "slot"
     Full(Function),
 }
@@ -60,7 +61,7 @@ impl FunctionsStore {
     }
 
     pub fn add_function(&mut self, function: Function) -> FuncId {
-        if self.count as u32 == self.next_free_id {
+        if self.count == self.next_free_id {
             let id = self.next_free_id;
             self.functions.insert(id, FunctionHandle::Full(function));
             self.next_free_id = self.next_free_id.checked_add(1).unwrap();
@@ -84,6 +85,7 @@ impl FunctionsStore {
         }
     }
 
+    #[allow(dead_code)] // TODO:
     pub fn remove_function(&mut self, id: FuncId) {
         match self.functions.get(&id).unwrap() {
             FunctionHandle::Full(_) => {} // OK
@@ -92,6 +94,6 @@ impl FunctionsStore {
         self.functions
             .insert(id, FunctionHandle::Free(self.next_free_id));
         self.next_free_id = id;
-        self.count = self.count - 1;
+        self.count -= 1;
     }
 }

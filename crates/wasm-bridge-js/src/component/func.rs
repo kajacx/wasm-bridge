@@ -1,6 +1,6 @@
 use js_sys::Function;
 
-use crate::{AsContext, AsContextMut, FuncId};
+use crate::{AsContext, FuncId};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Func {

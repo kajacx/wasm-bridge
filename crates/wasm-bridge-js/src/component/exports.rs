@@ -1,8 +1,5 @@
 use std::collections::HashMap;
 
-use js_sys::{Object, Reflect};
-use wasm_bindgen::JsValue;
-
 use crate::{FuncId, Result};
 
 use super::{Func, TypedFunc};

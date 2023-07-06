@@ -1,7 +1,5 @@
 use std::marker::PhantomData;
 
-use wasm_bindgen::JsValue;
-
 use super::*;
 use crate::{AsContextMut, Result};
 

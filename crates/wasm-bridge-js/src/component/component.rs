@@ -83,10 +83,7 @@ impl Component {
         let text = String::from_utf8(file_bytes).unwrap(); // TODO: this needs to be user error
 
         let instantiate: Function = js_sys::eval(&text)?.into();
-        // let instantiate = make_instantiate
-        //     .call0(&JsValue::UNDEFINED)
-        //     .expect("HOW IT IS??");
-        Ok(instantiate.into())
+        Ok(instantiate)
     }
 
     fn make_compile_core(wasm_cores: HashMap<String, Vec<u8>>) -> JsValue {
@@ -94,8 +91,7 @@ impl Component {
             // let name = format!("out-dir/{name}"); // TODO: bad, bad hack
             let bytes = wasm_cores.get(&name).unwrap();
             let byte_array = Uint8Array::from(bytes.borrow());
-            let module = WebAssembly::Module::new(&byte_array.into()).unwrap();
-            module
+            WebAssembly::Module::new(&byte_array.into()).unwrap()
         });
 
         // FIXME: save the closure so it isn't dropped
