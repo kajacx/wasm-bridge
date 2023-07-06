@@ -24,13 +24,17 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for file in source_dir {
         let file = file?;
+        let file_name = file.file_name();
+        let file_name = file_name.to_str().expect("utf-8 file name");
 
-        writer.start_file(
-            file.file_name().to_str().expect("utf-8 file name"),
-            FileOptions::default(),
-        )?;
+        let mut file_bytes = std::fs::read(file.path())?;
+        if file_name == "component.js" {
+            writer.start_file("sync_component.js", FileOptions::default())?;
+            file_bytes = transform_component_js(file_bytes);
+        } else {
+            writer.start_file(file_name, FileOptions::default())?;
+        }
 
-        let file_bytes = std::fs::read(file.path())?;
         writer.write_all(&file_bytes)?;
     }
 
@@ -47,4 +51,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
+}
+
+fn transform_component_js(file_bytes: Vec<u8>) -> Vec<u8> {
+    let text = String::from_utf8(file_bytes).expect("valid utf-8 component.js file");
+
+    let text = text.replace("export async function", "function");
+    let text = text.replace(
+        "instantiateCore = WebAssembly.instantiate",
+        "instantiateCore",
+    );
+    let text = text.replace("await ", "");
+
+    let text = format!("(() => {{\n{text}\nreturn instantiate;\n}})()\n");
+    text.into_bytes()
 }

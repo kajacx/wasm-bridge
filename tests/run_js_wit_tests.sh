@@ -20,7 +20,6 @@ for test in wit_components/*; do
   cd target/wasm32-unknown-unknown/debug && \
   wasm-tools component new wit_components_plugin.wasm -o component.wasm && \
   jco transpile component.wasm --instantiation -o out-dir && \
-  cp ../../../../../$test/sync_component.js out-dir/sync_component.rs && \
   cargo run --manifest-path ../../../../../../crates/wasm-bridge-cli/Cargo.toml out-dir out-dir.zip && \
   cd ../../../../..
   if [ $? -ne 0 ]; then
