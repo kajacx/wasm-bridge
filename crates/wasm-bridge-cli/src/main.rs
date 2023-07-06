@@ -1,4 +1,7 @@
-use std::io::{Bytes, Cursor, Write};
+use std::{
+    error::Error,
+    io::{Cursor, Write},
+};
 
 use clap::Parser;
 use zip::{write::FileOptions, ZipWriter};
@@ -9,7 +12,7 @@ struct Args {
     out_file: Option<std::path::PathBuf>,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
 
     let mut data = Vec::<u8>::new();
@@ -17,25 +20,31 @@ fn main() {
 
     let mut writer = ZipWriter::new(cursor);
 
-    writer
-        .start_file("hello.txt", FileOptions::default())
-        .unwrap();
-    writer.write_all("Hello world!".as_bytes()).unwrap();
+    let source_dir = std::fs::read_dir(args.source_dir)?;
 
-    writer
-        .start_file("world.txt", FileOptions::default())
-        .unwrap();
-    writer.write_all("Hello WORLD!".as_bytes()).unwrap();
+    for file in source_dir {
+        let file = file?;
 
-    writer.finish().unwrap();
+        writer.start_file(
+            file.file_name().to_str().expect("utf-8 file name"),
+            FileOptions::default(),
+        )?;
+
+        let file_bytes = std::fs::read(file.path())?;
+        writer.write_all(&file_bytes)?;
+    }
+
+    writer.finish()?;
     drop(writer);
 
-    std::fs::write(args.out_file.as_ref().unwrap(), data).unwrap();
+    match args.out_file {
+        Some(out_file) => {
+            std::fs::write(out_file, data)?;
+        }
+        None => {
+            std::io::stdout().write_all(&data)?;
+        }
+    }
 
-    let bytes = std::fs::read(args.out_file.unwrap()).unwrap();
-
-    let bytes = Cursor::new(bytes);
-    let mut archive = zip::ZipArchive::new(bytes).unwrap();
-
-    println!("number of files: {}", archive.len());
+    Ok(())
 }

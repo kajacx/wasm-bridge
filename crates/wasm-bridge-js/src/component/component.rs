@@ -91,7 +91,7 @@ impl Component {
 
     fn make_compile_core(wasm_cores: HashMap<String, Vec<u8>>) -> JsValue {
         let closure = Closure::<dyn Fn(String) -> WebAssembly::Module>::new(move |name: String| {
-            let name = format!("out-dir/{name}"); // TODO: bad, bad hack
+            // let name = format!("out-dir/{name}"); // TODO: bad, bad hack
             let bytes = wasm_cores.get(&name).unwrap();
             let byte_array = Uint8Array::from(bytes.borrow());
             let module = WebAssembly::Module::new(&byte_array.into()).unwrap();
