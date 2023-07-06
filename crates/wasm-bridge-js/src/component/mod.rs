@@ -8,6 +8,9 @@ pub use linker::*;
 mod instance;
 pub use instance::*;
 
+mod exports;
+pub use exports::*;
+
 mod func;
 pub use func::*;
 

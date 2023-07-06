@@ -1,3 +1,5 @@
+use wasm_bindgen::JsValue;
+
 use crate::component::*;
 use crate::{AsContextMut, Engine, Result};
 use std::marker::PhantomData;
@@ -16,18 +18,10 @@ impl<T> Linker<T> {
     pub fn instantiate(
         &self,
         _store: impl AsContextMut<Data = T>,
-        _component: &Component,
+        component: &Component,
     ) -> Result<Instance> {
-        // let compile_core = js_sys::eval(compile_core)?;
+        let import_object: JsValue = js_sys::Object::new().into();
 
-        // let import_object: JsValue = js_sys::Object::new().into();
-
-        // let instance =
-        //     component
-        //         .instantiate
-        //         .call2(&component.component, &compile_core, &import_object)?;
-
-        // Ok(Instance::new(instance))
-        todo!()
+        component.instantiate(&import_object)
     }
 }

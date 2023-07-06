@@ -6,6 +6,8 @@ use zip::{read::ZipFile, ZipArchive};
 
 use crate::{Engine, Result};
 
+use super::Instance;
+
 pub struct Component {
     instantiate: Function,
     compile_core: JsValue,
@@ -33,6 +35,7 @@ impl Component {
         }
 
         let compile_core = Self::make_compile_core(wasm_cores);
+        // panic!("WHAT IS COMPILE CORE? {:?}", compile_core);
         let instantiate_core = Self::make_instantiate_core();
 
         Ok(Self {
@@ -40,6 +43,17 @@ impl Component {
             compile_core,
             instantiate_core,
         })
+    }
+
+    pub(crate) fn instantiate(&self, import_object: &JsValue) -> Result<Instance> {
+        let exports = self.instantiate.call3(
+            &JsValue::UNDEFINED,
+            &self.compile_core,
+            import_object,
+            &self.instantiate_core,
+        )?;
+
+        Ok(Instance::new(exports))
     }
 
     fn load_wasm_core(mut file: ZipFile) -> Result<Vec<u8>> {
@@ -54,8 +68,10 @@ impl Component {
         std::io::copy(&mut file, &mut file_bytes).unwrap();
         let text = String::from_utf8(file_bytes).unwrap(); // TODO: this needs to be user error
 
-        let make_instantiate: Function = js_sys::eval(&text)?.into();
-        let instantiate = make_instantiate.call0(&JsValue::UNDEFINED)?;
+        let instantiate: Function = js_sys::eval(&text)?.into();
+        // let instantiate = make_instantiate
+        //     .call0(&JsValue::UNDEFINED)
+        //     .expect("HOW IT IS??");
         Ok(instantiate.into())
     }
 
@@ -68,7 +84,8 @@ impl Component {
         });
 
         // FIXME: save the closure so it isn't dropped
-        closure.as_ref().into()
+        // closure.as_ref().into()
+        closure.into_js_value()
     }
 
     fn make_instantiate_core() -> JsValue {
@@ -80,6 +97,7 @@ impl Component {
         );
 
         // FIXME: save the closure so it isn't dropped
-        closure.as_ref().into()
+        // closure.as_ref().into()
+        closure.into_js_value()
     }
 }
