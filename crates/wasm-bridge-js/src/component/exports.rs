@@ -40,7 +40,7 @@ impl ExportsRoot {
     fn translate_func_name(name: &str) -> String {
         use std::fmt::Write;
 
-        let mut parts = name.split("-").into_iter();
+        let mut parts = name.split('-');
         let mut result = parts.next().expect("non-empty name").to_string();
 
         for next in parts {
