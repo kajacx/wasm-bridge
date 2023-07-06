@@ -20,7 +20,8 @@ jobs:
           path: |
             ~/.cargo
             ~/.rustup
-          key: ${{ runner.os }}-installation-01
+            /usr/local/lib/node_modules
+          key: ${{ runner.os }}-installation-02
           restore-keys: ${{ runner.os }}-installation
 
       - name: Install wasm32 target
@@ -31,6 +32,9 @@ jobs:
 
       - name: Install wasm-tools
         run: cargo install wasm-tools
+
+      - name: Install jco
+        run: npm install -g @bytecodealliance/jco
 
       - uses: actions/checkout@v3
 
