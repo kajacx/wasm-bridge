@@ -2,6 +2,7 @@
 
 members = [
   "crates/wasm-bridge",
+  "crates/wasm-bridge-cli",
   "crates/wasm-bridge-js",
   "crates/wasm-bridge-macros",
 ]
