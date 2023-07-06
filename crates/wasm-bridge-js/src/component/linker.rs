@@ -17,11 +17,11 @@ impl<T> Linker<T> {
 
     pub fn instantiate(
         &self,
-        _store: impl AsContextMut<Data = T>,
+        store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
         let import_object: JsValue = js_sys::Object::new().into();
 
-        component.instantiate(&import_object)
+        component.instantiate(store, &import_object)
     }
 }

@@ -10,7 +10,7 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub(crate) fn new(exports: JsValue) -> Self {
+    pub(crate) fn new(exports: ExportsRoot) -> Self {
         Self {
             exports: Exports::new(exports),
         }

@@ -1,12 +1,12 @@
-use std::{borrow::Borrow, collections::HashMap, fmt::Write};
+use std::{borrow::Borrow, collections::HashMap};
 
-use js_sys::{Function, Object, Uint8Array, WebAssembly};
+use js_sys::{Function, Object, Reflect, Uint8Array, WebAssembly};
 use wasm_bindgen::prelude::*;
 use zip::{read::ZipFile, ZipArchive};
 
-use crate::{Engine, Result};
+use crate::{AsContextMut, Engine, FuncId, Result};
 
-use super::Instance;
+use super::{ExportsRoot, Instance};
 
 pub struct Component {
     instantiate: Function,
@@ -45,7 +45,11 @@ impl Component {
         })
     }
 
-    pub(crate) fn instantiate(&self, import_object: &JsValue) -> Result<Instance> {
+    pub(crate) fn instantiate(
+        &self,
+        mut store: impl AsContextMut,
+        import_object: &JsValue,
+    ) -> Result<Instance> {
         let exports = self.instantiate.call3(
             &JsValue::UNDEFINED,
             &self.compile_core,
@@ -53,7 +57,17 @@ impl Component {
             &self.instantiate_core,
         )?;
 
-        Ok(Instance::new(exports))
+        let names = Object::get_own_property_names(&exports.clone().into());
+        let mut export_fns = HashMap::<String, FuncId>::new();
+        let context = store.as_context_mut();
+
+        for i in 0..names.length() {
+            let name = Reflect::get_u32(&names, i)?;
+            let function: Function = Reflect::get(&exports, &name)?.into();
+            export_fns.insert(name.as_string().unwrap(), context.add_function(function));
+        }
+
+        Ok(Instance::new(ExportsRoot::new(export_fns)))
     }
 
     fn load_wasm_core(mut file: ZipFile) -> Result<Vec<u8>> {
@@ -77,6 +91,7 @@ impl Component {
 
     fn make_compile_core(wasm_cores: HashMap<String, Vec<u8>>) -> JsValue {
         let closure = Closure::<dyn Fn(String) -> WebAssembly::Module>::new(move |name: String| {
+            let name = format!("out-dir/{name}"); // TODO: bad, bad hack
             let bytes = wasm_cores.get(&name).unwrap();
             let byte_array = Uint8Array::from(bytes.borrow());
             let module = WebAssembly::Module::new(&byte_array.into()).unwrap();

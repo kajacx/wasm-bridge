@@ -1,18 +1,19 @@
+use std::collections::HashMap;
+
+use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
-use crate::Result;
+use crate::{FuncId, Result};
 
-use super::TypedFunc;
+use super::{Func, TypedFunc};
 
 pub struct Exports {
     root: ExportsRoot,
 }
 
 impl Exports {
-    pub(crate) fn new(exports: JsValue) -> Self {
-        Self {
-            root: ExportsRoot::new(exports),
-        }
+    pub(crate) fn new(root: ExportsRoot) -> Self {
+        Self { root }
     }
 
     pub fn root(&self) -> &ExportsRoot {
@@ -21,15 +22,24 @@ impl Exports {
 }
 
 pub struct ExportsRoot {
-    exports: JsValue,
+    exports: HashMap<String, FuncId>,
 }
 
 impl ExportsRoot {
-    pub(crate) fn new(exports: JsValue) -> Self {
+    pub(crate) fn new(exports: HashMap<String, FuncId>) -> Self {
         Self { exports }
     }
 
-    pub fn typed_func<Params, Return>(&self, _name: &str) -> Result<TypedFunc<Params, Return>> {
-        Ok(TypedFunc::new(super::Func {}))
+    pub fn typed_func<Params, Return>(&self, name: &str) -> Result<TypedFunc<Params, Return>> {
+        // TODO: proper name conversion
+        let name = if name == "add-hello" {
+            "addHello"
+        } else {
+            name
+        };
+        // TODO: convert unwrap to user error
+        // panic!("Getting export: {}, HASH MAP: {:?}", name, self.exports);
+        let func = Func::new(*self.exports.get(name).unwrap());
+        Ok(TypedFunc::new(func))
     }
 }
