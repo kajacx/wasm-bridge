@@ -1,6 +1,7 @@
 use js_sys::{Array, Reflect};
 use wasm_bindgen::JsValue;
 
+// TODO: rename to IntoJsParams
 pub trait ToJsParams: Copy {
     fn number_of_args() -> u32;
     fn to_js_params(self) -> Array;

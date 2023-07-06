@@ -36,6 +36,7 @@ from_js_results_single!(u32);
 from_js_results_single!(u64);
 from_js_results_single!(f32);
 from_js_results_single!(f64);
+from_js_results_single!(String);
 
 macro_rules! from_js_results_many {
     ($(($index: tt, $name: ident)),*) => {

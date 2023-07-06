@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use wasm_bindgen::JsValue;
 
-use crate::{AsContextMut, Result};
+use crate::{AsContextMut, FromJsResults, FromJsValue, Result, ToJsParams};
 
 use super::Func;
 
@@ -31,15 +31,15 @@ impl<Params, Return> TypedFunc<Params, Return> {
 
     pub fn call(&self, store: impl AsContextMut, params: Params) -> Result<Return>
     where
-        Params: IntoJsAbi,
-        Return: FromJsAbi,
+        Params: ToJsParams,
+        Return: FromJsResults,
     {
-        let argument = params.into_js_abi();
-        let result = self
+        let argument = params.to_js_params();
+        let results = self
             .func
             .function(&store)
-            .call1(&JsValue::UNDEFINED, &argument)?;
-        Return::from_js_abi(result)
+            .apply(&JsValue::UNDEFINED, &argument)?;
+        Return::from_js_results(&results)
     }
 
     pub fn post_return(&self, _store: impl AsContextMut) -> Result<()> {
@@ -47,22 +47,22 @@ impl<Params, Return> TypedFunc<Params, Return> {
     }
 }
 
-pub trait FromJsAbi: Sized {
-    fn from_js_abi(value: JsValue) -> Result<Self>;
-}
+// pub trait FromJsAbi: Sized {
+//     fn from_js_abi(value: JsValue) -> Result<Self>;
+// }
 
-pub trait IntoJsAbi {
-    fn into_js_abi(self) -> JsValue;
-}
+// pub trait IntoJsAbi {
+//     fn into_js_abi(self) -> JsValue;
+// }
 
-impl FromJsAbi for (String,) {
-    fn from_js_abi(value: JsValue) -> Result<Self> {
-        Ok((value.as_string().unwrap(),)) // TODO: add user error
-    }
-}
+// impl FromJsAbi for (String,) {
+//     fn from_js_abi(value: JsValue) -> Result<Self> {
+//         Ok((value.as_string().unwrap(),)) // TODO: add user error
+//     }
+// }
 
-impl IntoJsAbi for (&str,) {
-    fn into_js_abi(self) -> JsValue {
-        self.0.into()
-    }
-}
+// impl IntoJsAbi for (&str,) {
+//     fn into_js_abi(self) -> JsValue {
+//         self.0.into()
+//     }
+// }

@@ -52,3 +52,12 @@ impl FromJsValue for f64 {
         Ok(value.try_into()?)
     }
 }
+
+impl FromJsValue for String {
+    fn from_js_value(value: &JsValue) -> Result<Self, crate::Error> {
+        match value.as_string() {
+            Some(value) => Ok(value),
+            None => Err(crate::Error::JsError(value.clone())), // TODO: better error
+        }
+    }
+}
