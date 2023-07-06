@@ -20,7 +20,8 @@ jobs:
           path: |
             ~/.cargo
             ~/.rustup
-          key: ${{ runner.os }}-installation
+          key: ${{ runner.os }}-installation-01
+          restore-keys: ${{ runner.os }}-installation
 
       - name: Install wasm32 target
         run: rustup target add wasm32-unknown-unknown
@@ -40,7 +41,8 @@ jobs:
             target
             tests/instance
             Cargo.lock
-          key: ${{ runner.os }}-build-folders
+          key: ${{ runner.os }}-build-folders-${{ hashFiles('crates/*/Cargo.toml') }}
+          restore-keys: ${{ runner.os }}-build-folders
 
       - name: Check formatting
         run: cargo fmt --all -- --check
