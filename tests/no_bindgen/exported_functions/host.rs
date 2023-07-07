@@ -2,7 +2,7 @@ use wasm_bridge::*;
 
 pub fn run_test(bytes: &[u8]) -> Result<()> {
     let mut store = Store::<()>::default();
-    let module = Module::new(&store.engine(), bytes)?;
+    let module = Module::new(store.engine(), bytes)?;
     let instance = Instance::new(&mut store, &module, &[])?;
 
     single_value(&mut store, &instance)?;
@@ -99,7 +99,7 @@ fn many_values(mut store: &mut Store<()>) -> Result<()> {
       )
     "#;
 
-    let module = Module::new(&store.engine(), wat.as_bytes())?;
+    let module = Module::new(store.engine(), wat.as_bytes())?;
 
     let instance = Instance::new(&mut store, &module, &[])?;
 
@@ -118,16 +118,16 @@ fn errors(bytes: &[u8]) -> Result<()> {
     let mut store = Store::<()>::default();
 
     // Bad binary bytes
-    Module::new(&store.engine(), &[1, 5])
+    Module::new(store.engine(), &[1, 5])
         .map(|_| ())
         .expect_err("should not create module");
 
     // Bad text bytes
-    Module::new(&store.engine(), "not a valit wat module".as_bytes())
+    Module::new(store.engine(), "not a valit wat module".as_bytes())
         .map(|_| ())
         .expect_err("should not create module");
 
-    let module = Module::new(&store.engine(), bytes)?;
+    let module = Module::new(store.engine(), bytes)?;
     let instance = Instance::new(&mut store, &module, &[])?;
 
     // Non-existing function

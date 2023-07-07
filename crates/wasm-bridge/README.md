@@ -6,7 +6,7 @@
 
 The goal of this crate is to "run wasmtime on the web".
 
-Since wasmtime cannot actually *run* on the web, the goal is to **provide a unified API** for both sys (desktop) and js (web) runtimes.
+Since wasmtime cannot actually _run_ on the web, the goal is to **provide a unified API** for both sys (desktop) and js (web) runtimes.
 
 ## How to use
 
@@ -28,7 +28,7 @@ fn add_three(number: i32) -> Result<i32> {
         )
       )
     "#;
-    let module = Module::new(&store.engine(), wat.as_bytes())?;
+    let module = Module::new(store.engine(), wat.as_bytes())?;
 
     let instance = Instance::new(&mut store, &module, &[])?;
     let add_three_wasm = instance.get_typed_func::<i32, i32>(&mut store, "add_three")?;
@@ -40,7 +40,7 @@ fn add_three(number: i32) -> Result<i32> {
 
 ## Switching from `wasmtime`
 
-Simply replace the `wasmtime` dependency and imports with `wasm-bridge`, and you *should* be good to go.
+Simply replace the `wasmtime` dependency and imports with `wasm-bridge`, and you _should_ be good to go.
 
 Most of wasmtime's API is still not implemented, so you will likely run into compile errors when compiling to wasm.
 
@@ -51,6 +51,7 @@ Create an issue with a code snippet describing your use case.
 Work on supporting the component model has only just begun, but it will hopefully be possible to use the component model with `wasm-bridge` in the future.
 
 ## Implemented features
+
 - Load a module from bytes
 - Instantiate a module with an empty import object
 - Get (typed) exported function and call it

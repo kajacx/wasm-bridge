@@ -4,7 +4,7 @@ use wasm_bridge::*;
 pub fn run_test(bytes: &[u8]) -> Result<()> {
     let mut store = Store::<()>::default();
 
-    let module = Module::new(&store.engine(), bytes)?;
+    let module = Module::new(store.engine(), bytes)?;
 
     let mut linker = Linker::new(store.engine());
 
@@ -144,7 +144,7 @@ fn many_values(mut store: &mut Store<()>) -> Result<()> {
     )
     "#;
 
-    let module = Module::new(&store.engine(), wat.as_bytes())?;
+    let module = Module::new(store.engine(), wat.as_bytes())?;
 
     let mut linker = Linker::new(store.engine());
     linker.func_wrap(

@@ -20,7 +20,7 @@ impl<'a, Params: ToJsParams, Results: FromJsResults> TypedFunc<'a, Params, Resul
         }
     }
 
-    pub fn call(&self, _store: &Store<()>, params: Params) -> Result<Results, Error> {
+    pub fn call(&self, _store: impl AsContextMut, params: Params) -> Result<Results, Error> {
         let args = params.to_js_params();
         let result = self.function.apply(self.instance.as_ref(), &args)?;
         Results::from_js_results(&result)

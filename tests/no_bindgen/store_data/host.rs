@@ -11,7 +11,7 @@ pub fn run_test(bytes: &[u8]) -> Result<()> {
     let engine = Engine::default();
     let mut store = Store::new(&engine, data);
 
-    let module = Module::new(&store.engine(), bytes)?;
+    let module = Module::new(store.engine(), bytes)?;
 
     let mut linker = Linker::<Data>::new(store.engine());
 
