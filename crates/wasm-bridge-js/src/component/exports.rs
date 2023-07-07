@@ -32,7 +32,6 @@ impl ExportsRoot {
         let name = Self::translate_func_name(name);
 
         // TODO: convert unwrap to user error
-        // panic!("Getting export: {}, HASH MAP: {:?}", name, self.exports);
         let func = Func::new(*self.exports.get(&name).unwrap());
         Ok(TypedFunc::new(func))
     }

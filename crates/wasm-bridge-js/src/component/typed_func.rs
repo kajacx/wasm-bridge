@@ -46,23 +46,3 @@ impl<Params, Return> TypedFunc<Params, Return> {
         Ok(())
     }
 }
-
-// pub trait FromJsAbi: Sized {
-//     fn from_js_abi(value: JsValue) -> Result<Self>;
-// }
-
-// pub trait IntoJsAbi {
-//     fn into_js_abi(self) -> JsValue;
-// }
-
-// impl FromJsAbi for (String,) {
-//     fn from_js_abi(value: JsValue) -> Result<Self> {
-//         Ok((value.as_string().unwrap(),)) // TODO: add user error
-//     }
-// }
-
-// impl IntoJsAbi for (&str,) {
-//     fn into_js_abi(self) -> JsValue {
-//         self.0.into()
-//     }
-// }

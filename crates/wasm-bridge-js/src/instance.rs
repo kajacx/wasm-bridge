@@ -28,7 +28,7 @@ impl Instance {
         Ok(Self {
             instance,
             exports,
-            _closures: closures, // TODO: not saving this object does not cause tests to fail. Why?
+            _closures: closures,
         })
     }
 
