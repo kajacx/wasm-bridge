@@ -1,20 +1,22 @@
-use std::rc::Rc;
+use std::{marker::PhantomData, rc::Rc};
 
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
 use crate::*;
 
-pub struct Linker {
+pub struct Linker<T> {
     import_object: JsValue,
     closures: Vec<DropHandler>,
+    _phantom: PhantomData<T>,
 }
 
-impl Linker {
+impl<T> Linker<T> {
     pub fn new(_engine: &Engine) -> Self {
         Self {
             import_object: Object::new().into(),
             closures: vec![],
+            _phantom: PhantomData,
         }
     }
 
@@ -34,7 +36,7 @@ impl Linker {
         func: F,
     ) -> Result<&mut Self, Error>
     where
-        F: IntoClosure<Params, Results>,
+        F: IntoClosure<T, Params, Results>,
     {
         let module = self.module(module)?;
 

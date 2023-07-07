@@ -1,19 +1,18 @@
-use std::marker::PhantomData;
+use crate::DataHandle;
 
+#[derive(Debug)]
 pub struct Caller<T> {
-    _phantom: PhantomData<T>,
+    handle: DataHandle<T>,
 }
 
 impl<T> Caller<T> {
-    pub fn new() -> Self {
-        Self {
-            _phantom: PhantomData,
-        }
+    pub fn new(handle: DataHandle<T>) -> Self {
+        Self { handle }
     }
 }
 
-impl<T> Default for Caller<T> {
-    fn default() -> Self {
-        Self::new()
+impl<T> Clone for Caller<T> {
+    fn clone(&self) -> Self {
+        Caller::new(self.handle.clone())
     }
 }

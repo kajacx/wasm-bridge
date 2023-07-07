@@ -2,18 +2,20 @@ use wasm_bindgen::{convert::FromWasmAbi, prelude::Closure, JsValue};
 
 use crate::*;
 
-pub trait IntoClosure<Params, Results> {
-    fn into_closure(self) -> (JsValue, DropHandler);
+pub trait IntoClosure<T, Params, Results> {
+    fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler);
 }
 
-impl<R, F> IntoClosure<(), R> for F
+impl<T, R, F> IntoClosure<T, (), R> for F
 where
-    F: Fn(Caller<()>) -> R + 'static,
+    F: Fn(Caller<T>) -> R + 'static,
     R: IntoImportResults + 'static,
 {
-    fn into_closure(self) -> (JsValue, DropHandler) {
+    fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
+        let caller = Caller::new(handle);
+
         let closure = Closure::<dyn Fn() -> R::Results + 'static>::new(move || {
-            self(Caller::new()).into_import_results()
+            self(caller.clone()).into_import_results()
         });
 
         let js_val: JsValue = closure.as_ref().into();
@@ -24,15 +26,18 @@ where
 
 macro_rules! impl_into_closure_single {
     ($ty:ty) => {
-        impl<R, F> IntoClosure<$ty, R> for F
+        impl<T, R, F> IntoClosure<T, $ty, R> for F
         where
-            F: Fn(Caller<()>, $ty) -> R + 'static,
+            // T: 'static, TODO: why is this not required?
+            F: Fn(Caller<T>, $ty) -> R + 'static,
             R: IntoImportResults + 'static,
         {
-            fn into_closure(self) -> (JsValue, DropHandler) {
+            fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
+                let caller = Caller::new(handle);
+
                 let closure =
                     Closure::<dyn Fn($ty) -> R::Results + 'static>::new(move |arg: $ty| {
-                        self(Caller::new(), arg).into_import_results()
+                        self(caller.clone(), arg).into_import_results()
                     });
 
                 let js_val: JsValue = closure.as_ref().into();
@@ -52,16 +57,18 @@ impl_into_closure_single!(f64);
 
 macro_rules! into_closure_many {
     ($(($param: ident, $name: ident)),*) => {
-        impl<$($name, )* R, F> IntoClosure<($($name),*), R> for F
+        impl<T, $($name, )* R, F> IntoClosure<T, ($($name),*), R> for F
         where
-            F: Fn(Caller<()> $(, $name)*) -> R + 'static,
+            F: Fn(Caller<T>, $($name),*) -> R + 'static,
             $($name: FromWasmAbi + 'static,)*
             R: IntoImportResults + 'static,
         {
-            fn into_closure(self) -> (JsValue, DropHandler) {
+            fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
+                let caller = Caller::new(handle);
+
                 let closure =
                     Closure::<dyn Fn($($name),*) -> R::Results + 'static>::new(move |$($param: $name),*| {
-                        self(Caller::new() $(, $param)*).into_import_results()
+                        self(caller.clone(), $($param),*).into_import_results()
                     });
 
                 let js_val: JsValue = closure.as_ref().into();
@@ -88,6 +95,7 @@ into_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (
 into_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7));
 
 // js-sys doesn't support closured with more than 7 arguments
+// TODO: a workaround can exist though
 
 // #[rustfmt::skip]
 // into_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7), (p8, P8));

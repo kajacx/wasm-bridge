@@ -1,4 +1,7 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 use js_sys::Function;
 
@@ -8,7 +11,7 @@ use crate::*;
 pub struct Store<T> {
     engine: Engine,
     functions: FunctionsStore,
-    _data: T,
+    data: DataHandle<T>,
 }
 
 impl<T> Store<T> {
@@ -16,7 +19,7 @@ impl<T> Store<T> {
         Self {
             engine: engine.clone(),
             functions: FunctionsStore::new(),
-            _data: data,
+            data: Arc::new(Mutex::new(data)),
         }
     }
 
@@ -32,6 +35,8 @@ impl<T> Store<T> {
         self.functions.get_function(id)
     }
 }
+
+pub(crate) type DataHandle<T> = Arc<Mutex<T>>;
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct FunctionsStore {
