@@ -3,15 +3,16 @@ use wasm_bindgen::{convert::FromWasmAbi, prelude::Closure, JsValue};
 use crate::*;
 
 pub trait IntoClosure<T, Params, Results> {
-    fn into_closure(&self, handle: DataHandle<T>) -> (JsValue, DropHandler);
+    fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler);
 }
 
 impl<T, R, F> IntoClosure<T, (), R> for F
 where
+    T: 'static,
     F: Fn(Caller<T>) -> R + 'static,
     R: IntoImportResults + 'static,
 {
-    fn into_closure(&self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
+    fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
         let caller = Caller::new(handle);
 
         let closure = Closure::<dyn Fn() -> R::Results + 'static>::new(move || {
@@ -28,11 +29,11 @@ macro_rules! impl_into_closure_single {
     ($ty:ty) => {
         impl<T, R, F> IntoClosure<T, $ty, R> for F
         where
-            // T: 'static, TODO: why is this not required?
+            T: 'static,
             F: Fn(Caller<T>, $ty) -> R + 'static,
             R: IntoImportResults + 'static,
         {
-            fn into_closure(&self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
+            fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
                 let caller = Caller::new(handle);
 
                 let closure =
@@ -59,11 +60,12 @@ macro_rules! into_closure_many {
     ($(($param: ident, $name: ident)),*) => {
         impl<T, $($name, )* R, F> IntoClosure<T, ($($name),*), R> for F
         where
+            T: 'static,
             F: Fn(Caller<T>, $($name),*) -> R + 'static,
             $($name: FromWasmAbi + 'static,)*
             R: IntoImportResults + 'static,
         {
-            fn into_closure(&self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
+            fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
                 let caller = Caller::new(handle);
 
                 let closure =
