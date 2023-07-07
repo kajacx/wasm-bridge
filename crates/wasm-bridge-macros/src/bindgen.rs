@@ -144,13 +144,13 @@ fn parse_source(
     };
 
     let path_pkg = if let Some(path) = path {
-        Some(parse(&mut resolve, &root.join(&path))?)
+        Some(parse(&mut resolve, &root.join(path))?)
     } else {
         None
     };
 
     let inline_pkg = if let Some(inline) = inline {
-        Some(resolve.push(UnresolvedPackage::parse("macro-input".as_ref(), &inline)?)?)
+        Some(resolve.push(UnresolvedPackage::parse("macro-input".as_ref(), inline)?)?)
     } else {
         None
     };
