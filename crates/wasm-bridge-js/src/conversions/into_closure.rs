@@ -3,7 +3,7 @@ use wasm_bindgen::{convert::FromWasmAbi, prelude::Closure, JsValue};
 use crate::*;
 
 pub trait IntoClosure<T, Params, Results> {
-    fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler);
+    fn into_closure(&self, handle: DataHandle<T>) -> (JsValue, DropHandler);
 }
 
 impl<T, R, F> IntoClosure<T, (), R> for F
@@ -11,7 +11,7 @@ where
     F: Fn(Caller<T>) -> R + 'static,
     R: IntoImportResults + 'static,
 {
-    fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
+    fn into_closure(&self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
         let caller = Caller::new(handle);
 
         let closure = Closure::<dyn Fn() -> R::Results + 'static>::new(move || {
@@ -32,7 +32,7 @@ macro_rules! impl_into_closure_single {
             F: Fn(Caller<T>, $ty) -> R + 'static,
             R: IntoImportResults + 'static,
         {
-            fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
+            fn into_closure(&self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
                 let caller = Caller::new(handle);
 
                 let closure =
@@ -63,7 +63,7 @@ macro_rules! into_closure_many {
             $($name: FromWasmAbi + 'static,)*
             R: IntoImportResults + 'static,
         {
-            fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
+            fn into_closure(&self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
                 let caller = Caller::new(handle);
 
                 let closure =

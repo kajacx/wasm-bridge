@@ -34,6 +34,10 @@ impl<T> Store<T> {
     pub(crate) fn get_function(&self, id: u32) -> Option<&Function> {
         self.functions.get_function(id)
     }
+
+    pub(crate) fn data_handle(&self) -> &DataHandle<T> {
+        &self.data
+    }
 }
 
 pub(crate) type DataHandle<T> = Arc<Mutex<T>>;
