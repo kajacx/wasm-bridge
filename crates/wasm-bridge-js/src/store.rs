@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    ops::{Deref, DerefMut},
     sync::{Arc, Mutex},
 };
 
@@ -25,6 +26,15 @@ impl<T> Store<T> {
 
     pub fn engine(&self) -> &Engine {
         &self.engine
+    }
+
+    // FIXME: calling this twice will panic
+    pub fn data(&self) -> impl Deref<Target = T> + '_ {
+        self.data.try_lock().unwrap()
+    }
+
+    pub fn data_mut(&mut self) -> impl DerefMut<Target = T> + '_ {
+        self.data.try_lock().unwrap()
     }
 
     pub(crate) fn add_function(&mut self, function: Function) -> FuncId {
