@@ -1,7 +1,7 @@
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
-use crate::{AsContextMut, DataHandle, DropHandler, Engine, FromJsValue, Result};
+use crate::{AsContextMut, DataHandle, DropHandler, Engine, Result};
 
 use super::*;
 
@@ -38,9 +38,6 @@ impl<T> Linker<T> {
     pub fn func_wrap<Params, Results, F>(&mut self, name: &str, func: F) -> Result<()>
     where
         T: 'static,
-        Params: Into<JsValue>,
-        Results: FromJsValue,
-        // F: Fn(StoreContextMut<T>, Params) -> Result<Results>,
         F: IntoMakeClosure<T, Params, Results>,
     {
         self.fns
