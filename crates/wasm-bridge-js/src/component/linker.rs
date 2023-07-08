@@ -3,8 +3,8 @@ use js_sys::Reflect;
 use wasm_bindgen::JsValue;
 
 use crate::{
-    AsContextMut, DataHandle, DropHandler, Engine, FromJsResults, FromJsValue, IntoJsParams,
-    Result, StoreContext, StoreContextMut,
+    helpers, AsContextMut, DataHandle, DropHandler, Engine, FromJsResults, FromJsValue,
+    IntoJsParams, Result, StoreContext, StoreContextMut,
 };
 
 use super::*;
@@ -59,7 +59,8 @@ struct PreparedFn<T> {
 impl<T> PreparedFn<T> {
     fn new(name: &str, creator: MakeClosure<T>) -> Self {
         Self {
-            name: name.to_lower_camel_case(),
+            // name: name.to_lower_camel_case(), // Import name is in kebab-case on purpose
+            name: name.into(),
             creator,
         }
     }
