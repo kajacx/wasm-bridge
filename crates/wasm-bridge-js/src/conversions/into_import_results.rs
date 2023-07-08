@@ -1,7 +1,6 @@
+use js_sys::{Array, Reflect};
 use wasm_bindgen::convert::ReturnWasmAbi;
 use wasm_bindgen::JsValue;
-
-use crate::*;
 
 pub trait IntoImportResults {
     type Results: ReturnWasmAbi;
@@ -45,36 +44,39 @@ impl_into_import_results_single!(f32);
 impl_into_import_results_single!(f64);
 
 macro_rules! impl_into_import_results_many {
-    ($wrapper: ident, $(($index: tt, $name: ident)),*) => {
+    ($count: literal, $(($index: tt, $name: ident)),*) => {
         impl<$($name: Into<JsValue>),*> IntoImportResults for ($($name),*) {
-            type Results = $wrapper<$($name),*>;
+            type Results = JsValue;
 
             fn into_import_results(self) -> Self::Results {
-                $wrapper($(self.$index),*)
+                // TODO: Array::ofN might be faster
+                let result: JsValue = Array::new_with_length($count).into();
+                $(Reflect::set_u32(&result, $index, &self.$index.into()).unwrap();)*
+                result
             }
         }
     };
 }
 
 #[rustfmt::skip]
-impl_into_import_results_many!(TupleWrapper2,  (0, T0), (1, T1));
+impl_into_import_results_many!(2,  (0, T0), (1, T1));
 #[rustfmt::skip]
-impl_into_import_results_many!(TupleWrapper3,  (0, T0), (1, T1), (2, T2));
+impl_into_import_results_many!(3,  (0, T0), (1, T1), (2, T2));
 #[rustfmt::skip]
-impl_into_import_results_many!(TupleWrapper4,  (0, T0), (1, T1), (2, T2), (3, T3));
+impl_into_import_results_many!(4,  (0, T0), (1, T1), (2, T2), (3, T3));
 #[rustfmt::skip]
-impl_into_import_results_many!(TupleWrapper5,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4));
+impl_into_import_results_many!(5,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4));
 #[rustfmt::skip]
-impl_into_import_results_many!(TupleWrapper6,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5));
+impl_into_import_results_many!(6,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5));
 #[rustfmt::skip]
-impl_into_import_results_many!(TupleWrapper7,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6));
+impl_into_import_results_many!(7,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6));
 #[rustfmt::skip]
-impl_into_import_results_many!(TupleWrapper8,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7));
+impl_into_import_results_many!(8,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7));
 #[rustfmt::skip]
-impl_into_import_results_many!(TupleWrapper9,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8));
+impl_into_import_results_many!(9,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8));
 #[rustfmt::skip]
-impl_into_import_results_many!(TupleWrapper10, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9));
+impl_into_import_results_many!(10, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9));
 #[rustfmt::skip]
-impl_into_import_results_many!(TupleWrapper11, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9), (10, T10));
+impl_into_import_results_many!(11, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9), (10, T10));
 #[rustfmt::skip]
-impl_into_import_results_many!(TupleWrapper12, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9), (10, T10), (11, T11));
+impl_into_import_results_many!(12, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9), (10, T10), (11, T11));
