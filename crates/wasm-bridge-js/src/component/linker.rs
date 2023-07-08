@@ -1,9 +1,10 @@
+use heck::ToLowerCamelCase;
 use js_sys::Reflect;
 use wasm_bindgen::JsValue;
 
 use crate::{
-    AsContextMut, DataHandle, DropHandler, Engine, FromJsResults, IntoJsParams, Result,
-    StoreContext, StoreContextMut,
+    AsContextMut, DataHandle, DropHandler, Engine, FromJsResults, FromJsValue, IntoJsParams,
+    Result, StoreContext, StoreContextMut,
 };
 
 use super::*;
@@ -37,10 +38,15 @@ impl<T> Linker<T> {
 
     pub fn func_wrap<Params, Results, F>(&mut self, name: &str, func: F) -> Result<()>
     where
-        Params: IntoJsParams,
-        Results: FromJsResults,
-        F: Fn(StoreContextMut<T>, Params) -> Result<Results>,
+        T: 'static,
+        Params: Into<JsValue>,
+        Results: FromJsValue,
+        // F: Fn(StoreContextMut<T>, Params) -> Result<Results>,
+        F: IntoMakeClosure<T, Params, Results>,
     {
+        self.fns
+            .push(PreparedFn::new(name, func.into_make_closure()));
+
         Ok(())
     }
 }
@@ -53,7 +59,7 @@ struct PreparedFn<T> {
 impl<T> PreparedFn<T> {
     fn new(name: &str, creator: MakeClosure<T>) -> Self {
         Self {
-            name: name.into(),
+            name: name.to_lower_camel_case(),
             creator,
         }
     }
@@ -62,7 +68,6 @@ impl<T> PreparedFn<T> {
     fn add_to_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandler {
         let (js_val, handler) = (self.creator)(handle);
 
-        // FIXME: change import name!
         Reflect::set(&imports, &self.name.as_str().into(), &js_val).expect("imports is object");
 
         handler
