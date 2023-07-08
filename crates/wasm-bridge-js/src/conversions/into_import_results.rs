@@ -42,6 +42,7 @@ into_import_results_single!(u32);
 into_import_results_single!(u64);
 into_import_results_single!(f32);
 into_import_results_single!(f64);
+into_import_results_single!(String);
 
 macro_rules! into_import_results_many {
     ($count: literal, $(($index: tt, $name: ident)),*) => {
