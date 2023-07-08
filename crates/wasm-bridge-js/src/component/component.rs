@@ -4,9 +4,9 @@ use js_sys::{Function, Object, Reflect, Uint8Array, WebAssembly};
 use wasm_bindgen::prelude::*;
 use zip::{read::ZipFile, ZipArchive};
 
-use crate::{AsContextMut, Engine, FuncId, Result};
+use crate::{AsContextMut, Engine, Result};
 
-use super::{ExportsRoot, Instance};
+use super::*;
 
 pub struct Component {
     instantiate: Function,
@@ -28,14 +28,13 @@ impl Component {
 
             if filename.ends_with(".wasm") {
                 let file_bytes = Self::load_wasm_core(file)?;
-                wasm_cores.insert(filename, file_bytes); // FIXME: remove folder from filename
+                wasm_cores.insert(filename, file_bytes); // TODO: remove folder from filename?
             } else if filename.ends_with("sync_component.js") {
                 instantiate = Some(Self::load_instantiate(file)?);
             }
         }
 
         let compile_core = Self::make_compile_core(wasm_cores);
-        // panic!("WHAT IS COMPILE CORE? {:?}", compile_core);
         let instantiate_core = Self::make_instantiate_core();
 
         Ok(Self {
@@ -47,7 +46,7 @@ impl Component {
 
     pub(crate) fn instantiate(
         &self,
-        mut store: impl AsContextMut,
+        _store: impl AsContextMut,
         import_object: &JsValue,
     ) -> Result<Instance> {
         let exports = self.instantiate.call3(
@@ -58,13 +57,12 @@ impl Component {
         )?;
 
         let names = Object::get_own_property_names(&exports.clone().into());
-        let mut export_fns = HashMap::<String, FuncId>::new();
-        let context = store.as_context_mut();
+        let mut export_fns = HashMap::<String, Func>::new();
 
         for i in 0..names.length() {
             let name = Reflect::get_u32(&names, i)?;
             let function: Function = Reflect::get(&exports, &name)?.into();
-            export_fns.insert(name.as_string().unwrap(), context.add_function(function));
+            export_fns.insert(name.as_string().unwrap(), Func::new(function));
         }
 
         Ok(Instance::new(ExportsRoot::new(export_fns)))

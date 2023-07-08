@@ -29,16 +29,13 @@ impl<Params, Return> TypedFunc<Params, Return> {
         &self.func
     }
 
-    pub fn call(&self, store: impl AsContextMut, params: Params) -> Result<Return>
+    pub fn call(&self, _store: impl AsContextMut, params: Params) -> Result<Return>
     where
         Params: ToJsParams,
         Return: FromJsResults,
     {
         let argument = params.to_js_params();
-        let results = self
-            .func
-            .function(&store)
-            .apply(&JsValue::UNDEFINED, &argument)?;
+        let results = self.func.function.apply(&JsValue::UNDEFINED, &argument)?;
         Return::from_js_results(&results)
     }
 

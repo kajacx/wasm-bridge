@@ -1,4 +1,3 @@
-use std::sync::{Arc, Mutex};
 use wasm_bridge::*;
 
 struct Data {

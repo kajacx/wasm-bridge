@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use crate::{FuncId, Result};
+use crate::Result;
 
-use super::{Func, TypedFunc};
+use super::*;
 
 pub struct Exports {
     root: ExportsRoot,
@@ -19,11 +19,11 @@ impl Exports {
 }
 
 pub struct ExportsRoot {
-    exports: HashMap<String, FuncId>,
+    exports: HashMap<String, Func>,
 }
 
 impl ExportsRoot {
-    pub(crate) fn new(exports: HashMap<String, FuncId>) -> Self {
+    pub(crate) fn new(exports: HashMap<String, Func>) -> Self {
         Self { exports }
     }
 
@@ -32,7 +32,7 @@ impl ExportsRoot {
         let name = Self::translate_func_name(name);
 
         // TODO: convert unwrap to user error
-        let func = Func::new(*self.exports.get(&name).unwrap());
+        let func = self.exports.get(&name).unwrap().clone();
         Ok(TypedFunc::new(func))
     }
 
