@@ -12,7 +12,9 @@ wasm_bridge::component::bindgen!({
     world: "test-world",
 });
 
-struct HostData {}
+struct HostData {
+    number: i32,
+}
 
 impl TestWorldImports for HostData {
     fn add_b(&mut self, text: String) -> Result<String> {
@@ -22,6 +24,11 @@ impl TestWorldImports for HostData {
     fn add_numbers_import(&mut self, a: i32, b: i32) -> Result<i32> {
         Ok(a + b)
     }
+
+    fn increment(&mut self) -> Result<()> {
+        self.number += 1;
+        Ok(())
+    }
 }
 
 pub fn run_test(component_bytes: &[u8]) -> Result<()> {
@@ -29,7 +36,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
 
     let engine = Engine::new(&config)?;
-    let mut store = Store::new(&engine, HostData {});
+    let mut store = Store::new(&engine, HostData { number: 0 });
 
     let component = Component::new(&store.engine(), &component_bytes)?;
 
@@ -46,6 +53,9 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
 
     let result = instance.call_add_numbers(&mut store, 5, 6)?;
     assert_eq!(result, 11);
+
+    instance.call_increment_twice(&mut store)?;
+    assert_eq!(store.data().number, 2);
 
     Ok(())
 }

@@ -19,6 +19,11 @@ impl TestWorld for Plugin {
     fn add_numbers(a: i32, b: i32) -> i32 {
         add_numbers_import(a, b)
     }
+
+    fn increment_twice() {
+        increment();
+        increment();
+    }
 }
 
 export_test_world!(Plugin);
