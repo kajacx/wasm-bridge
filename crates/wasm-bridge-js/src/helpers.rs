@@ -1,6 +1,7 @@
 use js_sys::Function;
 use wasm_bindgen::JsValue;
 
+#[allow(unused)]
 pub(crate) fn warn(msg: &str) {
     let console_warn: Function = js_sys::eval("console.warn")
         .expect("eval console.warn")

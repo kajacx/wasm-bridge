@@ -1,11 +1,7 @@
-use heck::ToLowerCamelCase;
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
-use crate::{
-    helpers, AsContextMut, DataHandle, DropHandler, Engine, FromJsResults, FromJsValue,
-    IntoJsParams, Result, StoreContext, StoreContextMut,
-};
+use crate::{AsContextMut, DataHandle, DropHandler, Engine, FromJsValue, Result};
 
 use super::*;
 
@@ -75,7 +71,7 @@ impl<T> PreparedFn<T> {
         let object: JsValue = Object::new().into();
         Reflect::set(&object, &"default".into(), &js_val).expect("object is object");
 
-        Reflect::set(&imports, &self.name.as_str().into(), &object).expect("imports is object");
+        Reflect::set(imports, &self.name.as_str().into(), &object).expect("imports is object");
 
         handler
     }
