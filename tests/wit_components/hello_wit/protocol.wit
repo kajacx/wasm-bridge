@@ -5,4 +5,6 @@ world test-world {
 
   export add-hello: func(text: string) -> string
   export add-abc: func(text: string) -> string
+
+  export add-numbers: func(a: s32, b: s32) -> s32
 }

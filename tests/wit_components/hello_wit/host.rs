@@ -40,5 +40,8 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance.call_add_abc(&mut store, "Hello ")?;
     assert_eq!(result, "Hello abc");
 
+    let result = instance.call_add_numbers(&mut store, 5, 6)?;
+    assert_eq!(result, 11);
+
     Ok(())
 }
