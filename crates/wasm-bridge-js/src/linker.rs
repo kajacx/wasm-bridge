@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::rc::Rc;
 
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
@@ -6,14 +6,12 @@ use wasm_bindgen::JsValue;
 use crate::*;
 
 pub struct Linker<T> {
-    fns: RefCell<Vec<PreparedFn<T>>>,
+    fns: Vec<PreparedFn<T>>,
 }
 
 impl<T> Linker<T> {
     pub fn new(_engine: &Engine) -> Self {
-        Self {
-            fns: RefCell::new(vec![]),
-        }
+        Self { fns: vec![] }
     }
 
     pub fn instantiate(
@@ -26,10 +24,7 @@ impl<T> Linker<T> {
         let imports: JsValue = Object::new().into();
         let mut drop_handles = vec![];
 
-        // FIXME: this make the linker not re-usable
-        // A refactor of the IntoClosure trait is needed
-        // This is a BREAKING CHANGE
-        for func in self.fns.borrow_mut().drain(..) {
+        for func in self.fns.iter() {
             let drop_handle = func.add_to_imports(&imports, store.data_handle());
             drop_handles.push(drop_handle);
         }
@@ -44,13 +39,11 @@ impl<T> Linker<T> {
         func: F,
     ) -> Result<&mut Self, Error>
     where
-        F: IntoClosure<T, Params, Results> + 'static,
+        F: IntoMakeClosure<T, Params, Results> + 'static,
     {
-        let creator = move |handle: DataHandle<T>| func.into_closure(handle);
+        let creator = func.into_make_closure();
 
-        self.fns
-            .borrow_mut()
-            .push(PreparedFn::new(module, name, creator));
+        self.fns.push(PreparedFn::new(module, name, creator));
 
         Ok(self)
     }
@@ -68,24 +61,20 @@ impl DropHandler {
 struct PreparedFn<T> {
     module: String,
     name: String,
-    creator: Box<dyn FnOnce(DataHandle<T>) -> (JsValue, DropHandler)>,
+    creator: MakeClosure<T>,
 }
 
 impl<T> PreparedFn<T> {
-    fn new(
-        module: &str,
-        name: &str,
-        creator: impl FnOnce(DataHandle<T>) -> (JsValue, DropHandler) + 'static,
-    ) -> Self {
+    fn new(module: &str, name: &str, creator: MakeClosure<T>) -> Self {
         Self {
             module: module.into(),
             name: name.into(),
-            creator: Box::new(creator),
+            creator,
         }
     }
 
     #[must_use]
-    fn add_to_imports(self, imports: &JsValue, handle: &DataHandle<T>) -> DropHandler {
+    fn add_to_imports(&self, imports: &JsValue, handle: &DataHandle<T>) -> DropHandler {
         let module = Self::module(imports, &self.module);
 
         let (js_val, handler) = (self.creator)(handle.clone());

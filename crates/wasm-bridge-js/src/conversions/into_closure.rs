@@ -1,49 +1,67 @@
+use std::rc::Rc;
+
 use wasm_bindgen::{convert::FromWasmAbi, prelude::Closure, JsValue};
 
 use crate::*;
 
-pub trait IntoClosure<T, Params, Results> {
-    fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler);
+pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>) -> (JsValue, DropHandler)>;
+
+pub trait IntoMakeClosure<T, Params, Results> {
+    fn into_make_closure(self) -> MakeClosure<T>;
 }
 
-impl<T, R, F> IntoClosure<T, (), R> for F
+impl<T, R, F> IntoMakeClosure<T, (), R> for F
 where
     T: 'static,
     F: Fn(Caller<T>) -> R + 'static,
     R: IntoImportResults + 'static,
 {
-    fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
-        let caller = Caller::new(handle);
+    fn into_make_closure(self) -> MakeClosure<T> {
+        let self_rc = Rc::new(self);
 
-        let closure = Closure::<dyn Fn() -> R::Results + 'static>::new(move || {
-            self(caller.clone()).into_import_results()
-        });
+        let make_closure = move |handle: DataHandle<T>| {
+            let caller = Caller::new(handle);
+            let self_clone = self_rc.clone();
 
-        let js_val: JsValue = closure.as_ref().into();
+            let closure = Closure::<dyn Fn() -> R::Results + 'static>::new(move || {
+                self_clone(caller.clone()).into_import_results()
+            });
 
-        (js_val, DropHandler::new(closure))
+            let js_val: JsValue = closure.as_ref().into();
+
+            (js_val, DropHandler::new(closure))
+        };
+
+        Box::new(make_closure)
     }
 }
 
 macro_rules! impl_into_closure_single {
     ($ty:ty) => {
-        impl<T, R, F> IntoClosure<T, $ty, R> for F
+        impl<T, R, F> IntoMakeClosure<T, $ty, R> for F
         where
             T: 'static,
             F: Fn(Caller<T>, $ty) -> R + 'static,
             R: IntoImportResults + 'static,
         {
-            fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
-                let caller = Caller::new(handle);
+            fn into_make_closure(self) -> MakeClosure<T> {
+                let self_rc = Rc::new(self);
 
-                let closure =
-                    Closure::<dyn Fn($ty) -> R::Results + 'static>::new(move |arg: $ty| {
-                        self(caller.clone(), arg).into_import_results()
-                    });
+                let make_closure = move |handle: DataHandle<T>| {
+                    let caller = Caller::new(handle);
+                    let self_clone = self_rc.clone();
 
-                let js_val: JsValue = closure.as_ref().into();
+                    let closure =
+                        Closure::<dyn Fn($ty) -> R::Results + 'static>::new(move |arg: $ty| {
+                            self_clone(caller.clone(), arg).into_import_results()
+                        });
 
-                (js_val, DropHandler::new(closure))
+                    let js_val: JsValue = closure.as_ref().into();
+
+                    (js_val, DropHandler::new(closure))
+                };
+
+                Box::new(make_closure)
             }
         }
     };
@@ -58,24 +76,31 @@ impl_into_closure_single!(f64);
 
 macro_rules! into_closure_many {
     ($(($param: ident, $name: ident)),*) => {
-        impl<T, $($name, )* R, F> IntoClosure<T, ($($name),*), R> for F
+        impl<T, $($name, )* R, F> IntoMakeClosure<T, ($($name),*), R> for F
         where
             T: 'static,
             F: Fn(Caller<T>, $($name),*) -> R + 'static,
             $($name: FromWasmAbi + 'static,)*
             R: IntoImportResults + 'static,
         {
-            fn into_closure(self, handle: DataHandle<T>) -> (JsValue, DropHandler) {
-                let caller = Caller::new(handle);
+            fn into_make_closure(self) -> MakeClosure<T> {
+                let self_rc = Rc::new(self);
 
-                let closure =
-                    Closure::<dyn Fn($($name),*) -> R::Results + 'static>::new(move |$($param: $name),*| {
-                        self(caller.clone(), $($param),*).into_import_results()
-                    });
+                let make_closure = move |handle: DataHandle<T>| {
+                    let caller = Caller::new(handle);
+                    let self_clone = self_rc.clone();
 
-                let js_val: JsValue = closure.as_ref().into();
+                    let closure =
+                        Closure::<dyn Fn($($name),*) -> R::Results + 'static>::new(move |$($param: $name),*| {
+                            self_clone(caller.clone(), $($param),*).into_import_results()
+                        });
 
-                (js_val, DropHandler::new(closure))
+                    let js_val: JsValue = closure.as_ref().into();
+
+                    (js_val, DropHandler::new(closure))
+                };
+
+                Box::new(make_closure)
             }
         }
     };
