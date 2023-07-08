@@ -58,5 +58,11 @@ pub fn bindgen(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let regex = Regex::new("new_unchecked\\(self\\.([^)]*)\\)").unwrap();
     let as_string = regex.replace_all(&as_string, "new_unchecked(self.$1.clone())");
 
+    let regex = Regex::new("let host = get\\(caller\\.data_mut\\(\\)\\)\\s*;").unwrap();
+    let as_string = regex.replace_all(
+        &as_string,
+        "let mut data = caller.data_mut();\n    let host = get(&mut data);\n",
+    );
+
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
