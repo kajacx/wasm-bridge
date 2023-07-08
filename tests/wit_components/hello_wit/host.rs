@@ -32,7 +32,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let mut linker = Linker::new(store.engine());
     TestWorld::add_to_linker(&mut linker, |data| data)?;
 
-    let (instance, _) = TestWorld::instantiate(&mut store, &component, &linker)?;
+    let (instance, _do_not_drop) = TestWorld::instantiate(&mut store, &component, &linker)?;
 
     let result = instance.call_add_hello(&mut store, "world")?;
     assert_eq!(result, "Hello world");

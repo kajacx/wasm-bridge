@@ -5,6 +5,9 @@ use crate::{AsContextMut, DropHandler, Result};
 
 pub struct Instance {
     exports: Exports,
+
+    // FIXME: this is not enough
+    // Instance is returned separately from the "World" object and can be dropped
     _closures: Vec<DropHandler>,
 }
 
