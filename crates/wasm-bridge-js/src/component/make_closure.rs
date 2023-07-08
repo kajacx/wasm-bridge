@@ -1,8 +1,12 @@
 use std::rc::Rc;
 
-use wasm_bindgen::{prelude::*, JsValue};
+use wasm_bindgen::{
+    convert::{FromWasmAbi, ReturnWasmAbi},
+    prelude::*,
+    JsValue,
+};
 
-use crate::{DataHandle, DropHandler, FromJsValue, Result, StoreContextMut};
+use crate::{DataHandle, DropHandler, Result, StoreContextMut};
 
 pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>) -> (JsValue, DropHandler)>;
 
@@ -13,8 +17,8 @@ pub trait IntoMakeClosure<T, Params, Results> {
 impl<T, Params, Results, F> IntoMakeClosure<T, Params, Results> for F
 where
     T: 'static,
-    Params: FromJsValue + 'static,
-    Results: Into<JsValue> + 'static,
+    Params: FromWasmAbi + 'static,
+    Results: ReturnWasmAbi + 'static,
     F: Fn(StoreContextMut<T>, (Params,)) -> Result<(Results,)> + 'static,
 {
     fn into_make_closure(self) -> MakeClosure<T> {
@@ -23,11 +27,11 @@ where
         let make_closure = move |handle: DataHandle<T>| {
             let self_clone = self_rc.clone();
 
-            let closure = Closure::<dyn Fn(JsValue) -> JsValue>::new(move |arg| {
+            let closure = Closure::<dyn Fn(Params) -> Results>::new(move |arg| {
                 // TODO: change unwraps to user errors
-                let arg = (Params::from_js_value(&arg).unwrap(),);
-                let results = self_clone(&mut handle.try_lock().unwrap(), arg).unwrap();
-                results.0.into()
+                // let arg = (Params::from_js_value(&arg).unwrap(),);
+                let results = self_clone(&mut handle.try_lock().unwrap(), (arg,)).unwrap();
+                results.0
             });
 
             let js_val: JsValue = closure.as_ref().into();
