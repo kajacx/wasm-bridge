@@ -42,7 +42,12 @@ pub fn flags(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 #[proc_macro]
 pub fn bindgen(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    bindgen::expand(&parse_macro_input!(input as bindgen::Config))
-        .unwrap_or_else(Error::into_compile_error)
-        .into()
+    let stream: proc_macro::TokenStream =
+        bindgen::expand(&parse_macro_input!(input as bindgen::Config))
+            .unwrap_or_else(Error::into_compile_error)
+            .into();
+
+    // panic!("HELLO STREAM: {:?}", { stream })
+
+    stream
 }

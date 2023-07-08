@@ -35,5 +35,15 @@ pub fn run_test(bytes: &[u8]) -> Result<()> {
 
     assert_eq!(store.data().times_called, 2);
 
+    // Re-use the linker
+    let instance = linker.instantiate(&mut store, &module)?;
+
+    let add_three_i32 = instance.get_typed_func::<i32, i32>(&mut store, "add_three_i32")?;
+
+    add_three_i32.call(&mut store, 5)?;
+    add_three_i32.call(&mut store, 10)?;
+
+    assert_eq!(store.data().times_called, 4);
+
     Ok(())
 }
