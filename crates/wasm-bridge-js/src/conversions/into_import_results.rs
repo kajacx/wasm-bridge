@@ -16,7 +16,7 @@ impl IntoImportResults for () {
     }
 }
 
-macro_rules! impl_into_import_results_single {
+macro_rules! into_import_results_single {
     ($ty:ty) => {
         impl IntoImportResults for $ty {
             type Results = Self;
@@ -36,14 +36,14 @@ macro_rules! impl_into_import_results_single {
     };
 }
 
-impl_into_import_results_single!(i32);
-impl_into_import_results_single!(i64);
-impl_into_import_results_single!(u32);
-impl_into_import_results_single!(u64);
-impl_into_import_results_single!(f32);
-impl_into_import_results_single!(f64);
+into_import_results_single!(i32);
+into_import_results_single!(i64);
+into_import_results_single!(u32);
+into_import_results_single!(u64);
+into_import_results_single!(f32);
+into_import_results_single!(f64);
 
-macro_rules! impl_into_import_results_many {
+macro_rules! into_import_results_many {
     ($count: literal, $(($index: tt, $name: ident)),*) => {
         impl<$($name: Into<JsValue>),*> IntoImportResults for ($($name),*) {
             type Results = JsValue;
@@ -59,24 +59,24 @@ macro_rules! impl_into_import_results_many {
 }
 
 #[rustfmt::skip]
-impl_into_import_results_many!(2,  (0, T0), (1, T1));
+into_import_results_many!(2,  (0, T0), (1, T1));
 #[rustfmt::skip]
-impl_into_import_results_many!(3,  (0, T0), (1, T1), (2, T2));
+into_import_results_many!(3,  (0, T0), (1, T1), (2, T2));
 #[rustfmt::skip]
-impl_into_import_results_many!(4,  (0, T0), (1, T1), (2, T2), (3, T3));
+into_import_results_many!(4,  (0, T0), (1, T1), (2, T2), (3, T3));
 #[rustfmt::skip]
-impl_into_import_results_many!(5,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4));
+into_import_results_many!(5,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4));
 #[rustfmt::skip]
-impl_into_import_results_many!(6,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5));
+into_import_results_many!(6,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5));
 #[rustfmt::skip]
-impl_into_import_results_many!(7,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6));
+into_import_results_many!(7,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6));
 #[rustfmt::skip]
-impl_into_import_results_many!(8,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7));
+into_import_results_many!(8,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7));
 #[rustfmt::skip]
-impl_into_import_results_many!(9,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8));
+into_import_results_many!(9,  (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8));
 #[rustfmt::skip]
-impl_into_import_results_many!(10, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9));
+into_import_results_many!(10, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9));
 #[rustfmt::skip]
-impl_into_import_results_many!(11, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9), (10, T10));
+into_import_results_many!(11, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9), (10, T10));
 #[rustfmt::skip]
-impl_into_import_results_many!(12, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9), (10, T10), (11, T11));
+into_import_results_many!(12, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9), (10, T10), (11, T11));

@@ -22,7 +22,6 @@ where
 
         let make_closure = move |handle: DataHandle<T>| {
             let self_clone = self_rc.clone();
-            // let handle_clone = ha
 
             let closure = Closure::<dyn Fn(JsValue) -> JsValue>::new(move |arg| {
                 // TODO: change unwraps to user errors
