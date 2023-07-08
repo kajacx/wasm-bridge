@@ -2,8 +2,8 @@ use js_sys::Reflect;
 use wasm_bindgen::JsValue;
 
 use crate::{
-    AsContextMut, DropHandler, Engine, FromJsResults, IntoJsParams, Result, StoreContext,
-    StoreContextMut,
+    AsContextMut, DataHandle, DropHandler, Engine, FromJsResults, IntoJsParams, Result,
+    StoreContext, StoreContextMut,
 };
 
 use super::*;
@@ -25,7 +25,7 @@ impl<T> Linker<T> {
         let import_object: JsValue = js_sys::Object::new().into();
 
         for function in self.fns.iter() {
-            function.add_to_imports(&import_object, store.as_context_mut());
+            function.add_to_imports(&import_object, store.as_context_mut().data_handle().clone());
         }
 
         component.instantiate(store, &import_object)
@@ -59,7 +59,7 @@ impl<T> PreparedFn<T> {
     }
 
     #[must_use]
-    fn add_to_imports(&self, imports: &JsValue, handle: StoreContextMut<T>) -> DropHandler {
+    fn add_to_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandler {
         let (js_val, handler) = (self.creator)(handle);
 
         // FIXME: change import name!

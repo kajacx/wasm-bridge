@@ -2,9 +2,9 @@ use std::{cell::RefCell, rc::Rc};
 
 use wasm_bindgen::{prelude::*, JsValue};
 
-use crate::{DropHandler, FromJsValue, Result, StoreContextMut};
+use crate::{DataHandle, DropHandler, FromJsValue, Result, StoreContextMut};
 
-pub(crate) type MakeClosure<T> = Box<dyn Fn(StoreContextMut<T>) -> (JsValue, DropHandler)>;
+pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>) -> (JsValue, DropHandler)>;
 
 pub trait IntoMakeClosure<T, Params, Results> {
     fn into_make_closure(self) -> MakeClosure<T>;
@@ -20,14 +20,14 @@ where
     fn into_make_closure(self) -> MakeClosure<T> {
         let self_rc = Rc::new(self);
 
-        let make_closure = move |store: StoreContextMut<T>| {
-            let store = RefCell::new(store);
+        let make_closure = move |handle: DataHandle<T>| {
             let self_clone = self_rc.clone();
+            // let handle_clone = ha
 
             let closure = Closure::<dyn Fn(JsValue) -> JsValue>::new(move |arg| {
                 // TODO: change unwraps to user errors
                 let arg = (Params::from_js_value(&arg).unwrap(),);
-                let results = self_clone(&mut store.borrow_mut(), arg).unwrap();
+                let results = self_clone(&mut handle.try_lock().unwrap(), arg).unwrap();
                 results.0.into()
             });
 

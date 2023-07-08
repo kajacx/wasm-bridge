@@ -39,6 +39,6 @@ impl<T> Store<T> {
 
 pub(crate) type DataHandle<T> = Arc<Mutex<T>>;
 
-pub type StoreContext<'a, T> = &'a Store<T>;
+pub type StoreContext<'a, T> = &'a T;
 
-pub type StoreContextMut<'a, T> = &'a mut Store<T>;
+pub type StoreContextMut<'a, T> = &'a mut T;
