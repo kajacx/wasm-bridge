@@ -2,6 +2,7 @@ package wasm-bridge:protocol
 
 world test-world {
   import add-b: func(text: string) -> string
+  import add-numbers-import: func(a: s32, b: s32) -> s32
 
   export add-hello: func(text: string) -> string
   export add-abc: func(text: string) -> string

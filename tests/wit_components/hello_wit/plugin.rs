@@ -17,7 +17,7 @@ impl TestWorld for Plugin {
     }
 
     fn add_numbers(a: i32, b: i32) -> i32 {
-        a + b
+        add_numbers_import(a, b)
     }
 }
 

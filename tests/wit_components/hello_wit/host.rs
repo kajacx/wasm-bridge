@@ -18,6 +18,10 @@ impl TestWorldImports for HostData {
     fn add_b(&mut self, text: String) -> Result<String> {
         Ok(text + "b")
     }
+
+    fn add_numbers_import(&mut self, a: i32, b: i32) -> Result<i32> {
+        Ok(a + b)
+    }
 }
 
 pub fn run_test(component_bytes: &[u8]) -> Result<()> {
