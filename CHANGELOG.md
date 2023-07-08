@@ -1,8 +1,18 @@
 # wasm-bridge change log
 
+## [0.1.2] YYYY-MM-DD
+
+### Added
+
+- Wit component support:
+- Imported and exported function, 0-8 arguments, 0-1 returns
+- Only primitives and String types supported
+- See [Component model](/component_model.md)
+
 ## [0.1.1] 2023-07-05
 
 ### Added
+
 - Export `Result` type
 
 ## [0.1.0] 2023-07-02
