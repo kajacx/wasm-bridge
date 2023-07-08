@@ -1,3 +1,6 @@
+use std::str::FromStr;
+
+use regex::Regex;
 use syn::{parse_macro_input, DeriveInput, Error};
 
 mod bindgen;
@@ -47,7 +50,13 @@ pub fn bindgen(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             .unwrap_or_else(Error::into_compile_error)
             .into();
 
-    // panic!("HELLO STREAM: {:?}", { stream })
+    let as_string = stream.to_string();
 
-    stream
+    let regex = Regex::new("\\*\\s*__exports\\.typed_func([^?]*)\\?\\.func\\(\\)").unwrap();
+    let as_string = regex.replace_all(&as_string, "__exports.typed_func$1?.func().clone()");
+
+    let regex = Regex::new("new_unchecked\\(self\\.([^)]*)\\)").unwrap();
+    let as_string = regex.replace_all(&as_string, "new_unchecked(self.$1.clone())");
+
+    proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
