@@ -1,26 +1,32 @@
+use js_sys::Reflect;
 use wasm_bindgen::JsValue;
 
-use crate::{component::*, FromJsResults, IntoJsParams, StoreContextMut};
-use crate::{AsContextMut, Engine, Result};
-use std::marker::PhantomData;
+use crate::{
+    AsContextMut, DropHandler, Engine, FromJsResults, IntoJsParams, Result, StoreContext,
+    StoreContextMut,
+};
+
+use super::*;
 
 pub struct Linker<T> {
-    _phantom: PhantomData<T>,
+    fns: Vec<PreparedFn<T>>,
 }
 
 impl<T> Linker<T> {
     pub fn new(_engine: &Engine) -> Self {
-        Self {
-            _phantom: PhantomData,
-        }
+        Self { fns: vec![] }
     }
 
     pub fn instantiate(
         &self,
-        store: impl AsContextMut<Data = T>,
+        mut store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
         let import_object: JsValue = js_sys::Object::new().into();
+
+        for function in self.fns.iter() {
+            function.add_to_imports(&import_object, store.as_context_mut());
+        }
 
         component.instantiate(store, &import_object)
     }
@@ -36,5 +42,29 @@ impl<T> Linker<T> {
         F: Fn(StoreContextMut<T>, Params) -> Result<Results>,
     {
         Ok(())
+    }
+}
+
+struct PreparedFn<T> {
+    name: String,
+    creator: MakeClosure<T>,
+}
+
+impl<T> PreparedFn<T> {
+    fn new(name: &str, creator: MakeClosure<T>) -> Self {
+        Self {
+            name: name.into(),
+            creator,
+        }
+    }
+
+    #[must_use]
+    fn add_to_imports(&self, imports: &JsValue, handle: StoreContextMut<T>) -> DropHandler {
+        let (js_val, handler) = (self.creator)(handle);
+
+        // FIXME: change import name!
+        Reflect::set(&imports, &self.name.as_str().into(), &js_val).expect("imports is object");
+
+        handler
     }
 }
