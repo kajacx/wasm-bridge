@@ -2,7 +2,7 @@ use js_sys::Function;
 
 use crate::{AsContext, FuncId};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Func {
     func_id: FuncId,
 }
