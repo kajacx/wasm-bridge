@@ -1,6 +1,6 @@
 use wasm_bindgen::JsValue;
 
-use crate::component::*;
+use crate::{component::*, FromJsResults, IntoJsParams, StoreContextMut};
 use crate::{AsContextMut, Engine, Result};
 use std::marker::PhantomData;
 
@@ -23,5 +23,18 @@ impl<T> Linker<T> {
         let import_object: JsValue = js_sys::Object::new().into();
 
         component.instantiate(store, &import_object)
+    }
+
+    pub fn root(&mut self) -> &mut Self {
+        self
+    }
+
+    pub fn func_wrap<Params, Results, F>(&mut self, name: &str, func: F) -> Result<()>
+    where
+        Params: IntoJsParams,
+        Results: FromJsResults,
+        F: Fn(StoreContextMut<T>, Params) -> Result<Results>,
+    {
+        Ok(())
     }
 }
