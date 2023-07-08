@@ -11,7 +11,7 @@ pub struct TypedFunc<'a, Params, Results> {
     function: Function,
 }
 
-impl<'a, Params: ToJsParams, Results: FromJsResults> TypedFunc<'a, Params, Results> {
+impl<'a, Params: IntoJsParams, Results: FromJsResults> TypedFunc<'a, Params, Results> {
     pub(crate) fn new(instance: &'a WebAssembly::Instance, function: Function) -> Self {
         Self {
             _phantom: PhantomData,

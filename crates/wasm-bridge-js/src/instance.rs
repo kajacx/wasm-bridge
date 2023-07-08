@@ -32,7 +32,7 @@ impl Instance {
         })
     }
 
-    pub fn get_typed_func<Params: ToJsParams, Results: FromJsResults>(
+    pub fn get_typed_func<Params: IntoJsParams, Results: FromJsResults>(
         &self,
         _store: impl AsContextMut,
         name: &str,

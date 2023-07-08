@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use wasm_bindgen::JsValue;
 
-use crate::{AsContextMut, FromJsResults, Result, ToJsParams};
+use crate::{AsContextMut, FromJsResults, IntoJsParams, Result};
 
 use super::Func;
 
@@ -31,7 +31,7 @@ impl<Params, Return> TypedFunc<Params, Return> {
 
     pub fn call(&self, _store: impl AsContextMut, params: Params) -> Result<Return>
     where
-        Params: ToJsParams,
+        Params: IntoJsParams,
         Return: FromJsResults,
     {
         let argument = params.to_js_params();
