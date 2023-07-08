@@ -24,6 +24,10 @@ impl TestWorld for Plugin {
         increment();
         increment();
     }
+
+    fn add_all_and_one(a: i32, b: i64, c: u32, d: u64, e: f32, f: f64, g: String) -> f64 {
+        add_all(a, b, c, d, e, f, &g) + 1.0
+    }
 }
 
 export_test_world!(Plugin);

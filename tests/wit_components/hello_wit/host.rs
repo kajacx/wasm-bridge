@@ -29,6 +29,19 @@ impl TestWorldImports for HostData {
         self.number += 1;
         Ok(())
     }
+
+    fn add_all(
+        &mut self,
+        a: i32,
+        b: i64,
+        c: u32,
+        d: u64,
+        e: f32,
+        f: f64,
+        g: String,
+    ) -> Result<f64> {
+        Ok(a as f64 + b as f64 + c as f64 + d as f64 + e as f64 + f + g.parse::<f64>().unwrap())
+    }
 }
 
 pub fn run_test(component_bytes: &[u8]) -> Result<()> {
@@ -56,6 +69,14 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
 
     instance.call_increment_twice(&mut store)?;
     assert_eq!(store.data().number, 2);
+
+    let result = instance.call_add_all_and_one(
+        &mut store, 10i32, 20i64, 30u32, 40u64, 50.25f32, 60.25f64, "70",
+    )?;
+    assert_eq!(
+        result,
+        10.0 + 20.0 + 30.0 + 40.0 + 50.25 + 60.25 + 70.0 + 1.0
+    );
 
     Ok(())
 }
