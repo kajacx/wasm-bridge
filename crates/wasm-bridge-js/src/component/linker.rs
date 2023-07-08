@@ -1,5 +1,5 @@
 use heck::ToLowerCamelCase;
-use js_sys::Reflect;
+use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
 use crate::{
@@ -24,12 +24,15 @@ impl<T> Linker<T> {
         component: &Component,
     ) -> Result<Instance> {
         let import_object: JsValue = js_sys::Object::new().into();
+        let mut closures = vec![];
 
         for function in self.fns.iter() {
-            function.add_to_imports(&import_object, store.as_context_mut().data_handle().clone());
+            let drop_handler = function
+                .add_to_imports(&import_object, store.as_context_mut().data_handle().clone());
+            closures.push(drop_handler);
         }
 
-        component.instantiate(store, &import_object)
+        component.instantiate(store, &import_object, closures)
     }
 
     pub fn root(&mut self) -> &mut Self {
@@ -69,7 +72,10 @@ impl<T> PreparedFn<T> {
     fn add_to_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandler {
         let (js_val, handler) = (self.creator)(handle);
 
-        Reflect::set(&imports, &self.name.as_str().into(), &js_val).expect("imports is object");
+        let object: JsValue = Object::new().into();
+        Reflect::set(&object, &"default".into(), &js_val).expect("object is object");
+
+        Reflect::set(&imports, &self.name.as_str().into(), &object).expect("imports is object");
 
         handler
     }

@@ -1,16 +1,18 @@
 use std::marker::PhantomData;
 
 use super::*;
-use crate::{AsContextMut, Result};
+use crate::{AsContextMut, DropHandler, Result};
 
 pub struct Instance {
     exports: Exports,
+    _closures: Vec<DropHandler>,
 }
 
 impl Instance {
-    pub(crate) fn new(exports: ExportsRoot) -> Self {
+    pub(crate) fn new(exports: ExportsRoot, closures: Vec<DropHandler>) -> Self {
         Self {
             exports: Exports::new(exports),
+            _closures: closures,
         }
     }
 

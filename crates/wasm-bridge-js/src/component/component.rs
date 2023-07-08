@@ -4,7 +4,7 @@ use js_sys::{Function, Object, Reflect, Uint8Array, WebAssembly};
 use wasm_bindgen::prelude::*;
 use zip::{read::ZipFile, ZipArchive};
 
-use crate::{helpers, AsContextMut, Engine, Result};
+use crate::{helpers, AsContextMut, DropHandler, Engine, Result};
 
 use super::*;
 
@@ -53,6 +53,7 @@ impl Component {
         &self,
         _store: impl AsContextMut,
         import_object: &JsValue,
+        closures: Vec<DropHandler>,
     ) -> Result<Instance> {
         let exports = self.instantiate.call3(
             &JsValue::UNDEFINED,
@@ -70,7 +71,7 @@ impl Component {
             export_fns.insert(name.as_string().unwrap(), Func::new(function));
         }
 
-        Ok(Instance::new(ExportsRoot::new(export_fns)))
+        Ok(Instance::new(ExportsRoot::new(export_fns), closures))
     }
 
     fn load_wasm_core(mut file: ZipFile) -> Result<Vec<u8>> {
@@ -124,10 +125,10 @@ impl Component {
     }
 
     fn make_instantiate_core() -> JsValue {
-        let closure = Closure::<dyn Fn(WebAssembly::Module) -> WebAssembly::Instance>::new(
-            |module: WebAssembly::Module| {
-                let imports = Object::new();
-                WebAssembly::Instance::new(&module, &imports).unwrap()
+        let closure = Closure::<dyn Fn(WebAssembly::Module, JsValue) -> WebAssembly::Instance>::new(
+            |module: WebAssembly::Module, imports: JsValue| {
+                // TODO: this should be a user error?
+                WebAssembly::Instance::new(&module, &imports.into()).unwrap()
             },
         );
 
