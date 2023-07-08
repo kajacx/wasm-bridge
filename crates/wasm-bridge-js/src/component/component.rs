@@ -4,7 +4,7 @@ use js_sys::{Function, Object, Reflect, Uint8Array, WebAssembly};
 use wasm_bindgen::prelude::*;
 use zip::{read::ZipFile, ZipArchive};
 
-use crate::{AsContextMut, Engine, Result};
+use crate::{helpers, AsContextMut, Engine, Result};
 
 use super::*;
 
@@ -21,6 +21,7 @@ impl Component {
 
         let mut wasm_cores = HashMap::<String, Vec<u8>>::new();
         let mut instantiate = Option::<Function>::None;
+        let mut version = Option::<String>::None;
 
         for i in 0..archive.len() {
             let file = archive.by_index(i).unwrap();
@@ -31,14 +32,18 @@ impl Component {
                 wasm_cores.insert(filename, file_bytes); // TODO: remove folder from filename?
             } else if filename.ends_with("sync_component.js") {
                 instantiate = Some(Self::load_instantiate(file)?);
+            } else if filename.ends_with("version.txt") {
+                version = Some(Self::get_version(file)?);
             }
         }
 
         let compile_core = Self::make_compile_core(wasm_cores);
         let instantiate_core = Self::make_instantiate_core();
 
+        Self::check_version(version.as_deref());
+
         Ok(Self {
-            instantiate: instantiate.unwrap(),
+            instantiate: instantiate.unwrap(), // TODO: add user error
             compile_core,
             instantiate_core,
         })
@@ -82,6 +87,28 @@ impl Component {
 
         let instantiate: Function = js_sys::eval(&text)?.into();
         Ok(instantiate)
+    }
+
+    fn get_version(mut file: ZipFile) -> Result<String> {
+        let mut file_bytes = Vec::<u8>::new();
+        std::io::copy(&mut file, &mut file_bytes).unwrap();
+        Ok(String::from_utf8(file_bytes).unwrap()) // TODO: this needs to be user error
+    }
+
+    fn check_version(version: Option<&str>) {
+        match version {
+            Some(version) => {
+                let current_version = env!("CARGO_PKG_VERSION");
+                if version != current_version {
+                    helpers::warn(&format!(
+                        "Version mismatch: {} {version}, {} {current_version}",
+                        "component was build with wasm-bridge-cli version",
+                        "but wasm-bridge is running version"
+                    ));
+                }
+            }
+            None => helpers::warn("Missing version file in component zip."),
+        }
     }
 
     fn make_compile_core(wasm_cores: HashMap<String, Vec<u8>>) -> JsValue {

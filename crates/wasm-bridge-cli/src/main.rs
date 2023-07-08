@@ -38,6 +38,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         writer.write_all(&file_bytes)?;
     }
 
+    writer.start_file("version.txt", FileOptions::default())?;
+    writer.write_fmt(format_args!("{}", get_version()))?;
+
     writer.finish()?;
     drop(writer);
 
@@ -65,4 +68,8 @@ fn transform_component_js(file_bytes: Vec<u8>) -> Vec<u8> {
 
     let text = format!("(() => {{\n{text}\nreturn instantiate;\n}})()\n");
     text.into_bytes()
+}
+
+fn get_version() -> String {
+    env!("CARGO_PKG_VERSION").into()
 }

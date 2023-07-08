@@ -31,5 +31,7 @@ pub use config::*;
 mod context;
 pub use context::*;
 
+pub(crate) mod helpers;
+
 #[cfg(feature = "component-model")]
 pub mod component;
