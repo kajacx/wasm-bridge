@@ -9,6 +9,9 @@
 - Only primitives and String types supported
 - See [Component model](/component_model.md)
 
+- Error is now Send and Sync
+- Custom store data
+
 ## [0.1.1] 2023-07-05
 
 ### Added

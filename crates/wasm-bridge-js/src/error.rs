@@ -7,18 +7,25 @@ pub enum Error {
     InvalidWatText(String),
     ExportedFnNotFound(String),
     IncorrectNumOfArgs(String, u32, u32), // Name, expected, actual
-    JsError(JsValue),
+    JsError(String),                      // TODO: remove this variant completely
 }
 
 impl From<JsValue> for Error {
     fn from(value: JsValue) -> Self {
-        Self::JsError(value)
+        Self::JsError(format!("{value:?}"))
+    }
+}
+
+impl<'a> From<&'a JsValue> for Error {
+    fn from(value: &'a JsValue) -> Self {
+        value.clone().into()
     }
 }
 
 impl From<JsError> for Error {
     fn from(value: JsError) -> Self {
-        Self::JsError(value.into())
+        let value: JsValue = value.into();
+        value.into()
     }
 }
 
@@ -38,7 +45,7 @@ impl Display for Error {
                 f,
                 "Expected `{name}` to have {expected} arguments, but it has {actual} instead"
             ),
-            Error::JsError(value) => write!(f, "{value:?}"),
+            Error::JsError(value) => write!(f, "Unknown error: {value:?}"),
         }
     }
 }
