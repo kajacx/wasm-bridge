@@ -1,6 +1,7 @@
 use std::{
+    cell::RefCell,
     ops::{Deref, DerefMut},
-    sync::{Arc, Mutex},
+    rc::Rc,
 };
 
 use crate::*;
@@ -15,7 +16,7 @@ impl<T> Store<T> {
     pub fn new(engine: &Engine, data: T) -> Self {
         Self {
             engine: engine.clone(),
-            data: Arc::new(Mutex::new(data)),
+            data: Rc::new(RefCell::new(data)),
         }
     }
 
@@ -23,13 +24,12 @@ impl<T> Store<T> {
         &self.engine
     }
 
-    // FIXME: calling this twice will panic
     pub fn data(&self) -> impl Deref<Target = T> + '_ {
-        self.data.try_lock().unwrap()
+        self.data.borrow()
     }
 
     pub fn data_mut(&mut self) -> impl DerefMut<Target = T> + '_ {
-        self.data.try_lock().unwrap()
+        self.data.borrow_mut()
     }
 
     pub(crate) fn data_handle(&self) -> &DataHandle<T> {
@@ -37,7 +37,7 @@ impl<T> Store<T> {
     }
 }
 
-pub(crate) type DataHandle<T> = Arc<Mutex<T>>;
+pub(crate) type DataHandle<T> = Rc<RefCell<T>>;
 
 pub type StoreContext<'a, T> = &'a T;
 

@@ -28,7 +28,7 @@ macro_rules! make_closure {
                     let closure =
                         Closure::<dyn Fn($($name),*) -> R::Results>::new(move |$($param: $name),*| {
                             // TODO: user error?
-                            self_clone(&mut handle.try_lock().unwrap(), ($($param,)*)).unwrap().into_import_results()
+                            self_clone(&mut handle.borrow_mut(), ($($param,)*)).unwrap().into_import_results()
                         });
 
                     let js_val: JsValue = closure.as_ref().into();

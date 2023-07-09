@@ -12,13 +12,12 @@ impl<T> Caller<T> {
         Self { handle }
     }
 
-    // FIXME: calling this twice will panic
     pub fn data(&self) -> impl Deref<Target = T> + '_ {
-        self.handle.try_lock().unwrap()
+        self.handle.borrow()
     }
 
     pub fn data_mut(&mut self) -> impl DerefMut<Target = T> + '_ {
-        self.handle.try_lock().unwrap()
+        self.handle.borrow_mut()
     }
 }
 
