@@ -27,9 +27,7 @@ where
                 self_clone(caller.clone()).into_import_results()
             });
 
-            let js_val: JsValue = closure.as_ref().into();
-
-            (js_val, DropHandler::new(closure))
+            DropHandler::from_closure(closure)
         };
 
         Box::new(make_closure)
@@ -56,9 +54,7 @@ macro_rules! into_make_closure_single {
                             self_clone(caller.clone(), arg).into_import_results()
                         });
 
-                    let js_val: JsValue = closure.as_ref().into();
-
-                    (js_val, DropHandler::new(closure))
+                    DropHandler::from_closure(closure)
                 };
 
                 Box::new(make_closure)
@@ -95,9 +91,7 @@ macro_rules! into_make_closure_many {
                             self_clone(caller.clone(), $($param),*).into_import_results()
                         });
 
-                    let js_val: JsValue = closure.as_ref().into();
-
-                    (js_val, DropHandler::new(closure))
+                    DropHandler::from_closure(closure)
                 };
 
                 Box::new(make_closure)

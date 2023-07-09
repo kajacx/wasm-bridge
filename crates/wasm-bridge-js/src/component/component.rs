@@ -12,6 +12,7 @@ pub struct Component {
     instantiate: Function,
     compile_core: JsValue,
     instantiate_core: JsValue,
+    _drop_handles: [DropHandler; 2],
 }
 
 impl Component {
@@ -37,8 +38,8 @@ impl Component {
             }
         }
 
-        let compile_core = Self::make_compile_core(wasm_cores);
-        let instantiate_core = Self::make_instantiate_core();
+        let (compile_core, drop0) = Self::make_compile_core(wasm_cores);
+        let (instantiate_core, drop1) = Self::make_instantiate_core();
 
         Self::check_version(version.as_deref());
 
@@ -46,6 +47,7 @@ impl Component {
             instantiate: instantiate.unwrap(), // TODO: add user error
             compile_core,
             instantiate_core,
+            _drop_handles: [drop0, drop1],
         })
     }
 
@@ -112,19 +114,17 @@ impl Component {
         }
     }
 
-    fn make_compile_core(wasm_cores: HashMap<String, Vec<u8>>) -> JsValue {
+    fn make_compile_core(wasm_cores: HashMap<String, Vec<u8>>) -> (JsValue, DropHandler) {
         let closure = Closure::<dyn Fn(String) -> WebAssembly::Module>::new(move |name: String| {
             let bytes = wasm_cores.get(&name).unwrap();
             let byte_array = Uint8Array::from(bytes.borrow());
             WebAssembly::Module::new(&byte_array.into()).unwrap()
         });
 
-        // FIXME: save the closure so it isn't dropped
-        // closure.as_ref().into()
-        closure.into_js_value()
+        DropHandler::from_closure(closure)
     }
 
-    fn make_instantiate_core() -> JsValue {
+    fn make_instantiate_core() -> (JsValue, DropHandler) {
         let closure = Closure::<dyn Fn(WebAssembly::Module, JsValue) -> WebAssembly::Instance>::new(
             |module: WebAssembly::Module, imports: JsValue| {
                 // TODO: this should be a user error?
@@ -132,8 +132,6 @@ impl Component {
             },
         );
 
-        // FIXME: save the closure so it isn't dropped
-        // closure.as_ref().into()
-        closure.into_js_value()
+        DropHandler::from_closure(closure)
     }
 }

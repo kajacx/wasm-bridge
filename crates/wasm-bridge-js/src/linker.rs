@@ -53,8 +53,16 @@ impl<T> Linker<T> {
 pub struct DropHandler(Rc<dyn std::fmt::Debug>);
 
 impl DropHandler {
-    pub fn new<T: std::fmt::Debug + 'static>(value: T) -> Self {
+    pub(crate) fn new<T: std::fmt::Debug + 'static>(value: T) -> Self {
         Self(Rc::new(value))
+    }
+
+    pub(crate) fn from_closure(
+        closure: impl AsRef<JsValue> + std::fmt::Debug + 'static,
+    ) -> (JsValue, Self) {
+        let js_value = closure.as_ref().clone();
+
+        (js_value, Self::new(closure))
     }
 }
 
