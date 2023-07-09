@@ -8,7 +8,6 @@ pub enum Error {
     ExportedFnNotFound(String),
     IncorrectNumOfArgs(String, u32, u32), // Name, expected, actual
     JsError(JsValue),
-    // Other(String),
 }
 
 impl From<JsValue> for Error {
@@ -22,12 +21,6 @@ impl From<JsError> for Error {
         Self::JsError(value.into())
     }
 }
-
-// impl From<String> for Error {
-//     fn from(value: String) -> Self {
-//         Self::Other(value)
-//     }
-// }
 
 impl std::error::Error for Error {}
 
@@ -46,9 +39,18 @@ impl Display for Error {
                 "Expected `{name}` to have {expected} arguments, but it has {actual} instead"
             ),
             Error::JsError(value) => write!(f, "{value:?}"),
-            // Error::Other(value) => write!(f, "Other error: {value:?}"),
         }
     }
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
+
+#[cfg(test)]
+mod test {
+    fn check_error_bounds<T: Send + Sync + 'static>() {}
+
+    #[test]
+    fn test() {
+        check_error_bounds::<super::Error>();
+    }
+}
