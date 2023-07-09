@@ -30,7 +30,8 @@ impl TestWorld for Plugin {
     }
 
     fn add_sub_one(num: i32) -> (i32, i32) {
-        (num + 1, num - 1)
+        let (a, b) = add_sub_two(num);
+        (a - 1, b + 1)
     }
 }
 

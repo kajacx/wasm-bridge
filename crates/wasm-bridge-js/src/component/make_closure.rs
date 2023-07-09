@@ -12,12 +12,37 @@ pub trait IntoMakeClosure<T, Params, Results> {
 
 macro_rules! make_closure {
     ($(($param: ident, $name: ident)),*) => {
+        impl<T, $($name, )* F> IntoMakeClosure<T, ($($name,)*), ()> for F
+        where
+            T: 'static,
+            $($name: FromWasmAbi + 'static,)*
+            F: Fn(StoreContextMut<T>, ($($name, )*)) -> Result<()> + 'static,
+        {
+            fn into_make_closure(self) -> MakeClosure<T> {
+                let self_rc = Rc::new(self);
+
+                let make_closure = move |handle: DataHandle<T>| {
+                    let self_clone = self_rc.clone();
+
+                    let closure =
+                        Closure::<dyn Fn($($name),*)>::new(move |$($param: $name),*| {
+                            // TODO: user error?
+                            self_clone(&mut handle.borrow_mut(), ($($param,)*)).unwrap()
+                        });
+
+                    DropHandler::from_closure(closure)
+                };
+
+                Box::new(make_closure)
+            }
+        }
+
         impl<T, $($name, )* R, F> IntoMakeClosure<T, ($($name,)*), (R,)> for F
         where
             T: 'static,
             $($name: FromWasmAbi + 'static,)*
             R: IntoImportResults + 'static,
-            F: Fn(StoreContextMut<T>, ($($name, )*)) -> Result<R> + 'static,
+            F: Fn(StoreContextMut<T>, ($($name, )*)) -> Result<(R,)> + 'static,
         {
             fn into_make_closure(self) -> MakeClosure<T> {
                 let self_rc = Rc::new(self);
@@ -28,7 +53,7 @@ macro_rules! make_closure {
                     let closure =
                         Closure::<dyn Fn($($name),*) -> R::Results>::new(move |$($param: $name),*| {
                             // TODO: user error?
-                            self_clone(&mut handle.borrow_mut(), ($($param,)*)).unwrap().into_import_results()
+                            self_clone(&mut handle.borrow_mut(), ($($param,)*)).unwrap().0.into_import_results()
                         });
 
                     DropHandler::from_closure(closure)

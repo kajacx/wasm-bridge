@@ -26,6 +26,10 @@ impl TestWorldImports for HostData {
         Ok(())
     }
 
+    fn add_sub_two(&mut self, num: i32) -> Result<(i32, i32)> {
+        Ok((num + 2, num - 2))
+    }
+
     fn add_all(
         &mut self,
         a: i32,

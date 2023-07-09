@@ -15,5 +15,6 @@ world test-world {
   import add-all: func(a: s32, b: s64, c: u32, d: u64, e: float32, f: float64, g: string) -> float64
   export add-all-and-one: func(a: s32, b: s64, c: u32, d: u64, e: float32, f: float64, g: string) -> float64
 
+  import add-sub-two: func(num: s32) -> tuple<s32, s32>
   export add-sub-one: func(num: s32) -> tuple<s32, s32>
 }
