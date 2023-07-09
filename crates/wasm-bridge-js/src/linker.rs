@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
@@ -49,12 +47,12 @@ impl<T> Linker<T> {
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct DropHandler(Rc<dyn std::fmt::Debug>);
+#[derive(Debug)]
+pub struct DropHandler(Box<dyn std::fmt::Debug>);
 
 impl DropHandler {
     pub(crate) fn new<T: std::fmt::Debug + 'static>(value: T) -> Self {
-        Self(Rc::new(value))
+        Self(Box::new(value))
     }
 
     pub(crate) fn from_closure(
