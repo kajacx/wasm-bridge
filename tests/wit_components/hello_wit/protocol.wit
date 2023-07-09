@@ -17,4 +17,7 @@ world test-world {
 
   import add-sub-two: func(num: s32) -> tuple<s32, s32>
   export add-sub-one: func(num: s32) -> tuple<s32, s32>
+
+  import add-sub-ten: func(num: s32) -> (added: s32, subtracted: s32)
+  export add-sub-twenty: func(num: s32) -> (added: s32, subtracted: s32)
 }

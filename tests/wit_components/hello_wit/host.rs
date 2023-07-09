@@ -30,6 +30,10 @@ impl TestWorldImports for HostData {
         Ok((num + 2, num - 2))
     }
 
+    fn add_sub_ten(&mut self, num: i32) -> Result<(i32, i32)> {
+        Ok((num + 10, num - 10))
+    }
+
     fn add_all(
         &mut self,
         a: i32,
@@ -80,6 +84,9 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
 
     let result = instance.call_add_sub_one(&mut store, 5)?;
     assert_eq!(result, (6, 4));
+
+    let result = instance.call_add_sub_twenty(&mut store, 5)?;
+    assert_eq!(result, (25, -15));
 
     // multiple references to data
     let data1 = store.data();

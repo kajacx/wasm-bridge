@@ -1,39 +1,30 @@
 use js_sys::{Array, Reflect};
-use wasm_bindgen::convert::ReturnWasmAbi;
 use wasm_bindgen::JsValue;
 
 pub trait IntoImportResults {
-    type Results: ReturnWasmAbi;
-
-    fn into_import_results(self) -> Self::Results;
+    fn into_import_results(self) -> JsValue;
 }
 
 impl IntoImportResults for () {
-    type Results = ();
-
-    fn into_import_results(self) -> Self::Results {
-        self
+    fn into_import_results(self) -> JsValue {
+        JsValue::undefined()
     }
 }
 
 macro_rules! into_import_results_single {
     ($ty:ty) => {
         impl IntoImportResults for $ty {
-            type Results = Self;
-
-            fn into_import_results(self) -> Self::Results {
-                self
-            }
-        }
-
-        impl IntoImportResults for ($ty,) {
-            type Results = $ty;
-
-            fn into_import_results(self) -> Self::Results {
-                self.0
+            fn into_import_results(self) -> JsValue {
+                self.into()
             }
         }
     };
+}
+
+impl<T: IntoImportResults> IntoImportResults for (T,) {
+    fn into_import_results(self) -> JsValue {
+        self.0.into_import_results()
+    }
 }
 
 into_import_results_single!(i32);
@@ -46,13 +37,11 @@ into_import_results_single!(String);
 
 macro_rules! into_import_results_many {
     ($count: literal, $(($index: tt, $name: ident)),*) => {
-        impl<$($name: Into<JsValue>),*> IntoImportResults for ($($name),*) {
-            type Results = JsValue;
-
-            fn into_import_results(self) -> Self::Results {
+        impl<$($name: IntoImportResults),*> IntoImportResults for ($($name),*) {
+            fn into_import_results(self) -> JsValue {
                 // TODO: Array::ofN might be faster
                 let result: JsValue = Array::new_with_length($count).into();
-                $(Reflect::set_u32(&result, $index, &self.$index.into()).unwrap();)*
+                $(Reflect::set_u32(&result, $index, &self.$index.into_import_results()).expect("result is array");)*
                 result
             }
         }

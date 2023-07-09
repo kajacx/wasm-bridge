@@ -1,6 +1,12 @@
 # wasm-bridge change log
 
-## [0.1.2] YYYY-MM-DD
+## [0.1.3] YYYY-MM-DD
+
+### Added
+
+- Tuple return in WIT imported and exported fns
+
+## [0.1.2] 2023-07-09
 
 ### Added
 

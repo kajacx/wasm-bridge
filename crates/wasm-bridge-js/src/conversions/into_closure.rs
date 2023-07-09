@@ -23,7 +23,7 @@ where
             let caller = Caller::new(handle);
             let self_clone = self_rc.clone();
 
-            let closure = Closure::<dyn Fn() -> R::Results + 'static>::new(move || {
+            let closure = Closure::<dyn Fn() -> JsValue>::new(move || {
                 self_clone(caller.clone()).into_import_results()
             });
 
@@ -49,10 +49,9 @@ macro_rules! into_make_closure_single {
                     let caller = Caller::new(handle);
                     let self_clone = self_rc.clone();
 
-                    let closure =
-                        Closure::<dyn Fn($ty) -> R::Results + 'static>::new(move |arg: $ty| {
-                            self_clone(caller.clone(), arg).into_import_results()
-                        });
+                    let closure = Closure::<dyn Fn($ty) -> JsValue>::new(move |arg: $ty| {
+                        self_clone(caller.clone(), arg).into_import_results()
+                    });
 
                     DropHandler::from_closure(closure)
                 };
@@ -87,7 +86,7 @@ macro_rules! into_make_closure_many {
                     let self_clone = self_rc.clone();
 
                     let closure =
-                        Closure::<dyn Fn($($name),*) -> R::Results + 'static>::new(move |$($param: $name),*| {
+                        Closure::<dyn Fn($($name),*) -> JsValue>::new(move |$($param: $name),*| {
                             self_clone(caller.clone(), $($param),*).into_import_results()
                         });
 

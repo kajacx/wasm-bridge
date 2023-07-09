@@ -86,5 +86,7 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let regex = Regex::new("add_root_to_linker\\s*<\\s*T").unwrap();
     let as_string = regex.replace_all(&as_string, "add_root_to_linker<T: 'static");
 
+    // panic!("{as_string}");
+
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
