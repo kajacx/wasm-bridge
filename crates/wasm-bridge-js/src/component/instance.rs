@@ -1,18 +1,15 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, rc::Rc};
 
 use super::*;
 use crate::{AsContextMut, DropHandler, Result};
 
 pub struct Instance {
     exports: Exports,
-
-    // FIXME: this is not enough
-    // Instance is returned separately from the "World" object and can be dropped
-    _closures: Vec<DropHandler>,
+    _closures: Rc<Vec<DropHandler>>,
 }
 
 impl Instance {
-    pub(crate) fn new(exports: ExportsRoot, closures: Vec<DropHandler>) -> Self {
+    pub(crate) fn new(exports: ExportsRoot, closures: Rc<Vec<DropHandler>>) -> Self {
         Self {
             exports: Exports::new(exports),
             _closures: closures,

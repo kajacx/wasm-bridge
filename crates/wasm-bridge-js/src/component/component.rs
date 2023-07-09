@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, collections::HashMap};
+use std::{borrow::Borrow, collections::HashMap, rc::Rc};
 
 use js_sys::{Function, Object, Reflect, Uint8Array, WebAssembly};
 use wasm_bindgen::prelude::*;
@@ -57,6 +57,8 @@ impl Component {
         import_object: &JsValue,
         closures: Vec<DropHandler>,
     ) -> Result<Instance> {
+        let closures = Rc::new(closures);
+
         let exports = self.instantiate.call3(
             &JsValue::UNDEFINED,
             &self.compile_core,
@@ -70,7 +72,10 @@ impl Component {
         for i in 0..names.length() {
             let name = Reflect::get_u32(&names, i)?;
             let function: Function = Reflect::get(&exports, &name)?.into();
-            export_fns.insert(name.as_string().unwrap(), Func::new(function));
+            export_fns.insert(
+                name.as_string().unwrap(),
+                Func::new(function, closures.clone()),
+            );
         }
 
         Ok(Instance::new(ExportsRoot::new(export_fns), closures))
