@@ -74,6 +74,9 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         10.0 + 20.0 + 30.0 + 40.0 + 50.25 + 60.25 + 70.0 + 1.0
     );
 
+    let result = instance.call_add_sub_one(&mut store, 5)?;
+    assert_eq!(result, (6, 4));
+
     // multiple references to data
     let data1 = store.data();
     let data2 = store.data();

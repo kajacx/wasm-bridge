@@ -45,6 +45,12 @@ macro_rules! from_js_results_many {
                 Ok(( $($name::from_js_value(&Reflect::get_u32(results, $index)?)?,)* ))
             }
         }
+
+        impl<$($name: FromJsValue),*> FromJsResults for (($($name, )*),) {
+            fn from_js_results(results: &JsValue) -> Result<Self, Error> {
+                Ok((( $($name::from_js_value(&Reflect::get_u32(results, $index)?)?,)* ),))
+            }
+        }
     };
 }
 

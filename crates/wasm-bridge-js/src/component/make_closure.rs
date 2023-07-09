@@ -12,7 +12,7 @@ pub trait IntoMakeClosure<T, Params, Results> {
 
 macro_rules! make_closure {
     ($(($param: ident, $name: ident)),*) => {
-        impl<T, $($name, )* R, F> IntoMakeClosure<T, ($($name,)*), R> for F
+        impl<T, $($name, )* R, F> IntoMakeClosure<T, ($($name,)*), (R,)> for F
         where
             T: 'static,
             $($name: FromWasmAbi + 'static,)*
@@ -31,9 +31,7 @@ macro_rules! make_closure {
                             self_clone(&mut handle.borrow_mut(), ($($param,)*)).unwrap().into_import_results()
                         });
 
-                    let js_val: JsValue = closure.as_ref().into();
-
-                    (js_val, DropHandler::new(closure))
+                    DropHandler::from_closure(closure)
                 };
 
                 Box::new(make_closure)
