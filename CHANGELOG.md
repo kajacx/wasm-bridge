@@ -10,7 +10,7 @@
 - See [Component model](/component_model.md)
 
 - Error is now Send and Sync
-- Custom store data
+- Custom store data, accessible from Caller (imported fn)
 
 ## [0.1.1] 2023-07-05
 

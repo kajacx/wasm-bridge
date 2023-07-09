@@ -54,6 +54,10 @@ fn add_three(number: i32) -> Result<i32> {
 }
 ```
 
+Alternatively, watch the [video tutorial](https://youtu.be/CqpZjouAOvg):
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/CqpZjouAOvg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
 ## Switching from `wasmtime`
 
 Simply replace the `wasmtime` dependency and imports with `wasm-bridge`, and you _should_ be good to go.
@@ -64,17 +68,16 @@ Create an issue with a code snippet describing your use case.
 
 ## Using `component-model`
 
-Work on supporting the component model has only just begun, but it will hopefully be possible to use the component model with `wasm-bridge` in the future.
+Component model is available since version `0.1.2`, but the support is still very limited.
+See [Component model](/component_model.md).
 
 ## Implemented features
 
-- Load a module from bytes
-- Instantiate a module with an empty import object
+- Load a module from bytes or from WAT text
+- Instantiate a module with or without imports
 - Get (typed) exported function and call it
-- Add imported functions to a linker
-- Instantiate a module with a linker to use imported functions
-- Compile a module from the wat format
 - Multivalue returns from exported and imported functions
 - Supported value types: `i32`, `i64`, `u32`, `u64`, `f32`, `f64`
+- Access store's data from Caller (imported fn)
 
-See the [`no_bindgen`](/tests/no_bindgen) folder for supported example usages.
+See the [`no_bindgen`](/tests/no_bindgen) test folder for supported example usages.

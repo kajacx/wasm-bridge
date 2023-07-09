@@ -12,7 +12,9 @@ Since version `0.1.2`, it is now possible to use the [wit component model](https
 6. [Install `jco`](https://github.com/bytecodealliance/jco) with `npm install -g @bytecodealliance/jco`
 7. Install `wasm-bridge-cli` with `cargo install wasm-bridge-cli`
 
-Note that steps 1-4 are the same when using wasmtime's component model, and steps 1-6 are the same when running a wit component on the web from JS the "intended" way.
+Steps 1-4 are the same when using wasmtime's component model
+
+Steps 1-6 are the same when running a wit component on the web from JS "the intended way".
 
 ## Project setup
 
@@ -22,3 +24,5 @@ TODO
 
 - Supported types: 32-bit and 64-bit numbers, string
 - Exported and imported functions with 0-8 arguments and 0-1 return values
+
+See the [`wit_bindgen`](/tests/wit_bindgen) test folder for supported example usages.
