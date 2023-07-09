@@ -20,7 +20,7 @@ pub use typed_func::*;
 mod make_closure;
 pub use make_closure::*;
 
-pub use wasm_bridge_macros::*;
+pub use wasm_bridge_macros::bindgen_js as bindgen;
 
 pub mod __internal {
     pub use anyhow;

@@ -3,10 +3,6 @@ use wasm_bridge::{
     Config, Engine, Result, Store,
 };
 
-mod wasmtime {
-    pub use wasm_bridge::*;
-}
-
 wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
     world: "primitives",
