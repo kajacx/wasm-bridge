@@ -1,6 +1,22 @@
 # wasm-bridge
 
-<img src="/wasm-bridge-banner.png" alt="image banner" width="600" />
+<div align="center">
+  <p>
+    <img src="/wasm-bridge-banner.png" alt="image banner" width="600" />
+  </p>
+
+  <p>
+    <a href="https://www.flaticon.com/" title="Icons from flaticon.com">
+      <img src="https://img.shields.io/badge/Icons_from-Flaticon-green" alt="Icons from flaticon.com">
+    </a>
+    <a href="https://crates.io/crates/wasm-bridge" title="View on crates.io">
+      <img src="https://img.shields.io/badge/View_on-crates.io-blue" alt="View on crates.io">
+    </a>
+    <a href="https://discord.gg/7fk5Uk6Eqr" title="Join the Discord server">
+      <img src="https://img.shields.io/discord/1125842158914646080?logo=discord&label=Join" alt="Join the Discord server">
+    </a>
+  </p>
+</div>
 
 ## Goals
 
@@ -62,11 +78,3 @@ Work on supporting the component model has only just begun, but it will hopefull
 - Supported value types: `i32`, `i64`, `u32`, `u64`, `f32`, `f64`
 
 See the [`no_bindgen`](/tests/no_bindgen) folder for supported example usages.
-
-## Join the community
-
-You can join a newly created [Discord server](https://discord.gg/7fk5Uk6Eqr) for `wasm-bridge`.
-
-## Acknowledgments
-
-Some icons in the banner image are from [flaticon](https://www.flaticon.com/).
