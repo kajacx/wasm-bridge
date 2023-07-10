@@ -1,0 +1,6 @@
+package wasm-bridge:protocol
+
+world test-world {
+  import push-s32: func(nums: list<s32>, a: s32) -> list<s32> 
+  export push-s32s: func(nums: list<s32>, a: s32, b: s32) -> list<s32>
+}
