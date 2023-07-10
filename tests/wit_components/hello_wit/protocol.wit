@@ -21,5 +21,6 @@ world test-world {
   import add-sub-ten: func(num: s32) -> (added: s32, subtracted: s32)
   export add-sub-twenty: func(num: s32) -> (added: s32, subtracted: s32)
 
-  export sqrt: func(num: float64) -> option<float64>
+  import sqrt-import: func(num: option<float64>) -> option<float64>
+  export sqrt: func(num: option<float64>) -> option<float64>
 }

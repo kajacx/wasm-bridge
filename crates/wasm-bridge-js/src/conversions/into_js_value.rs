@@ -88,6 +88,34 @@ into_js_value_single!(f32);
 into_js_value_single!(f64);
 into_js_value_single!(String);
 
+impl<T: IntoJsValue> IntoJsValue for Option<T> {
+    // TODO: should be able to return Option ... ?
+    // type ReturnAbi = OptionIntoWasmAbi<T::ReturnAbi>;
+    type ReturnAbi = JsValue;
+
+    fn into_js_value(self) -> JsValue {
+        match self {
+            Self::Some(value) => value.into_js_value(),
+            None => JsValue::undefined(),
+        }
+    }
+
+    fn into_return_abi(self) -> Self::ReturnAbi {
+        match self {
+            Self::Some(value) => value.into_js_value(),
+            None => JsValue::undefined(),
+        }
+    }
+
+    fn number_of_args() -> u32 {
+        1 // TODO: verify
+    }
+
+    fn into_function_args(self) -> Array {
+        Array::of1(&self.into_js_value())
+    }
+}
+
 impl<T: IntoJsValue> IntoJsValue for (T,) {
     type ReturnAbi = T::ReturnAbi;
 

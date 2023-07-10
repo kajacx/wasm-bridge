@@ -46,6 +46,13 @@ impl TestWorldImports for HostData {
     ) -> Result<f64> {
         Ok(a as f64 + b as f64 + c as f64 + d as f64 + e as f64 + f + g.parse::<f64>().unwrap())
     }
+
+    fn sqrt_import(&mut self, num: Option<f64>) -> Result<Option<f64>> {
+        Ok(match num {
+            Some(value) if value >= 0.0 => Some(value.sqrt()),
+            _ => None,
+        })
+    }
 }
 
 pub fn run_test(component_bytes: &[u8]) -> Result<()> {
@@ -88,9 +95,11 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance.call_add_sub_twenty(&mut store, 5)?;
     assert_eq!(result, (25, -15));
 
-    let result = instance.call_sqrt(&mut store, 16.0)?;
+    let result = instance.call_sqrt(&mut store, Some(16.0))?;
     assert_eq!(result, Some(4.0));
-    let result = instance.call_sqrt(&mut store, -16.0)?;
+    let result = instance.call_sqrt(&mut store, Some(-16.0))?;
+    assert_eq!(result, None);
+    let result = instance.call_sqrt(&mut store, None)?;
     assert_eq!(result, None);
 
     // multiple references to data

@@ -39,12 +39,8 @@ impl TestWorld for Plugin {
         (a + 10, b - 10)
     }
 
-    fn sqrt(num: f64) -> Option<f64> {
-        if num >= 0.0 {
-            Some(num.sqrt())
-        } else {
-            None
-        }
+    fn sqrt(num: Option<f64>) -> Option<f64> {
+        sqrt_import(num)
     }
 }
 
