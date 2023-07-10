@@ -1,7 +1,7 @@
 mod from_js_value;
 mod into_closure;
-mod into_js_value;
+mod to_js_value;
 
 pub use from_js_value::*;
 pub use into_closure::*;
-pub use into_js_value::*;
+pub use to_js_value::*;

@@ -14,7 +14,7 @@ impl<T, R, F> IntoMakeClosure<T, (), R> for F
 where
     T: 'static,
     F: Fn(Caller<T>) -> R + 'static,
-    R: IntoJsValue + 'static,
+    R: ToJsValue + 'static,
 {
     fn into_make_closure(self) -> MakeClosure<T> {
         let self_rc = Rc::new(self);
@@ -24,7 +24,7 @@ where
             let self_clone = self_rc.clone();
 
             let closure = Closure::<dyn Fn() -> R::ReturnAbi>::new(move || {
-                self_clone(caller.clone()).into_return_abi()
+                self_clone(caller.clone()).to_return_abi()
             });
 
             DropHandler::from_closure(closure)
@@ -40,7 +40,7 @@ macro_rules! into_make_closure_single {
         where
             T: 'static,
             F: Fn(Caller<T>, $ty) -> R + 'static,
-            R: IntoJsValue + 'static,
+            R: ToJsValue + 'static,
         {
             fn into_make_closure(self) -> MakeClosure<T> {
                 let self_rc = Rc::new(self);
@@ -50,7 +50,7 @@ macro_rules! into_make_closure_single {
                     let self_clone = self_rc.clone();
 
                     let closure = Closure::<dyn Fn($ty) -> R::ReturnAbi>::new(move |arg: $ty| {
-                        self_clone(caller.clone(), arg).into_return_abi()
+                        self_clone(caller.clone(), arg).to_return_abi()
                     });
 
                     DropHandler::from_closure(closure)
@@ -76,7 +76,7 @@ macro_rules! into_make_closure_many {
             T: 'static,
             F: Fn(Caller<T>, $($name),*) -> R + 'static,
             $($name: FromWasmAbi + 'static,)*
-            R: IntoJsValue + 'static,
+            R: ToJsValue + 'static,
         {
             fn into_make_closure(self) -> MakeClosure<T> {
                 let self_rc = Rc::new(self);
@@ -87,7 +87,7 @@ macro_rules! into_make_closure_many {
 
                     let closure =
                         Closure::<dyn Fn($($name),*) -> R::ReturnAbi>::new(move |$($param: $name),*| {
-                            self_clone(caller.clone(), $($param),*).into_return_abi()
+                            self_clone(caller.clone(), $($param),*).to_return_abi()
                         });
 
                     DropHandler::from_closure(closure)
