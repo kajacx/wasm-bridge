@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use wasm_bindgen::{convert::FromWasmAbi, prelude::*, JsValue};
 
-use crate::{DataHandle, DropHandler, IntoImportResults, Result, StoreContextMut};
+use crate::{DataHandle, DropHandler, IntoJsValue, Result, StoreContextMut};
 
 pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>) -> (JsValue, DropHandler)>;
 
@@ -16,7 +16,7 @@ macro_rules! make_closure {
         where
             T: 'static,
             $($name: FromWasmAbi + 'static,)*
-            R: IntoImportResults + 'static,
+            R: IntoJsValue + 'static,
             F: Fn(StoreContextMut<T>, ($($name, )*)) -> Result<R> + 'static,
         {
             fn into_make_closure(self) -> MakeClosure<T> {
@@ -26,9 +26,9 @@ macro_rules! make_closure {
                     let self_clone = self_rc.clone();
 
                     let closure =
-                        Closure::<dyn Fn($($name),*) -> JsValue>::new(move |$($param: $name),*| {
+                        Closure::<dyn Fn($($name),*) -> R::ReturnAbi>::new(move |$($param: $name),*| {
                             // TODO: user error?
-                            self_clone(&mut handle.borrow_mut(), ($($param,)*)).unwrap().into_import_results()
+                            self_clone(&mut handle.borrow_mut(), ($($param,)*)).unwrap().into_return_abi()
                         });
 
                     DropHandler::from_closure(closure)

@@ -14,7 +14,7 @@ impl<T, R, F> IntoMakeClosure<T, (), R> for F
 where
     T: 'static,
     F: Fn(Caller<T>) -> R + 'static,
-    R: IntoImportResults + 'static,
+    R: IntoJsValue + 'static,
 {
     fn into_make_closure(self) -> MakeClosure<T> {
         let self_rc = Rc::new(self);
@@ -23,8 +23,8 @@ where
             let caller = Caller::new(handle);
             let self_clone = self_rc.clone();
 
-            let closure = Closure::<dyn Fn() -> JsValue>::new(move || {
-                self_clone(caller.clone()).into_import_results()
+            let closure = Closure::<dyn Fn() -> R::ReturnAbi>::new(move || {
+                self_clone(caller.clone()).into_return_abi()
             });
 
             DropHandler::from_closure(closure)
@@ -40,7 +40,7 @@ macro_rules! into_make_closure_single {
         where
             T: 'static,
             F: Fn(Caller<T>, $ty) -> R + 'static,
-            R: IntoImportResults + 'static,
+            R: IntoJsValue + 'static,
         {
             fn into_make_closure(self) -> MakeClosure<T> {
                 let self_rc = Rc::new(self);
@@ -49,8 +49,8 @@ macro_rules! into_make_closure_single {
                     let caller = Caller::new(handle);
                     let self_clone = self_rc.clone();
 
-                    let closure = Closure::<dyn Fn($ty) -> JsValue>::new(move |arg: $ty| {
-                        self_clone(caller.clone(), arg).into_import_results()
+                    let closure = Closure::<dyn Fn($ty) -> R::ReturnAbi>::new(move |arg: $ty| {
+                        self_clone(caller.clone(), arg).into_return_abi()
                     });
 
                     DropHandler::from_closure(closure)
@@ -76,7 +76,7 @@ macro_rules! into_make_closure_many {
             T: 'static,
             F: Fn(Caller<T>, $($name),*) -> R + 'static,
             $($name: FromWasmAbi + 'static,)*
-            R: IntoImportResults + 'static,
+            R: IntoJsValue + 'static,
         {
             fn into_make_closure(self) -> MakeClosure<T> {
                 let self_rc = Rc::new(self);
@@ -86,8 +86,8 @@ macro_rules! into_make_closure_many {
                     let self_clone = self_rc.clone();
 
                     let closure =
-                        Closure::<dyn Fn($($name),*) -> JsValue>::new(move |$($param: $name),*| {
-                            self_clone(caller.clone(), $($param),*).into_import_results()
+                        Closure::<dyn Fn($($name),*) -> R::ReturnAbi>::new(move |$($param: $name),*| {
+                            self_clone(caller.clone(), $($param),*).into_return_abi()
                         });
 
                     DropHandler::from_closure(closure)
