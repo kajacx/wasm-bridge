@@ -73,6 +73,16 @@ impl FromJsValue for String {
     }
 }
 
+impl<T: FromJsValue> FromJsValue for Option<T> {
+    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+        if value.is_undefined() || value.is_null() {
+            Ok(None)
+        } else {
+            Ok(Some(T::from_js_value(value)?))
+        }
+    }
+}
+
 impl<T: FromJsValue> FromJsValue for (T,) {
     fn from_js_value(value: &JsValue) -> Result<Self, Error> {
         Ok((T::from_js_value(value)?,))

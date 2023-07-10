@@ -38,6 +38,14 @@ impl TestWorld for Plugin {
         let (a, b) = add_sub_ten(num);
         (a + 10, b - 10)
     }
+
+    fn sqrt(num: f64) -> Option<f64> {
+        if num >= 0.0 {
+            Some(num.sqrt())
+        } else {
+            None
+        }
+    }
 }
 
 export_test_world!(Plugin);

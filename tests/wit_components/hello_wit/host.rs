@@ -88,6 +88,11 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance.call_add_sub_twenty(&mut store, 5)?;
     assert_eq!(result, (25, -15));
 
+    let result = instance.call_sqrt(&mut store, 16.0)?;
+    assert_eq!(result, Some(4.0));
+    let result = instance.call_sqrt(&mut store, -16.0)?;
+    assert_eq!(result, None);
+
     // multiple references to data
     let data1 = store.data();
     let data2 = store.data();
