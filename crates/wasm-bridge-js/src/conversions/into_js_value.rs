@@ -6,7 +6,14 @@ pub trait IntoJsValue {
 
     fn into_js_value(self) -> JsValue;
 
+    /// When this is returned from a closure
     fn into_return_abi(self) -> Self::ReturnAbi;
+
+    /// Number of function arguments when this type is used as a function input type
+    fn number_of_args() -> u32;
+
+    /// Convert to function arguments when calling a function with this value
+    fn into_function_args(self) -> Array;
 }
 
 impl IntoJsValue for () {
@@ -18,6 +25,34 @@ impl IntoJsValue for () {
 
     fn into_return_abi(self) -> Self::ReturnAbi {
         self
+    }
+
+    fn number_of_args() -> u32 {
+        0
+    }
+
+    fn into_function_args(self) -> Array {
+        Array::new()
+    }
+}
+
+impl<'a> IntoJsValue for &'a str {
+    type ReturnAbi = Self;
+
+    fn into_js_value(self) -> JsValue {
+        self.into()
+    }
+
+    fn into_return_abi(self) -> Self::ReturnAbi {
+        self
+    }
+
+    fn number_of_args() -> u32 {
+        1
+    }
+
+    fn into_function_args(self) -> Array {
+        Array::of1(&self.into_js_value())
     }
 }
 
@@ -32,6 +67,14 @@ macro_rules! into_js_value_single {
 
             fn into_return_abi(self) -> Self::ReturnAbi {
                 self
+            }
+
+            fn number_of_args() -> u32 {
+                1
+            }
+
+            fn into_function_args(self) -> Array {
+                Array::of1(&self.into_js_value())
             }
         }
     };
@@ -55,6 +98,14 @@ impl<T: IntoJsValue> IntoJsValue for (T,) {
     fn into_return_abi(self) -> Self::ReturnAbi {
         self.0.into_return_abi()
     }
+
+    fn number_of_args() -> u32 {
+        T::number_of_args()
+    }
+
+    fn into_function_args(self) -> Array {
+        self.0.into_function_args()
+    }
 }
 
 macro_rules! into_js_value_many {
@@ -63,14 +114,22 @@ macro_rules! into_js_value_many {
             type ReturnAbi = JsValue;
 
             fn into_js_value(self) -> JsValue {
-                // TODO: test is "ofN" is faster, and by how much
-                let result = Array::new_with_length($count);
-                $( Reflect::set_u32(&result, $index, &self.$index.into_js_value()).expect("result is array"); )*
-                result.into()
+                self.into_function_args().into()
             }
 
             fn into_return_abi(self) -> Self::ReturnAbi {
                 self.into_js_value()
+            }
+
+            fn number_of_args() -> u32 {
+                $count
+            }
+
+            fn into_function_args(self) -> Array {
+                // TODO: test is "ofN" is faster, and by how much
+                let result = Array::new_with_length($count);
+                $( Reflect::set_u32(&result, $index, &self.$index.into_js_value()).expect("result is array"); )*
+                result
             }
         }
     };

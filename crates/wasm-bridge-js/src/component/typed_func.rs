@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use wasm_bindgen::JsValue;
 
-use crate::{AsContextMut, FromJsValue, IntoJsParams, Result};
+use crate::{AsContextMut, FromJsValue, IntoJsValue, Result};
 
 use super::Func;
 
@@ -31,10 +31,10 @@ impl<Params, Return> TypedFunc<Params, Return> {
 
     pub fn call(&self, _store: impl AsContextMut, params: Params) -> Result<Return>
     where
-        Params: IntoJsParams,
+        Params: IntoJsValue,
         Return: FromJsValue,
     {
-        let argument = params.to_js_params();
+        let argument = params.into_function_args();
         let results = self.func.function.apply(&JsValue::UNDEFINED, &argument)?;
         Return::from_js_value(&results)
     }
