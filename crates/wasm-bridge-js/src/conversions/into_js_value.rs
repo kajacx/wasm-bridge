@@ -1,4 +1,4 @@
-use js_sys::{Array, Int32Array, Reflect};
+use js_sys::{Array, Float32Array, Float64Array, Int32Array, Reflect};
 use wasm_bindgen::{convert::ReturnWasmAbi, JsValue};
 
 pub trait IntoJsValue: Sized {
@@ -17,6 +17,11 @@ pub trait IntoJsValue: Sized {
     /// Convert to function arguments when calling a function with this value
     fn into_function_args(self) -> Array {
         Array::of1(&self.into_js_value())
+    }
+
+    /// When converting Vec<Self> to JsValue, create array or Int32Array for example
+    fn create_array_of_size(size: u32) -> JsValue {
+        Array::new_with_length(size).into()
     }
 }
 
@@ -53,7 +58,7 @@ impl<'a> IntoJsValue for &'a str {
 }
 
 macro_rules! into_js_value_single {
-    ($ty: ty) => {
+    ($ty: ty, $array: ty) => {
         impl IntoJsValue for $ty {
             type ReturnAbi = Self;
 
@@ -64,17 +69,21 @@ macro_rules! into_js_value_single {
             fn into_return_abi(self) -> Self::ReturnAbi {
                 self
             }
+
+            fn create_array_of_size(size: u32) -> JsValue {
+                <$array>::new_with_length(size).into()
+            }
         }
     };
 }
 
-into_js_value_single!(i32);
-into_js_value_single!(i64);
-into_js_value_single!(u32);
-into_js_value_single!(u64);
-into_js_value_single!(f32);
-into_js_value_single!(f64);
-into_js_value_single!(String);
+into_js_value_single!(i32, Int32Array);
+into_js_value_single!(i64, Array);
+into_js_value_single!(u32, Array);
+into_js_value_single!(u64, Array);
+into_js_value_single!(f32, Float32Array);
+into_js_value_single!(f64, Float64Array);
+into_js_value_single!(String, Array);
 
 // TODO: inspect OptionIntoWasmAbi and see if it's better
 impl<T: IntoJsValue> IntoJsValue for Option<T> {
@@ -97,12 +106,12 @@ impl<'a, T: IntoJsValue + Copy> IntoJsValue for &'a [T] {
     type ReturnAbi = JsValue;
 
     fn into_js_value(self) -> JsValue {
-        let array = Int32Array::new_with_length(self.len() as _);
+        let array = T::create_array_of_size(self.len() as _);
         self.into_iter().enumerate().for_each(|(index, item)| {
             // TODO: set_index is probably faster to Int32Array and "friends"
             Reflect::set_u32(&array, index as _, &item.into_js_value()).expect("array is array");
         });
-        array.into()
+        array
     }
 
     fn into_return_abi(self) -> Self::ReturnAbi {
