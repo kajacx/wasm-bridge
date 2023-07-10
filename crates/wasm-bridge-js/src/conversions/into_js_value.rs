@@ -1,0 +1,100 @@
+use js_sys::{Array, Reflect};
+use wasm_bindgen::{convert::ReturnWasmAbi, JsValue};
+
+pub trait IntoJsValue {
+    type ReturnAbi: ReturnWasmAbi;
+
+    fn into_js_value(self) -> JsValue;
+
+    fn into_return_abi(self) -> Self::ReturnAbi;
+}
+
+impl IntoJsValue for () {
+    type ReturnAbi = Self;
+
+    fn into_js_value(self) -> JsValue {
+        JsValue::undefined()
+    }
+
+    fn into_return_abi(self) -> Self::ReturnAbi {
+        self
+    }
+}
+
+macro_rules! into_js_value_single {
+    ($ty: ty) => {
+        impl IntoJsValue for $ty {
+            type ReturnAbi = Self;
+
+            fn into_js_value(self) -> JsValue {
+                self.into()
+            }
+
+            fn into_return_abi(self) -> Self::ReturnAbi {
+                self
+            }
+        }
+    };
+}
+
+into_js_value_single!(i32);
+into_js_value_single!(i64);
+into_js_value_single!(u32);
+into_js_value_single!(u64);
+into_js_value_single!(f32);
+into_js_value_single!(f64);
+into_js_value_single!(String);
+
+impl<T: IntoJsValue> IntoJsValue for (T,) {
+    type ReturnAbi = T::ReturnAbi;
+
+    fn into_js_value(self) -> JsValue {
+        self.0.into_js_value()
+    }
+
+    fn into_return_abi(self) -> Self::ReturnAbi {
+        self.0.into_return_abi()
+    }
+}
+
+macro_rules! into_js_value_many {
+    ($count: literal, $(($index: tt, $name: ident)),*) => {
+        impl<$($name: IntoJsValue),*> IntoJsValue for ($($name, )*) {
+            type ReturnAbi = JsValue;
+
+            fn into_js_value(self) -> JsValue {
+                // TODO: test is "ofN" is faster, and by how much
+                let result = Array::new_with_length($count);
+                $( Reflect::set_u32(&result, $index, &self.$index.into_js_value()).expect("result is array"); )*
+                result.into()
+            }
+
+            fn into_return_abi(self) -> Self::ReturnAbi {
+                self.into_js_value()
+            }
+        }
+    };
+}
+
+#[rustfmt::skip]
+into_js_value_many!( 2, (0, T0), (1, T1));
+#[rustfmt::skip]
+into_js_value_many!( 3, (0, T0), (1, T1), (2, T2));
+#[rustfmt::skip]
+into_js_value_many!( 4, (0, T0), (1, T1), (2, T2), (3, T3));
+#[rustfmt::skip]
+into_js_value_many!( 5, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4));
+#[rustfmt::skip]
+into_js_value_many!( 6, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5));
+#[rustfmt::skip]
+into_js_value_many!( 7, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6));
+#[rustfmt::skip]
+into_js_value_many!( 8, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7));
+#[rustfmt::skip]
+into_js_value_many!( 9, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8));
+#[rustfmt::skip]
+into_js_value_many!(10, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9));
+#[rustfmt::skip]
+into_js_value_many!(11, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9), (10, T10));
+#[rustfmt::skip]
+into_js_value_many!(12, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9), (10, T10), (11, T11));
