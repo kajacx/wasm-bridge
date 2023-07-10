@@ -42,6 +42,12 @@ impl TestWorld for Plugin {
     fn sqrt(num: Option<f64>) -> Option<f64> {
         sqrt_import(num)
     }
+
+    fn push_numbers(mut numbers: Vec<i32>, a: i32, b: i32) -> Vec<i32> {
+        numbers.push(a);
+        numbers.push(b);
+        numbers
+    }
 }
 
 export_test_world!(Plugin);

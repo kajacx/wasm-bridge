@@ -23,4 +23,6 @@ world test-world {
 
   import sqrt-import: func(num: option<float64>) -> option<float64>
   export sqrt: func(num: option<float64>) -> option<float64>
+
+  export push-numbers: func(nums: list<s32>, a: s32, b: s32) -> list<s32>
 }
