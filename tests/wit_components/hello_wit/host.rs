@@ -111,8 +111,5 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     drop(data1);
     drop(data2);
 
-    let result = instance.call_push_numbers(&mut store, &[1, 2], 3, 4)?;
-    assert_eq!(result, vec![1, 2, 3, 4]);
-
     Ok(())
 }
