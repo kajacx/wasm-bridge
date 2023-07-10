@@ -7,12 +7,12 @@ pub struct Module {
 }
 
 impl Module {
-    pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self, Error> {
+    pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
         let bytes = bytes.as_ref();
         Self::from_bytes(bytes).or_else(|err| Self::from_wat(bytes, err))
     }
 
-    fn from_wat(wat: &[u8], oriringal_err: Error) -> Result<Self, Error> {
+    fn from_wat(wat: &[u8], oriringal_err: Error) -> Result<Self> {
         // If it's not text, give back the original error, it's probably more useful
         let text: &str = std::str::from_utf8(wat).map_err(move |_| oriringal_err)?;
 
@@ -22,7 +22,7 @@ impl Module {
         Self::from_bytes(&bytes)
     }
 
-    fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
+    fn from_bytes(bytes: &[u8]) -> Result<Self> {
         // TODO: view might be faster than from, but its unsafe
         // Uint8Array::view(bytes.as_ref());
 

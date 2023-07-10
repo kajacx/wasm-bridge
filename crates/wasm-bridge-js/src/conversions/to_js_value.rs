@@ -112,8 +112,7 @@ impl<T: ToJsValue> ToJsValue for Option<T> {
     }
 }
 
-// FIXME: Copy bound is bad
-impl<'a, T: ToJsValue + Copy> ToJsValue for &'a [T] {
+impl<'a, T: ToJsValue> ToJsValue for &'a [T] {
     type ReturnAbi = JsValue;
 
     fn to_js_value(&self) -> JsValue {
@@ -130,7 +129,7 @@ impl<'a, T: ToJsValue + Copy> ToJsValue for &'a [T] {
     }
 }
 
-impl<T: ToJsValue + Copy> ToJsValue for Vec<T> {
+impl<T: ToJsValue> ToJsValue for Vec<T> {
     type ReturnAbi = JsValue;
 
     fn to_js_value(&self) -> JsValue {
@@ -141,6 +140,14 @@ impl<T: ToJsValue + Copy> ToJsValue for Vec<T> {
     fn to_return_abi(&self) -> Self::ReturnAbi {
         self.to_js_value()
     }
+}
+
+fn test_it<T: ToJsValue>() {}
+
+fn test() {
+    test_it::<String>();
+    // test_it::<u8>();
+    test_it::<(Vec<String>, String)>();
 }
 
 impl<T: ToJsValue> ToJsValue for (T,) {

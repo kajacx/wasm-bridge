@@ -1,8 +1,8 @@
 use std::rc::Rc;
 
-use wasm_bindgen::{convert::FromWasmAbi, prelude::*, JsValue};
+use wasm_bindgen::{prelude::*, JsValue};
 
-use crate::{DataHandle, DropHandler, Result, StoreContextMut, ToJsValue};
+use crate::{DataHandle, DropHandler, FromJsValue, Result, StoreContextMut, ToJsValue};
 
 pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>) -> (JsValue, DropHandler)>;
 
@@ -15,7 +15,7 @@ macro_rules! make_closure {
         impl<T, $($name, )* R, F> IntoMakeClosure<T, ($($name,)*), R> for F
         where
             T: 'static,
-            $($name: FromWasmAbi + 'static,)*
+            $($name: FromJsValue + 'static,)*
             R: ToJsValue + 'static,
             F: Fn(StoreContextMut<T>, ($($name, )*)) -> Result<R> + 'static,
         {
@@ -26,9 +26,9 @@ macro_rules! make_closure {
                     let self_clone = self_rc.clone();
 
                     let closure =
-                        Closure::<dyn Fn($($name),*) -> R::ReturnAbi>::new(move |$($param: $name),*| {
+                        Closure::<dyn Fn($($name::WasmAbi),*) -> R::ReturnAbi>::new(move |$($param: $name::WasmAbi),*| {
                             // TODO: user error?
-                            self_clone(&mut handle.borrow_mut(), ($($param,)*)).unwrap().to_return_abi()
+                            self_clone(&mut handle.borrow_mut(), ($($name::from_wasm_abi($param).unwrap(),)*)).unwrap().to_return_abi()
                         });
 
                     DropHandler::from_closure(closure)

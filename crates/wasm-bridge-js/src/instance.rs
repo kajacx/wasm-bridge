@@ -9,11 +9,7 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub fn new(
-        _store: impl AsContextMut,
-        module: &Module,
-        _: impl AsRef<[()]>,
-    ) -> Result<Self, Error> {
+    pub fn new(_store: impl AsContextMut, module: &Module, _: impl AsRef<[()]>) -> Result<Self> {
         let imports = Object::new();
         Self::new_with_imports(module, &imports, vec![])
     }
@@ -22,7 +18,7 @@ impl Instance {
         module: &Module,
         imports: &Object,
         closures: Vec<DropHandler>,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self> {
         let instance = WebAssembly::Instance::new(&module.module, imports)?;
         let exports = Reflect::get(instance.as_ref(), &"exports".into())?;
         Ok(Self {

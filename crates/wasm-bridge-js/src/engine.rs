@@ -4,7 +4,7 @@ use crate::*;
 pub struct Engine {}
 
 impl Engine {
-    pub fn new(_: &Config) -> Result<Self, Error> {
+    pub fn new(_: &Config) -> Result<Self> {
         Ok(Self {})
     }
 }

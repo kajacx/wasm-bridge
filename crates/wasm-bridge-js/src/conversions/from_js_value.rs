@@ -1,90 +1,140 @@
 use js_sys::Reflect;
-use wasm_bindgen::JsValue;
+use wasm_bindgen::{convert::FromWasmAbi, JsValue};
 
 use crate::*;
 
 pub trait FromJsValue: Sized {
-    fn from_js_value(value: &JsValue) -> Result<Self, Error>;
+    type WasmAbi: FromWasmAbi;
+
+    fn from_js_value(value: &JsValue) -> Result<Self>;
+
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self>;
 }
 
 impl FromJsValue for () {
-    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+    type WasmAbi = JsValue;
+
+    fn from_js_value(value: &JsValue) -> Result<Self> {
         if value.is_undefined() || value.is_null() {
             Ok(())
         } else {
             Err(value.into())
         }
     }
+
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Ok(())
+    }
 }
 
 impl FromJsValue for i32 {
-    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+    type WasmAbi = Self;
+
+    fn from_js_value(value: &JsValue) -> Result<Self> {
         match value.as_f64() {
             Some(number) => Ok(number as _),
             None => Err(value.into()), // TODO: better error, in other types too
         }
     }
+
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Ok(abi)
+    }
 }
 
 impl FromJsValue for i64 {
-    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+    type WasmAbi = Self;
+    fn from_js_value(value: &JsValue) -> Result<Self> {
         Ok(value.clone().try_into()?)
+    }
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Ok(abi)
     }
 }
 
 impl FromJsValue for u32 {
-    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+    type WasmAbi = Self;
+    fn from_js_value(value: &JsValue) -> Result<Self> {
         match value.as_f64() {
             // Conversion to i32 first needed to handle "negative" numbers
             Some(number) => Ok(number as i32 as _),
             None => Err(value.into()),
         }
     }
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Ok(abi)
+    }
 }
 
 impl FromJsValue for u64 {
-    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+    type WasmAbi = Self;
+    fn from_js_value(value: &JsValue) -> Result<Self> {
         // Conversion to u32 first needed to handle "negative" numbers
         Ok(i64::try_from(value.clone())? as _)
+    }
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Ok(abi)
     }
 }
 
 impl FromJsValue for f32 {
-    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+    type WasmAbi = Self;
+    fn from_js_value(value: &JsValue) -> Result<Self> {
         match value.as_f64() {
             Some(number) => Ok(number as _),
             None => Err(value.into()),
         }
     }
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Ok(abi)
+    }
 }
 
 impl FromJsValue for f64 {
-    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+    type WasmAbi = Self;
+    fn from_js_value(value: &JsValue) -> Result<Self> {
         Ok(value.try_into()?)
+    }
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Ok(abi)
     }
 }
 
 impl FromJsValue for String {
+    type WasmAbi = Self;
+
     fn from_js_value(value: &JsValue) -> Result<Self, crate::Error> {
         match value.as_string() {
             Some(value) => Ok(value),
             None => Err(value.into()), // TODO: better error
         }
     }
+
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Ok(abi)
+    }
 }
 
 impl<T: FromJsValue> FromJsValue for Option<T> {
-    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+    type WasmAbi = JsValue; // TODO: better ABI?
+
+    fn from_js_value(value: &JsValue) -> Result<Self> {
         if value.is_undefined() || value.is_null() {
             Ok(None)
         } else {
             Ok(Some(T::from_js_value(value)?))
         }
     }
+
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Self::from_js_value(&abi)
+    }
 }
 
 impl<T: FromJsValue> FromJsValue for Vec<T> {
-    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+    type WasmAbi = JsValue;
+
+    fn from_js_value(value: &JsValue) -> Result<Self> {
         // TODO: Add user error?
         let length = Reflect::get(&value, &"length".into())?;
         let length = length.as_f64().unwrap() as u32;
@@ -98,19 +148,35 @@ impl<T: FromJsValue> FromJsValue for Vec<T> {
 
         Ok(result)
     }
+
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Self::from_js_value(&abi)
+    }
 }
 
 impl<T: FromJsValue> FromJsValue for (T,) {
-    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+    type WasmAbi = T::WasmAbi;
+
+    fn from_js_value(value: &JsValue) -> Result<Self> {
         Ok((T::from_js_value(value)?,))
+    }
+
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Ok((T::from_wasm_abi(abi)?,))
     }
 }
 
 macro_rules! from_js_value_many {
     ($(($index: tt, $name: ident)),*) => {
         impl<$($name: FromJsValue),*> FromJsValue for ($($name, )*) {
-            fn from_js_value(results: &JsValue) -> Result<Self, Error> {
+            type WasmAbi = JsValue;
+
+            fn from_js_value(results: &JsValue) -> Result<Self> {
                 Ok(( $($name::from_js_value(&Reflect::get_u32(results, $index)?)?,)* ))
+            }
+
+            fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+                Self::from_js_value(&abi)
             }
         }
     };
