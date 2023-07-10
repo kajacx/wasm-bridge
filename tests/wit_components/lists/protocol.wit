@@ -3,4 +3,22 @@ package wasm-bridge:protocol
 world test-world {
   import push-s32: func(nums: list<s32>, a: s32) -> list<s32> 
   export push-s32s: func(nums: list<s32>, a: s32, b: s32) -> list<s32>
+
+  import push-s64: func(nums: list<s64>, a: s64) -> list<s64> 
+  export push-s64s: func(nums: list<s64>, a: s64, b: s64) -> list<s64>
+
+  import push-u32: func(nums: list<u32>, a: u32) -> list<u32> 
+  export push-u32s: func(nums: list<u32>, a: u32, b: u32) -> list<u32>
+
+  import push-u64: func(nums: list<u64>, a: u64) -> list<u64> 
+  export push-u64s: func(nums: list<u64>, a: u64, b: u64) -> list<u64>
+
+  import push-float32: func(nums: list<float32>, a: float32) -> list<float32> 
+  export push-float32s: func(nums: list<float32>, a: float32, b: float32) -> list<float32>
+
+  import push-float64: func(nums: list<float64>, a: float64) -> list<float64> 
+  export push-float64s: func(nums: list<float64>, a: float64, b: float64) -> list<float64>
+
+  import push-string: func(nums: list<string>, a: string) -> list<string> 
+  export push-strings: func(nums: list<string>, a: string, b: string) -> list<string>
 }
