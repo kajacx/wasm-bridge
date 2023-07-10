@@ -5,6 +5,7 @@
 ### Added
 
 - Tuple return in WIT imported and exported fns
+- Support option and list in WIT format
 
 ## [0.1.2] 2023-07-09
 

@@ -1,4 +1,7 @@
-use js_sys::{Array, Float32Array, Float64Array, Int32Array, Reflect};
+use js_sys::{
+    Array, BigInt64Array, BigUint64Array, Float32Array, Float64Array, Int32Array, Reflect,
+    Uint32Array,
+};
 use wasm_bindgen::{convert::ReturnWasmAbi, JsValue};
 
 pub trait ToJsValue: Sized {
@@ -32,9 +35,7 @@ impl ToJsValue for () {
         JsValue::undefined()
     }
 
-    fn to_return_abi(&self) -> Self::ReturnAbi {
-        ()
-    }
+    fn to_return_abi(&self) -> Self::ReturnAbi {}
 
     fn number_of_args() -> u32 {
         0
@@ -90,9 +91,9 @@ macro_rules! to_js_value_single {
 }
 
 to_js_value_single!(i32, Int32Array);
-to_js_value_single!(i64, Array);
-to_js_value_single!(u32, Array);
-to_js_value_single!(u64, Array);
+to_js_value_single!(i64, BigInt64Array);
+to_js_value_single!(u32, Uint32Array);
+to_js_value_single!(u64, BigUint64Array);
 to_js_value_single!(f32, Float32Array);
 to_js_value_single!(f64, Float64Array);
 
@@ -117,7 +118,7 @@ impl<'a, T: ToJsValue> ToJsValue for &'a [T] {
 
     fn to_js_value(&self) -> JsValue {
         let array = T::create_array_of_size(self.len() as _);
-        self.into_iter().enumerate().for_each(|(index, item)| {
+        self.iter().enumerate().for_each(|(index, item)| {
             // TODO: set_index is probably faster to Int32Array and "friends"
             Reflect::set_u32(&array, index as _, &item.to_js_value()).expect("array is array");
         });
@@ -133,21 +134,13 @@ impl<T: ToJsValue> ToJsValue for Vec<T> {
     type ReturnAbi = JsValue;
 
     fn to_js_value(&self) -> JsValue {
-        let as_slice: &[T] = &self;
+        let as_slice: &[T] = self;
         as_slice.to_js_value()
     }
 
     fn to_return_abi(&self) -> Self::ReturnAbi {
         self.to_js_value()
     }
-}
-
-fn test_it<T: ToJsValue>() {}
-
-fn test() {
-    test_it::<String>();
-    // test_it::<u8>();
-    test_it::<(Vec<String>, String)>();
 }
 
 impl<T: ToJsValue> ToJsValue for (T,) {

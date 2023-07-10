@@ -22,7 +22,7 @@ impl FromJsValue for () {
         }
     }
 
-    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+    fn from_wasm_abi(_abi: Self::WasmAbi) -> Result<Self> {
         Ok(())
     }
 }
@@ -52,12 +52,14 @@ impl FromJsValue for i64 {
     }
 }
 
+// TODO: Add a check that the value didn't overflow?
 impl FromJsValue for u32 {
     type WasmAbi = Self;
     fn from_js_value(value: &JsValue) -> Result<Self> {
         match value.as_f64() {
-            // Conversion to i32 first needed to handle "negative" numbers
-            Some(number) => Ok(number as i32 as _),
+            // Value might be bigger than u32::MAX / 2 or smaller than 0
+            Some(number) if number < 0.0 => Ok(number as i32 as _),
+            Some(number) => Ok(number as _),
             None => Err(value.into()),
         }
     }
@@ -69,8 +71,9 @@ impl FromJsValue for u32 {
 impl FromJsValue for u64 {
     type WasmAbi = Self;
     fn from_js_value(value: &JsValue) -> Result<Self> {
-        // Conversion to u32 first needed to handle "negative" numbers
-        Ok(i64::try_from(value.clone())? as _)
+        // Value is BigInt, but it might be positive over u64::MAX / 2, or negative
+        Ok(u64::try_from(value.clone())
+            .or_else(|_| i64::try_from(value.clone()).map(|value| value as u64))?)
     }
     fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
         Ok(abi)
@@ -136,7 +139,7 @@ impl<T: FromJsValue> FromJsValue for Vec<T> {
 
     fn from_js_value(value: &JsValue) -> Result<Self> {
         // TODO: Add user error?
-        let length = Reflect::get(&value, &"length".into())?;
+        let length = Reflect::get(value, &"length".into())?;
         let length = length.as_f64().unwrap() as u32;
 
         let mut result = Vec::with_capacity(length as usize);
