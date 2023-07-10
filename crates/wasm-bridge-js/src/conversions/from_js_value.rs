@@ -83,6 +83,23 @@ impl<T: FromJsValue> FromJsValue for Option<T> {
     }
 }
 
+impl<T: FromJsValue> FromJsValue for Vec<T> {
+    fn from_js_value(value: &JsValue) -> Result<Self, Error> {
+        // TODO: Add user error?
+        let length = Reflect::get(&value, &"length".into())?;
+        let length = length.as_f64().unwrap() as u32;
+
+        let mut result = Vec::with_capacity(length as usize);
+
+        for index in 0..length {
+            let item = Reflect::get_u32(value, index)?;
+            result.push(T::from_js_value(&item)?);
+        }
+
+        Ok(result)
+    }
+}
+
 impl<T: FromJsValue> FromJsValue for (T,) {
     fn from_js_value(value: &JsValue) -> Result<Self, Error> {
         Ok((T::from_js_value(value)?,))

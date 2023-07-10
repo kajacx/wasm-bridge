@@ -107,6 +107,10 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let data2 = store.data();
     assert_eq!(data1.number, data2.number);
 
+    // TODO: need to manually drop read "references" before making a mutable one
+    drop(data1);
+    drop(data2);
+
     let result = instance.call_push_numbers(&mut store, &[1, 2], 3, 4)?;
     assert_eq!(result, vec![1, 2, 3, 4]);
 

@@ -1,4 +1,4 @@
-use js_sys::{Array, Reflect};
+use js_sys::{Array, Int32Array, Reflect};
 use wasm_bindgen::{convert::ReturnWasmAbi, JsValue};
 
 pub trait IntoJsValue {
@@ -109,6 +109,53 @@ impl<T: IntoJsValue> IntoJsValue for Option<T> {
 
     fn number_of_args() -> u32 {
         1 // TODO: verify
+    }
+
+    fn into_function_args(self) -> Array {
+        Array::of1(&self.into_js_value())
+    }
+}
+
+// FIXME: Copy bound is bad
+impl<'a, T: IntoJsValue + Copy> IntoJsValue for &'a [T] {
+    type ReturnAbi = JsValue;
+
+    fn into_js_value(self) -> JsValue {
+        let array = Int32Array::new_with_length(self.len() as _);
+        self.into_iter().enumerate().for_each(|(index, item)| {
+            // TODO: set_index is probably faster to Int32Array and "friends"
+            Reflect::set_u32(&array, index as _, &item.into_js_value()).expect("array is array");
+        });
+        array.into()
+    }
+
+    fn into_return_abi(self) -> Self::ReturnAbi {
+        self.into_js_value()
+    }
+
+    fn number_of_args() -> u32 {
+        1
+    }
+
+    fn into_function_args(self) -> Array {
+        Array::of1(&self.into_js_value())
+    }
+}
+
+impl<T: IntoJsValue + Copy> IntoJsValue for Vec<T> {
+    type ReturnAbi = JsValue;
+
+    fn into_js_value(self) -> JsValue {
+        let as_slice: &[T] = &self;
+        as_slice.into_js_value()
+    }
+
+    fn into_return_abi(self) -> Self::ReturnAbi {
+        self.into_js_value()
+    }
+
+    fn number_of_args() -> u32 {
+        1
     }
 
     fn into_function_args(self) -> Array {
