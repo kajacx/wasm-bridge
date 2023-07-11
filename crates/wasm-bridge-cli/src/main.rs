@@ -7,10 +7,10 @@ use clap::Parser;
 use zip::{write::FileOptions, ZipWriter};
 
 #[derive(Parser)]
+#[command(version)]
 struct Args {
     source_dir: std::path::PathBuf,
     out_file: Option<std::path::PathBuf>,
-    // TODO: Add version
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
