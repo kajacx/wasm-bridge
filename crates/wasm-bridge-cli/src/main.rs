@@ -1,76 +1,79 @@
 use std::{
-    error::Error,
-    io::{Cursor, Write},
+    io::Write,
+    ops::Deref,
+    path::{Path, PathBuf},
 };
 
+use anyhow::Result;
 use clap::Parser;
-use zip::{write::FileOptions, ZipWriter};
+use jco_runner::run_jco_transpile;
+use reader::read_files_from_dir;
+use transformers::{add_original_file, js_transformer, transform_all, version_transformer};
+use zipper::create_zip;
+
+mod jco_runner;
+mod reader;
+mod transformers;
+mod zipper;
 
 #[derive(Parser)]
 #[command(version)]
 struct Args {
-    source_dir: std::path::PathBuf,
+    /// Directory produced by jco
+    source: std::path::PathBuf,
+
+    /// Save resulting zip in this file instead of printing it to stdout.
     out_file: Option<std::path::PathBuf>,
+
+    /// Build a universal component to be used with `wasm_bridge::component::from_universal`.
+    /// Pass the WASM component file that you passed to jco.
+    #[arg(short, long)]
+    universal: Option<std::path::PathBuf>,
+
+    /// Keep a copy of the original "component.js" file in the resulting zip.
+    #[arg(short, long)]
+    keep_original_js: bool,
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<()> {
     let args = Args::parse();
 
-    let mut data = Vec::<u8>::new();
-    let cursor = Cursor::new(&mut data);
+    // TODO: how to run the jco command from Rust directly?
+    // let directory = get_directory(args.source.clone(), args.universal.is_some())?;
+    let directory = args.source.clone();
+    let mut contents = read_files_from_dir(directory.deref())?;
 
-    let mut writer = ZipWriter::new(cursor);
-
-    let source_dir = std::fs::read_dir(args.source_dir)?;
-
-    for file in source_dir {
-        let file = file?;
-        let file_name = file.file_name();
-        let file_name = file_name.to_str().expect("utf-8 file name");
-
-        let mut file_bytes = std::fs::read(file.path())?;
-        if file_name == "component.js" {
-            writer.start_file("sync_component.js", FileOptions::default())?;
-            file_bytes = transform_component_js(file_bytes);
-        } else {
-            writer.start_file(file_name, FileOptions::default())?;
-        }
-
-        writer.write_all(&file_bytes)?;
+    let mut transformers = vec![js_transformer(args.keep_original_js), version_transformer()];
+    if let Some(original) = args.universal {
+        transformers.push(add_original_file(original));
     }
 
-    writer.start_file("version.txt", FileOptions::default())?;
-    writer.write_fmt(format_args!("{}", get_version()))?;
+    transform_all(&mut contents, &transformers)?;
 
-    writer.finish()?;
-    drop(writer);
+    let zip_content = create_zip(&contents)?;
 
-    match args.out_file {
-        Some(out_file) => {
-            std::fs::write(out_file, data)?;
-        }
-        None => {
-            std::io::stdout().write_all(&data)?;
-        }
-    }
+    write_output(args.out_file, &zip_content)?;
 
     Ok(())
 }
 
-fn transform_component_js(file_bytes: Vec<u8>) -> Vec<u8> {
-    let text = String::from_utf8(file_bytes).expect("valid utf-8 component.js file");
-
-    let text = text.replace("export async function", "function");
-    let text = text.replace(
-        "instantiateCore = WebAssembly.instantiate",
-        "instantiateCore",
-    );
-    let text = text.replace("await ", "");
-
-    let text = format!("(() => {{\n{text}\nreturn instantiate;\n}})()\n");
-    text.into_bytes()
+#[allow(unused)]
+fn get_directory(source: PathBuf, universal: bool) -> Result<Box<dyn AsRef<Path>>> {
+    Ok(if universal {
+        Box::new(run_jco_transpile(source)?)
+    } else {
+        Box::new(source)
+    })
 }
 
-fn get_version() -> String {
-    env!("CARGO_PKG_VERSION").into()
+fn write_output(out_file: Option<PathBuf>, data: &[u8]) -> Result<()> {
+    match out_file {
+        Some(out_file) => {
+            std::fs::write(out_file, data)?;
+        }
+        None => {
+            std::io::stdout().write_all(data)?;
+        }
+    }
+    Ok(())
 }

@@ -1,5 +1,11 @@
 # wasm-bridge change log
 
+## [0.1.4] YYYY-MM-DD
+
+### Added
+
+- Universal component zip support
+
 ## [0.1.3] 2023-07-11
 
 ### Added
