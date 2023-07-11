@@ -25,4 +25,4 @@ TODO
 - Supported types: 32-bit and 64-bit numbers, string
 - Exported and imported functions with 0-N arguments and 0-N return values
 
-See the [`wit_bindgen`](/tests/wit_bindgen) test folder for supported example usages.
+See the [`wit_components`](/tests/wit_components) test folder for supported example usages.
