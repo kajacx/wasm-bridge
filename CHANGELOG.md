@@ -5,6 +5,7 @@
 ### Added
 
 - Universal component zip support
+- Support rest of the primitives in wat bindgen
 
 ## [0.1.3] 2023-07-11
 

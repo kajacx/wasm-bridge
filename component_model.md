@@ -145,7 +145,7 @@ This need make it slightly awkward to use, but a workaround is planned for a fut
 
 ## Implemented features
 
-- Supported types: 32-bit and 64-bit numbers, string
+- All primitive types (numbers, char, bool, string) supported
 - Exported and imported functions with 0-N arguments and 0-N return values
 - `list<T>` and `option<T>` types
 
