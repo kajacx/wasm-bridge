@@ -35,3 +35,6 @@ pub(crate) mod helpers;
 
 #[cfg(feature = "component-model")]
 pub mod component;
+
+pub use js_sys;
+pub use wasm_bindgen;

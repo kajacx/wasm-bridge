@@ -85,7 +85,27 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 #[proc_macro_derive(FromJsValue)]
 pub fn from_js_value(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    proc_macro::TokenStream::new()
+    let pof = r#"
+    impl wasm_bridge::FromJsValue for Person {
+        type WasmAbi = wasm_bridge::wasm_bindgen::JsValue;
+    
+        fn from_js_value(value: &wasm_bridge::wasm_bindgen::JsValue) -> Result<Self> {
+            let name = wasm_bridge::js_sys::Reflect::get(value, &"name".into())?;
+            let name = String::from_js_value(&name)?;
+    
+            let age = wasm_bridge::js_sys::Reflect::get(value, &"age".into())?;
+            let age = u32::from_js_value(&age)?;
+    
+            Ok(Person { name, age })
+        }
+    
+        fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+            Self::from_js_value(&abi)
+        }
+    }
+    "#;
+
+    proc_macro::TokenStream::from_str(pof).unwrap()
 }
 
 #[proc_macro_derive(ToJsValue)]
