@@ -10,7 +10,7 @@ categories.workspace = true
 
 [dependencies]
 clap = { version = "4.3.11", features = ["derive"] }
-zip = { version = "0.6.6", default-features = false }
+zip = { version = "0.6.6", default-features = false, features = ["deflate"] }
 tempdir = { version = "0.3.7" }
 anyhow = { version = "1.0.71" }
 regex = { version = "1.9.1" }
