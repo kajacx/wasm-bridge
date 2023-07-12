@@ -23,8 +23,6 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-pwd
-
 # copy the host code
 cp $test/host.rs instances/no_bindgen/host_sys/src/host.rs
 cp $test/host.rs instances/no_bindgen/host_js/src/host.rs
