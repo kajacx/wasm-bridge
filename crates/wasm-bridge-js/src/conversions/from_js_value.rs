@@ -125,7 +125,7 @@ impl FromJsValue for char {
 
     fn from_js_value(value: &JsValue) -> Result<Self> {
         match value.as_string() {
-            Some(text) if text.len() >= 1 => Ok(text.chars().next().unwrap()),
+            Some(text) if !text.is_empty() => Ok(text.chars().next().unwrap()),
             _ => Err(value.into()),
         }
     }
