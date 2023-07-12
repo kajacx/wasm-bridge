@@ -18,7 +18,7 @@ cp $test/protocol.wit instances/wit_components/protocol.wit
 cp $test/plugin.rs instances/wit_components/plugin/src/lib.rs
 
 # build the plugin
-cd instances/wit_components/plugin && cargo rustc --target=wasm32-unknown-unknown -- -C target-feature=+multivalue
+cd instances/wit_components/plugin && cargo rustc --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && \
 cd target/wasm32-unknown-unknown/debug && \
 wasm-tools component new wit_components_plugin.wasm -o component.wasm && \
 jco transpile component.wasm --instantiation -o out-dir && \
