@@ -1,85 +1,41 @@
-use std::{fs, path::Path};
+use wasmtime::{component::Component, Engine, Error, Result};
+use zip::ZipArchive;
 
-use wasmtime::{component::__internal::anyhow::Context, Engine, Result};
+pub fn new_universal_component(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Component> {
+    Component::new(engine, bytes.as_ref()).or_else(|original_error| {
+        try_load_universal_component(engine, bytes.as_ref())
+            .map_err(|new_error| new_error.unwrap_or(original_error))
+    })
+}
 
-#[derive(Clone)]
-pub struct Component(wasmtime::component::Component);
+fn try_load_universal_component(engine: &Engine, bytes: &[u8]) -> Result<Component, Option<Error>> {
+    let cursor = std::io::Cursor::new(bytes);
+    let mut archive = ZipArchive::new(cursor).void_error()?;
 
-impl Component {
-    /// Compiles a new WebAssembly component from the in-memory wasm image
-    /// provided.
-    pub fn new(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Component> {
-        // TODO
-        todo!()
-    }
+    let mut file_bytes = vec![];
 
-    /// Compiles a new WebAssembly component from a wasm file on disk pointed to
-    /// by `file`.
-    pub fn from_file(engine: &Engine, file: impl AsRef<Path>) -> Result<Component> {
-        match Self::new(
-            engine,
-            &fs::read(&file).with_context(|| "failed to read input file")?,
-        ) {
-            Ok(m) => Ok(m),
-            Err(e) => {
-                cfg_if::cfg_if! {
-                    if #[cfg(feature = "wat")] {
-                        let mut e = e.downcast::<wat::Error>()?;
-                        e.set_path(file);
-                        bail!(e)
-                    } else {
-                        Err(e)
-                    }
-                }
-            }
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i).unwrap();
+        let filename = file.name();
+
+        if filename.ends_with("original_component.wasm") {
+            std::io::copy(&mut file, &mut file_bytes).void_error()?;
         }
     }
 
-    /// Compiles a new WebAssembly component from the in-memory wasm image
-    /// provided.
-    pub fn from_binary(engine: &Engine, binary: &[u8]) -> Result<Component> {
-        engine
-            .check_compatible_with_native_host()
-            .context("compilation settings are not compatible with the native host")?;
-
-        let (mmap, artifacts) = Component::build_artifacts(engine, binary)?;
-        let mut code_memory = CodeMemory::new(mmap)?;
-        code_memory.publish()?;
-        Component::from_parts(engine, Arc::new(code_memory), Some(artifacts))
+    if file_bytes.is_empty() {
+        return Err(None);
     }
 
-    /// Same as [`Module::deserialize`], but for components.
-    ///
-    /// Note that the file referenced here must contain contents previously
-    /// produced by [`Engine::precompile_component`] or
-    /// [`Component::serialize`].
-    ///
-    /// For more information see the [`Module::deserialize`] method.
-    ///
-    /// [`Module::deserialize`]: crate::Module::deserialize
-    pub unsafe fn deserialize(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Component> {
-        wasmtime::component::Component::deserialize(engine, bytes)
-    }
+    Component::new(engine, &file_bytes).map_err(|err| Some(err))
+}
 
-    /// Same as [`Module::deserialize_file`], but for components.
-    ///
-    /// For more information see the [`Component::deserialize`] and
-    /// [`Module::deserialize_file`] methods.
-    ///
-    /// [`Module::deserialize_file`]: crate::Module::deserialize_file
-    pub unsafe fn deserialize_file(engine: &Engine, path: impl AsRef<Path>) -> Result<Component> {
-        wasmtime::component::Component::deserialize(engine, path)
-    }
+trait VoidError<T> {
+    fn void_error(self) -> Result<T, Option<Error>>;
+}
 
-    /// Same as [`Module::serialize`], except for a component.
-    ///
-    /// Note that the artifact produced here must be passed to
-    /// [`Component::deserialize`] and is not compatible for use with
-    /// [`Module`].
-    ///
-    /// [`Module::serialize`]: crate::Module::serialize
-    /// [`Module`]: crate::Module
-    pub fn serialize(&self) -> Result<Vec<u8>> {
-        self.0.serialize()
+impl<R, E> VoidError<R> for Result<R, E> {
+    fn void_error(self) -> Result<R, Option<Error>> {
+        self.map_err(|_| None)
     }
 }

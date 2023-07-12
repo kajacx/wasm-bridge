@@ -16,7 +16,8 @@ pub struct Component {
 }
 
 impl Component {
-    pub fn new(_engine: &Engine, bytes: &[u8]) -> Result<Self> {
+    pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
+        // TODO: many unwrap()s .. make it a user error instead
         let cursor = std::io::Cursor::new(bytes);
         let mut archive = ZipArchive::new(cursor).unwrap();
 
@@ -139,4 +140,8 @@ impl Component {
 
         DropHandler::from_closure(closure)
     }
+}
+
+pub fn new_universal_component(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Component> {
+    Component::new(engine, bytes)
 }

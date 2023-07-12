@@ -8,4 +8,7 @@ pub mod component {
     pub use wasmtime::component::*;
 
     pub use wasm_bridge_macros::bindgen_sys as bindgen;
+
+    #[cfg(feature = "component-model")]
+    pub use super::universal_component::new_universal_component;
 }
