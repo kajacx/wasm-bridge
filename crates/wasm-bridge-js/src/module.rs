@@ -12,14 +12,21 @@ impl Module {
         Self::from_bytes(bytes).or_else(|err| Self::from_wat(bytes, err))
     }
 
-    fn from_wat(wat: &[u8], oriringal_err: Error) -> Result<Self> {
+    #[cfg(feature = "wat")]
+    fn from_wat(wat: &[u8], original_err: Error) -> Result<Self> {
         // If it's not text, give back the original error, it's probably more useful
-        let text: &str = std::str::from_utf8(wat).map_err(move |_| oriringal_err)?;
+        let text: &str = std::str::from_utf8(wat).map_err(move |_| original_err)?;
 
         let bytes =
             wat::parse_str(text).map_err(|err| Error::InvalidWatText(format!("{err:?}")))?;
 
         Self::from_bytes(&bytes)
+    }
+
+    #[cfg(not(feature = "wat"))]
+    fn from_wat(_wat: &[u8], original_err: Error) -> Result<Self> {
+        // TODO: Add the "enable wat" warning if _wat is valid utf-8?
+        Err(original_err)
     }
 
     fn from_bytes(bytes: &[u8]) -> Result<Self> {
