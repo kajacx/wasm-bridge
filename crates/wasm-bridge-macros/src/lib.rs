@@ -1,5 +1,7 @@
 use std::str::FromStr;
 
+use heck::ToLowerCamelCase;
+use proc_macro2::TokenStream;
 use regex::Regex;
 
 mod bindgen;
@@ -84,28 +86,88 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 }
 
 #[proc_macro_derive(FromJsValue)]
-pub fn from_js_value(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let pof = r#"
-    impl wasm_bridge::FromJsValue for Person {
-        type WasmAbi = wasm_bridge::wasm_bindgen::JsValue;
-    
-        fn from_js_value(value: &wasm_bridge::wasm_bindgen::JsValue) -> Result<Self> {
-            let name = wasm_bridge::js_sys::Reflect::get(value, &"name".into())?;
-            let name = String::from_js_value(&name)?;
-    
-            let age = wasm_bridge::js_sys::Reflect::get(value, &"age".into())?;
-            let age = u32::from_js_value(&age)?;
-    
-            Ok(Person { name, age })
-        }
-    
-        fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
-            Self::from_js_value(&abi)
-        }
-    }
-    "#;
+pub fn from_js_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let derive_input: syn::DeriveInput = syn::parse(input.clone()).unwrap();
 
-    proc_macro::TokenStream::from_str(pof).unwrap()
+    // eprintln!("input: {input:?}");
+    // eprintln!("syn derive: {derive_input:?}");
+
+    let struct_name = derive_input.ident;
+
+    let data = match derive_input.data {
+        syn::Data::Struct(struct_data) => struct_data,
+        _ => todo!(),
+    };
+
+    let mut impl_block = String::new();
+    let mut fields_constructor = String::new();
+
+    for field in data.fields {
+        // eprintln!("FIELD: {field:?}");
+        // eprintln!("IDENT: {}", field.ident.unwrap().to_string());
+        // eprintln!("TYPE: {:?}", field.ty);
+
+        let field_type = field.ty;
+        // let field_name = field.ident.as_ref().unwrap().to_string(); // TODO: try ident?
+        let field_name = field.ident; // TODO: try ident?
+
+        let field_name_str = quote::quote!(#field_name).to_string();
+        //let field_name_converted = format!("\"{}\"", field_name_str.to_lower_camel_case());
+        let field_name_converted = field_name_str.to_lower_camel_case();
+
+        let tokens = quote::quote!(
+            let js_field = wasm_bridge::js_sys::Reflect::get(value, &#field_name_converted.into())?;
+            let #field_name = #field_type::from_js_value(&js_field)?;
+        );
+
+        impl_block.push_str(&tokens.to_string());
+
+        fields_constructor.push_str(&format!("{}, ", field_name.unwrap().to_string()));
+    }
+
+    let impl_block = TokenStream::from_str(&impl_block).unwrap();
+    let fields_constructor = TokenStream::from_str(&fields_constructor).unwrap();
+
+    let tokens = quote::quote! {
+        impl wasm_bridge::FromJsValue for #struct_name {
+            type WasmAbi = wasm_bridge::wasm_bindgen::JsValue;
+
+            fn from_js_value(value: &wasm_bridge::wasm_bindgen::JsValue) -> wasm_bridge::Result<Self> {
+                #impl_block
+
+                Ok(Self { #fields_constructor })
+            }
+
+            fn from_wasm_abi(abi: Self::WasmAbi) -> wasm_bridge::Result<Self> {
+                Self::from_js_value(&abi)
+            }
+        }
+    };
+
+    eprintln!("FINAL IMPL: {}", tokens.to_string());
+
+    // let pof = r#"
+    // impl wasm_bridge::FromJsValue for Person {
+    //     type WasmAbi = wasm_bridge::wasm_bindgen::JsValue;
+
+    //     fn from_js_value(value: &wasm_bridge::wasm_bindgen::JsValue) -> Result<Self> {
+    //         let name = wasm_bridge::js_sys::Reflect::get(value, &"name".into())?;
+    //         let name = String::from_js_value(&name)?;
+
+    //         let age = wasm_bridge::js_sys::Reflect::get(value, &"age".into())?;
+    //         let age = u32::from_js_value(&age)?;
+
+    //         Ok(Person { name, age })
+    //     }
+
+    //     fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+    //         Self::from_js_value(&abi)
+    //     }
+    // }
+    // "#;
+
+    //  proc_macro::TokenStream::from_str(pof).unwrap()
+    proc_macro::TokenStream::from_str(&tokens.to_string()).unwrap()
 }
 
 #[proc_macro_derive(ToJsValue)]
