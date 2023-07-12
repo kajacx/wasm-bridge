@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use heck::ToLowerCamelCase;
 use proc_macro2::TokenStream;
-use quote::TokenStreamExt;
+use quote::{quote, TokenStreamExt};
 use regex::Regex;
 
 mod bindgen;
@@ -81,14 +81,14 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let regex = Regex::new("#\\[derive\\([^)]*Lower\\)\\]").unwrap();
     let as_string = regex.replace_all(&as_string, "#[derive(wasm_bridge::component::ToJsValue)]");
 
-    // eprintln!("{as_string}");
+    // eprintln!("BINDGEN: {as_string}");
 
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
 
 #[proc_macro_derive(FromJsValue)]
 pub fn from_js_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let derive_input: syn::DeriveInput = syn::parse(input.clone()).unwrap();
+    let derive_input: syn::DeriveInput = syn::parse(input).unwrap();
 
     let struct_name = derive_input.ident;
     let data = match derive_input.data {
@@ -96,30 +96,26 @@ pub fn from_js_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
         _ => todo!(),
     };
 
-    let mut impl_block = String::new();
-    let mut fields_constructor = String::new();
+    let mut impl_block = TokenStream::new();
+    let mut fields_constructor = TokenStream::new();
 
     for field in data.fields {
         let field_type = field.ty;
         let field_name = field.ident;
 
-        let field_name_str = quote::quote!(#field_name).to_string();
+        let field_name_str = quote!(#field_name).to_string();
         let field_name_converted = field_name_str.to_lower_camel_case();
 
-        let tokens = quote::quote!(
+        let tokens = quote!(
             let js_field = wasm_bridge::js_sys::Reflect::get(value, &#field_name_converted.into())?;
             let #field_name = #field_type::from_js_value(&js_field)?;
         );
+        impl_block.append_all(tokens);
 
-        impl_block.push_str(&tokens.to_string());
-
-        fields_constructor.push_str(&format!("{}, ", field_name.unwrap().to_string()));
+        fields_constructor.append_all(quote!(#field_name, ));
     }
 
-    let impl_block = TokenStream::from_str(&impl_block).unwrap();
-    let fields_constructor = TokenStream::from_str(&fields_constructor).unwrap();
-
-    let tokens = quote::quote! {
+    let tokens = quote! {
         impl wasm_bridge::FromJsValue for #struct_name {
             type WasmAbi = wasm_bridge::wasm_bindgen::JsValue;
 
@@ -135,12 +131,14 @@ pub fn from_js_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
         }
     };
 
+    // eprintln!("FromJsValue IMPL: {}", tokens.to_string());
+
     proc_macro::TokenStream::from_str(&tokens.to_string()).unwrap()
 }
 
 #[proc_macro_derive(ToJsValue)]
 pub fn to_js_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let derive_input: syn::DeriveInput = syn::parse(input.clone()).unwrap();
+    let derive_input: syn::DeriveInput = syn::parse(input).unwrap();
 
     let struct_name = derive_input.ident;
     let data = match derive_input.data {
@@ -148,18 +146,15 @@ pub fn to_js_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         _ => todo!(),
     };
 
-    let mut impl_block = String::new();
+    let mut impl_block = TokenStream::new();
 
     for field in data.fields {
-        // let field_type = field.ty;
         let field_name = field.ident;
 
-        let field_name_str = quote::quote!(#field_name).to_string();
+        let field_name_str = quote!(#field_name).to_string();
         let field_name_converted = field_name_str.to_lower_camel_case();
 
-        let tokens = quote::quote!(
-            // let js_field = wasm_bridge::js_sys::Reflect::get(value, &#field_name_converted.into())?;
-            // let #field_name = #field_type::from_js_value(&js_field)?;
+        let tokens = quote!(
             wasm_bridge::js_sys::Reflect::set(
                 &value,
                 &#field_name_converted.into(),
@@ -167,12 +162,10 @@ pub fn to_js_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             ).expect("value is object");
         );
 
-        impl_block.push_str(&tokens.to_string());
+        impl_block.append_all(tokens);
     }
 
-    let impl_block = TokenStream::from_str(&impl_block).unwrap();
-
-    let tokens = quote::quote! {
+    let tokens = quote! {
         impl wasm_bridge::ToJsValue for #struct_name {
             type ReturnAbi = wasm_bridge::wasm_bindgen::JsValue;
 
@@ -191,7 +184,7 @@ pub fn to_js_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         }
     };
 
-    eprintln!("FINAL IMPL: {}", tokens.to_string());
+    // eprintln!("ToJsValue IMPL: {}", tokens.to_string());
 
     proc_macro::TokenStream::from_str(&tokens.to_string()).unwrap()
 }
