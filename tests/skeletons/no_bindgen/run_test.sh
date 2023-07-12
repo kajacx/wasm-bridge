@@ -1,5 +1,8 @@
 #!/usr/bin/sh
 
+# Optimization to speed up warnings checks
+export RUSTFLAGS="-D warnings"
+
 # Run from the "tests" folder and pass the instance name as an argument
 test="no_bindgen/$1"
 

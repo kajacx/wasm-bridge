@@ -1,5 +1,8 @@
 #!/usr/bin/sh
 
+# Optimization to speed up warnings checks
+export RUSTFLAGS="-D warnings"
+
 # Run from the "tests" folder and pass the instance name as an argument
 test="wit_components/$1"
 
