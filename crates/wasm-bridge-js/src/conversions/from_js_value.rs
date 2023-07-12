@@ -27,12 +27,12 @@ impl FromJsValue for () {
     }
 }
 
-impl FromJsValue for i32 {
+impl FromJsValue for bool {
     type WasmAbi = Self;
 
     fn from_js_value(value: &JsValue) -> Result<Self> {
-        match value.as_f64() {
-            Some(number) => Ok(number as _),
+        match value.as_bool() {
+            Some(value) => Ok(value),
             None => Err(value.into()), // TODO: better error, in other types too
         }
     }
@@ -42,62 +42,94 @@ impl FromJsValue for i32 {
     }
 }
 
+macro_rules! from_js_value_signed {
+    ($name: ty) => {
+        impl FromJsValue for $name {
+            type WasmAbi = Self;
+
+            fn from_js_value(value: &JsValue) -> Result<Self> {
+                match value.as_f64() {
+                    Some(number) => Ok(number as _),
+                    None => Err(value.into()), // TODO: better error, in other types too
+                }
+            }
+
+            fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+                Ok(abi)
+            }
+        }
+    };
+}
+
+from_js_value_signed!(i8);
+from_js_value_signed!(i16);
+from_js_value_signed!(i32);
+
 impl FromJsValue for i64 {
     type WasmAbi = Self;
+
     fn from_js_value(value: &JsValue) -> Result<Self> {
         Ok(value.clone().try_into()?)
     }
+
     fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
         Ok(abi)
     }
+}
+macro_rules! from_js_value_unsigned {
+    ($name: ty, $signed: ty) => {
+        impl FromJsValue for $name {
+            type WasmAbi = Self;
+
+            fn from_js_value(value: &JsValue) -> Result<Self> {
+                // TODO: Add a check that the value didn't overflow?
+                match value.as_f64() {
+                    // Value might be bigger than $name::MAX / 2 or smaller than 0
+                    Some(number) if number < 0.0 => Ok(number as $signed as _),
+                    Some(number) => Ok(number as _),
+                    None => Err(value.into()),
+                }
+            }
+
+            fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+                Ok(abi)
+            }
+        }
+    };
 }
 
-// TODO: Add a check that the value didn't overflow?
-impl FromJsValue for u32 {
-    type WasmAbi = Self;
-    fn from_js_value(value: &JsValue) -> Result<Self> {
-        match value.as_f64() {
-            // Value might be bigger than u32::MAX / 2 or smaller than 0
-            Some(number) if number < 0.0 => Ok(number as i32 as _),
-            Some(number) => Ok(number as _),
-            None => Err(value.into()),
-        }
-    }
-    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
-        Ok(abi)
-    }
-}
+from_js_value_unsigned!(u8, i8);
+from_js_value_unsigned!(u16, i16);
+from_js_value_unsigned!(u32, i32);
 
 impl FromJsValue for u64 {
     type WasmAbi = Self;
+
     fn from_js_value(value: &JsValue) -> Result<Self> {
         // Value is BigInt, but it might be positive over u64::MAX / 2, or negative
         Ok(u64::try_from(value.clone())
             .or_else(|_| i64::try_from(value.clone()).map(|value| value as u64))?)
     }
+
     fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
         Ok(abi)
     }
 }
 
-impl FromJsValue for f32 {
+// TODO: not the best name, but it works
+from_js_value_signed!(f32);
+from_js_value_signed!(f64);
+
+impl FromJsValue for char {
     type WasmAbi = Self;
+
     fn from_js_value(value: &JsValue) -> Result<Self> {
-        match value.as_f64() {
-            Some(number) => Ok(number as _),
-            None => Err(value.into()),
+        match value.as_string() {
+            Some(text) if text.len() >= 1 => Ok(text.chars().next().unwrap()),
+            _ => Err(value.into()),
         }
     }
-    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
-        Ok(abi)
-    }
-}
 
-impl FromJsValue for f64 {
-    type WasmAbi = Self;
-    fn from_js_value(value: &JsValue) -> Result<Self> {
-        Ok(value.try_into()?)
-    }
     fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
         Ok(abi)
     }
