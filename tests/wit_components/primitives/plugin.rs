@@ -6,6 +6,13 @@ wit_bindgen::generate!({
 struct Plugin;
 
 impl Primitives for Plugin {
+    fn negate_times(mut value: bool, times: u32) -> bool {
+        for _ in 0..times {
+            value = negate(value);
+        }
+        value
+    }
+
     fn add_three_s8(num: i8) -> i8 {
         add_one_s8(num + 1) + 1
     }
@@ -46,11 +53,8 @@ impl Primitives for Plugin {
         add_one_float64(num + 1.0) + 1.0
     }
 
-    fn negate_times(mut value: bool, times: u32) -> bool {
-        for _ in 0..times {
-            value = negate(value);
-        }
-        value
+    fn to_upper(ch: char) -> char {
+        to_upper_import(ch)
     }
 
     fn add_abc(text: String) -> String {

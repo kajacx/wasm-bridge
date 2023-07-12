@@ -11,6 +11,10 @@ wasm_bridge::component::bindgen!({
 struct Imports;
 
 impl PrimitivesImports for Imports {
+    fn negate(&mut self, value: bool) -> Result<bool> {
+        Ok(!value)
+    }
+
     fn add_one_s8(&mut self, num: i8) -> Result<i8> {
         Ok(num + 1)
     }
@@ -51,8 +55,8 @@ impl PrimitivesImports for Imports {
         Ok(num + 1.0)
     }
 
-    fn negate(&mut self, value: bool) -> Result<bool> {
-        Ok(!value)
+    fn to_upper_import(&mut self, ch: char) -> Result<char> {
+        Ok(ch.to_uppercase().next().unwrap())
     }
 
     fn add_b(&mut self, text: String) -> Result<String> {
@@ -73,6 +77,12 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     Primitives::add_to_linker(&mut linker, |data| data)?;
 
     let (instance, _) = Primitives::instantiate(&mut store, &component, &linker)?;
+
+    let result = instance.call_negate_times(&mut store, true, 0)?;
+    assert_eq!(result, true);
+
+    let result = instance.call_negate_times(&mut store, false, 3)?;
+    assert_eq!(result, true);
 
     let result = instance.call_add_three_s8(&mut store, 5i8)?;
     assert_eq!(result, 5i8 + 3);
@@ -104,11 +114,8 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance.call_add_three_float64(&mut store, 5.5f64)?;
     assert_eq!(result, 5.5f64 + 3.0);
 
-    let result = instance.call_negate_times(&mut store, true, 0)?;
-    assert_eq!(result, true);
-
-    let result = instance.call_negate_times(&mut store, false, 3)?;
-    assert_eq!(result, true);
+    let result = instance.call_to_upper(&mut store, 'a')?;
+    assert_eq!(result, 'A');
 
     let result = instance.call_add_abc(&mut store, "hello ")?;
     assert_eq!(result, "hello abc");

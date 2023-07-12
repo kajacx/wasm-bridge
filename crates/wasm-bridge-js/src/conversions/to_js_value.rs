@@ -46,30 +46,6 @@ impl ToJsValue for () {
     }
 }
 
-impl<'a> ToJsValue for &'a str {
-    type ReturnAbi = Self;
-
-    fn to_js_value(&self) -> JsValue {
-        (*self).into()
-    }
-
-    fn to_return_abi(&self) -> Self::ReturnAbi {
-        self
-    }
-}
-
-impl ToJsValue for String {
-    type ReturnAbi = Self;
-
-    fn to_js_value(&self) -> JsValue {
-        self.into()
-    }
-
-    fn to_return_abi(&self) -> Self::ReturnAbi {
-        self.clone() // TODO: unnecessary copy ... ?
-    }
-}
-
 macro_rules! to_js_value_single {
     ($ty: ty, $array: ty) => {
         impl ToJsValue for $ty {
@@ -104,6 +80,43 @@ to_js_value_single!(u64, BigUint64Array);
 
 to_js_value_single!(f32, Float32Array);
 to_js_value_single!(f64, Float64Array);
+
+impl ToJsValue for char {
+    type ReturnAbi = Self;
+
+    fn to_js_value(&self) -> JsValue {
+        // TODO: not really great copy
+        self.to_string().into()
+    }
+
+    fn to_return_abi(&self) -> Self::ReturnAbi {
+        *self
+    }
+}
+
+impl<'a> ToJsValue for &'a str {
+    type ReturnAbi = Self;
+
+    fn to_js_value(&self) -> JsValue {
+        (*self).into()
+    }
+
+    fn to_return_abi(&self) -> Self::ReturnAbi {
+        self
+    }
+}
+
+impl ToJsValue for String {
+    type ReturnAbi = Self;
+
+    fn to_js_value(&self) -> JsValue {
+        self.into()
+    }
+
+    fn to_return_abi(&self) -> Self::ReturnAbi {
+        self.clone() // TODO: unnecessary copy ... ?
+    }
+}
 
 // TODO: inspect OptionIntoWasmAbi and see if it's better
 impl<T: ToJsValue> ToJsValue for Option<T> {

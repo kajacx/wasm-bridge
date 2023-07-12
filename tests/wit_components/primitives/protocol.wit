@@ -1,6 +1,9 @@
 package wasm-bridge:protocol
 
 world primitives {
+  import negate: func(value: bool) -> bool
+  export negate-times: func(value: bool, times: u32) -> bool
+
   import add-one-s8: func(num: s8) -> s8
   import add-one-s16: func(num: s16) -> s16
   import add-one-s32: func(num: s32) -> s32
@@ -26,8 +29,8 @@ world primitives {
   export add-three-float32: func(num: float32) -> float32
   export add-three-float64: func(num: float64) -> float64
 
-  import negate: func(value: bool) -> bool
-  export negate-times: func(value: bool, times: u32) -> bool
+  import to-upper-import: func(ch: char) -> char
+  export to-upper: func(ch: char) -> char
 
   import add-b: func(text: string) -> string
   export add-abc: func(text: string) -> string
