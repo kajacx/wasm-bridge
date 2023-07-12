@@ -7,9 +7,9 @@ test="no_bindgen/$1"
 mkdir -p instances/no_bindgen
 
 # copy the "no_bindgen" skeleton
-cp -r skeletons/no_bindgen/plugin ./instances/no_bindgen
-cp -r skeletons/no_bindgen/host_sys ./instances/no_bindgen
-cp -r skeletons/no_bindgen/host_js ./instances/no_bindgen
+cp -r skeletons/no_bindgen/plugin instances/no_bindgen
+cp -r skeletons/no_bindgen/host_sys instances/no_bindgen
+cp -r skeletons/no_bindgen/host_js instances/no_bindgen
 
 # copy the plugin code
 cp $test/plugin.rs instances/no_bindgen/plugin/src/lib.rs

@@ -7,9 +7,12 @@ test="wit_components/$1"
 mkdir -p instances/wit_components
 
 # copy the "wit_components" skeleton
-cp -r skeletons/wit_components/plugin ./instances/wit_components
-cp -r skeletons/wit_components/host_sys ./instances/wit_components
-cp -r skeletons/wit_components/host_js ./instances/wit_components
+cp -r skeletons/wit_components/plugin instances/wit_components
+cp -r skeletons/wit_components/host_sys instances/wit_components
+cp -r skeletons/wit_components/host_js instances/wit_components
+
+# copy the protocol
+cp $test/protocol.wit instances/wit_components/protocol.wit
 
 # copy the plugin code
 cp $test/plugin.rs instances/wit_components/plugin/src/lib.rs

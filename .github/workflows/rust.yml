@@ -42,7 +42,7 @@ jobs:
         with:
           path: |
             target
-            tests/instance
+            tests/instances
             Cargo.lock
           key: ${{ runner.os }}-build-folders-${{ hashFiles('crates/*/Cargo.toml') }}
           restore-keys: ${{ runner.os }}-build-folders
@@ -53,12 +53,12 @@ jobs:
       - name: Check compile warnings
         env:
           RUSTFLAGS: "-D warnings"
-        run: cargo check --all-features --target=wasm32-unknown-unknown
+        run: cargo check --all-features
 
       - name: Check clippy warnings
         env:
           RUSTFLAGS: "-D warnings"
-        run: cargo clippy --all-features --target=wasm32-unknown-unknown -- -D clippy::all
+        run: cargo clippy --all-features -- -D clippy::all
 
       - name: Run tests
         run: cd tests && bash run_all_tests.sh
