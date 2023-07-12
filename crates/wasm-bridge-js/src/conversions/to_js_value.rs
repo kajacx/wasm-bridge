@@ -1,6 +1,6 @@
 use js_sys::{
-    Array, BigInt64Array, BigUint64Array, Float32Array, Float64Array, Int32Array, Reflect,
-    Uint32Array,
+    Array, BigInt64Array, BigUint64Array, Float32Array, Float64Array, Int16Array, Int32Array,
+    Int8Array, Reflect, Uint16Array, Uint32Array, Uint8Array,
 };
 use wasm_bindgen::{convert::ReturnWasmAbi, JsValue};
 
@@ -90,10 +90,18 @@ macro_rules! to_js_value_single {
     };
 }
 
+to_js_value_single!(bool, Array);
+
+to_js_value_single!(i8, Int8Array);
+to_js_value_single!(i16, Int16Array);
 to_js_value_single!(i32, Int32Array);
 to_js_value_single!(i64, BigInt64Array);
+
+to_js_value_single!(u8, Uint8Array);
+to_js_value_single!(u16, Uint16Array);
 to_js_value_single!(u32, Uint32Array);
 to_js_value_single!(u64, BigUint64Array);
+
 to_js_value_single!(f32, Float32Array);
 to_js_value_single!(f64, Float64Array);
 
