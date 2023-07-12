@@ -147,6 +147,7 @@ This need make it slightly awkward to use, but a workaround is planned for a fut
 
 - All primitive types (numbers, char, bool, string) supported
 - Exported and imported functions with 0-N arguments and 0-N return values
-- `list<T>` and `option<T>` types
+- `list`, `option` and `tuple` types
+- Custom `record` types
 
 See the [`wit_components`](/tests/wit_components) test folder for supported example usages.

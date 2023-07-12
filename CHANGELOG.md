@@ -6,6 +6,7 @@
 
 - Universal component zip support
 - Support rest of the primitives in wat bindgen
+- Add custom records support to wit format
 
 ## [0.1.3] 2023-07-11
 
