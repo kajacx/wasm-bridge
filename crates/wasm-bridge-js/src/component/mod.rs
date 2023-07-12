@@ -22,6 +22,9 @@ pub use make_closure::*;
 
 pub use wasm_bridge_macros::bindgen_js as bindgen;
 
+pub use wasm_bridge_macros::FromJsValue;
+pub use wasm_bridge_macros::ToJsValue;
+
 pub mod __internal {
     pub use anyhow;
 }

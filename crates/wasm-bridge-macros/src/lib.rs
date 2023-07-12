@@ -59,9 +59,38 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let regex = Regex::new("add_root_to_linker\\s*<\\s*T").unwrap();
     let as_string = regex.replace_all(&as_string, "add_root_to_linker<T: 'static");
 
+    // Remove the "ComponentType" trait, it's about memory and type safety, we don't need to care about it as much
+    let regex = Regex::new("#\\[derive[^C]*ComponentType\\s*\\)\\s*\\]").unwrap();
+    let as_string = regex.replace_all(&as_string, "");
+
+    let regex = Regex::new("const _ : \\(\\) =[^}]*ComponentType[^}]*\\}\\s*;").unwrap();
+    let as_string = regex.replace_all(&as_string, "");
+
+    // Remove the "component" macro, we don't care about it either
+    let regex = Regex::new("#\\[component\\([^)]*\\)\\]").unwrap();
+    let as_string = regex.replace_all(&as_string, "");
+
+    // Replace the "Lift" trait with "FromJsValue"
+    let regex = Regex::new("#\\[derive\\([^)]*Lift\\)\\]").unwrap();
+    let as_string = regex.replace_all(&as_string, "#[derive(wasm_bridge::component::FromJsValue)]");
+
+    // Replace the "Lower" trait with "ToJsValue"
+    let regex = Regex::new("#\\[derive\\([^)]*Lower\\)\\]").unwrap();
+    let as_string = regex.replace_all(&as_string, "#[derive(wasm_bridge::component::ToJsValue)]");
+
     // eprintln!("{as_string}");
 
     proc_macro::TokenStream::from_str(&as_string).unwrap()
+}
+
+#[proc_macro_derive(FromJsValue)]
+pub fn from_js_value(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    proc_macro::TokenStream::new()
+}
+
+#[proc_macro_derive(ToJsValue)]
+pub fn to_js_value(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    proc_macro::TokenStream::new()
 }
 
 fn replace_namespace(stream: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -70,8 +99,6 @@ fn replace_namespace(stream: proc_macro::TokenStream) -> proc_macro::TokenStream
     // Replace wasmtime:: package path with wasm_bridge::
     let regex = Regex::new("wasmtime[^:]*::").unwrap();
     let as_string = regex.replace_all(&as_string, "wasm_bridge::");
-
-    eprintln!("REPLACED: {as_string}");
 
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
