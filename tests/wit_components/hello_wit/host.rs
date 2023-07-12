@@ -1,5 +1,5 @@
 use wasm_bridge::{
-    component::{Component, Linker},
+    component::{new_universal_component, Component, Linker},
     Config, Engine, Result, Store,
 };
 
@@ -60,7 +60,7 @@ impl TestWorldImports for HostData {
     }
 }
 
-pub fn run_test(component_bytes: &[u8]) -> Result<()> {
+pub fn run_test(component_bytes: &[u8], universal_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
     config.wasm_component_model(true);
 
@@ -68,11 +68,19 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let mut store = Store::new(&engine, HostData { number: 0 });
 
     let component = Component::new(&store.engine(), &component_bytes)?;
+    run_with_component(&mut store, &component)?;
 
+    let component = new_universal_component(&store.engine(), &component_bytes)?;
+    run_with_component(&mut store, &component)?;
+
+    Ok(())
+}
+
+fn run_with_component(mut store: &mut Store<HostData>, component: &Component) -> Result<()> {
     let mut linker = Linker::new(store.engine());
     TestWorld::add_to_linker(&mut linker, |data| data)?;
 
-    let (instance, _) = TestWorld::instantiate(&mut store, &component, &linker)?;
+    let (instance, _) = TestWorld::instantiate(&mut store, component, &linker)?;
 
     let result = instance.call_promote_person(
         &mut store,
@@ -96,6 +104,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance.call_add_numbers(&mut store, 5, 6)?;
     assert_eq!(result, 11);
 
+    store.data_mut().number = 0;
     instance.call_increment_twice(&mut store)?;
     assert_eq!(store.data().number, 2);
 
@@ -106,6 +115,15 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         result,
         10.0 + 20.0 + 30.0 + 40.0 + 50.25 + 60.25 + 70.0 + 1.0
     );
+
+    // multiple references to data
+    let data1 = store.data();
+    let data2 = store.data();
+    assert_eq!(data1.number, data2.number);
+
+    // TODO: need to manually drop read "references" before making a mutable one
+    drop(data1);
+    drop(data2);
 
     let result = instance.call_add_sub_one(&mut store, 5)?;
     assert_eq!(result, (6, 4));
@@ -119,15 +137,6 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     assert_eq!(result, None);
     let result = instance.call_sqrt(&mut store, None)?;
     assert_eq!(result, None);
-
-    // multiple references to data
-    let data1 = store.data();
-    let data2 = store.data();
-    assert_eq!(data1.number, data2.number);
-
-    // TODO: need to manually drop read "references" before making a mutable one
-    drop(data1);
-    drop(data2);
 
     Ok(())
 }

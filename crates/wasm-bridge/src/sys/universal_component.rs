@@ -27,7 +27,7 @@ fn try_load_universal_component(engine: &Engine, bytes: &[u8]) -> Result<Compone
         return Err(None);
     }
 
-    Component::new(engine, &file_bytes).map_err(|err| Some(err))
+    Component::new(engine, &file_bytes).map_err(Some)
 }
 
 trait VoidError<T> {
