@@ -6,6 +6,10 @@ wit_bindgen::generate!({
 struct Plugin;
 
 impl TestWorld for Plugin {
+    fn get_person(name: String, age: u32) -> Person {
+        Person { name, age }
+    }
+
     fn add_hello(text: String) -> String {
         format!("Hello {text}")
     }

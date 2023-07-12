@@ -1,6 +1,13 @@
 package wasm-bridge:protocol
 
 world test-world {
+  record person {
+    name: string,
+    age: u32,
+  }
+
+  export get-person: func(name: string, age: u32) -> person
+
   export add-hello: func(text: string) -> string
 
   import add-b: func(text: string) -> string

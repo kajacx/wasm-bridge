@@ -1,4 +1,4 @@
-#!/use/bin/sh
+#!/usr/bin/sh
 
 # Run from the "tests" folder and pass the instance name as an argument
 test="no_bindgen/$1"

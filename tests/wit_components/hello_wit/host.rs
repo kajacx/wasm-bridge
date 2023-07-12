@@ -69,6 +69,10 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
 
     let (instance, _) = TestWorld::instantiate(&mut store, &component, &linker)?;
 
+    let result = instance.call_get_person(&mut store, "John", 30)?;
+    assert_eq!(result.name, "John");
+    assert_eq!(result.age, 30);
+
     let result = instance.call_add_hello(&mut store, "world")?;
     assert_eq!(result, "Hello world");
 
