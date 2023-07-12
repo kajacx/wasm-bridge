@@ -2,11 +2,13 @@ package wasm-bridge:protocol
 
 world test-world {
   record person {
-    name: string,
+    full-name: string,
     age: u32,
+    salary: u32,
   }
 
-  export get-person: func(name: string, age: u32) -> person
+  import set-salary: func(emloyee: person, amount: u32) -> person
+  export promote-person: func(emloyee: person, raise: u32) -> person
 
   export add-hello: func(text: string) -> string
 

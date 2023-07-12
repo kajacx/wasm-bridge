@@ -6,8 +6,8 @@ wit_bindgen::generate!({
 struct Plugin;
 
 impl TestWorld for Plugin {
-    fn get_person(name: String, age: u32) -> Person {
-        Person { name, age }
+    fn promote_person(employee: Person, raise: u32) -> Person {
+        set_salary(&employee, employee.salary + raise)
     }
 
     fn add_hello(text: String) -> String {

@@ -13,6 +13,11 @@ struct HostData {
 }
 
 impl TestWorldImports for HostData {
+    fn set_salary(&mut self, mut employee: Person, amount: u32) -> Result<Person> {
+        employee.salary = amount;
+        Ok(employee)
+    }
+
     fn add_b(&mut self, text: String) -> Result<String> {
         Ok(text + "b")
     }
@@ -69,9 +74,18 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
 
     let (instance, _) = TestWorld::instantiate(&mut store, &component, &linker)?;
 
-    let result = instance.call_get_person(&mut store, "John", 30)?;
-    assert_eq!(result.name, "John");
+    let result = instance.call_promote_person(
+        &mut store,
+        &Person {
+            full_name: "John Conner".into(),
+            age: 30,
+            salary: 10_000,
+        },
+        5_000,
+    )?;
+    assert_eq!(result.full_name, "John Conner");
     assert_eq!(result.age, 30);
+    assert_eq!(result.salary, 15_000);
 
     let result = instance.call_add_hello(&mut store, "world")?;
     assert_eq!(result, "Hello world");
