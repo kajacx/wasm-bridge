@@ -134,6 +134,19 @@ impl<T: ToJsValue> ToJsValue for Option<T> {
     }
 }
 
+impl<'a, T: ToJsValue> ToJsValue for &'a T {
+    type ReturnAbi = T::ReturnAbi;
+
+    fn to_js_value(&self) -> JsValue {
+        T::to_js_value(self)
+    }
+
+    fn to_return_abi(&self) -> Self::ReturnAbi {
+        T::to_return_abi(self)
+    }
+}
+
+// TODO: unify references...
 impl<'a, T: ToJsValue> ToJsValue for &'a [T] {
     type ReturnAbi = JsValue;
 
