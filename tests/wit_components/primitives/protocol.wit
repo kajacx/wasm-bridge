@@ -1,11 +1,34 @@
 package wasm-bridge:protocol
 
 world primitives {
+  import add-one-s8: func(num: s8) -> s8
+  import add-one-s16: func(num: s16) -> s16
+  import add-one-s32: func(num: s32) -> s32
+  import add-one-s64: func(num: s64) -> s64
+
+  export add-three-s8: func(num: s8) -> s8
+  export add-three-s16: func(num: s16) -> s16
   export add-three-s32: func(num: s32) -> s32
   export add-three-s64: func(num: s64) -> s64
+
+  import add-one-u8: func(num: u8) -> u8
+  import add-one-u16: func(num: u16) -> u16
+  import add-one-u32: func(num: u32) -> u32
+  import add-one-u64: func(num: u64) -> u64
+
+  export add-three-u8: func(num: u8) -> u8
+  export add-three-u16: func(num: u16) -> u16
   export add-three-u32: func(num: u32) -> u32
   export add-three-u64: func(num: u64) -> u64
+
+  import add-one-float32: func(num: float32) -> float32
+  import add-one-float64: func(num: float64) -> float64
   export add-three-float32: func(num: float32) -> float32
   export add-three-float64: func(num: float64) -> float64
+
+  import negate: func(value: bool) -> bool
+  export negate-times: func(value: bool, times: u32) -> bool
+
+  import add-b: func(text: string) -> string
   export add-abc: func(text: string) -> string
 }
