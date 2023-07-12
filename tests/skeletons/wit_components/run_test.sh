@@ -23,7 +23,7 @@ cd target/wasm32-unknown-unknown/debug && \
 wasm-tools component new wit_components_plugin.wasm -o component.wasm && \
 jco transpile component.wasm --instantiation -o out-dir && \
 cargo run --manifest-path ../../../../../../../crates/wasm-bridge-cli/Cargo.toml out-dir out-dir.zip && \
-cargo run --manifest-path ../../../../../../../crates/wasm-bridge-cli/Cargo.toml out-dir -u component.wasm universal.zip && \
+cargo run --manifest-path ../../../../../../../crates/wasm-bridge-cli/Cargo.toml out-dir --universal component.wasm universal.zip && \
 cd ../../../../../..
 if [ $? -ne 0 ]; then
   echo

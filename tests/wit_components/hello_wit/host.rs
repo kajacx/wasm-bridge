@@ -70,7 +70,21 @@ pub fn run_test(component_bytes: &[u8], universal_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes)?;
     run_with_component(&mut store, &component)?;
 
+    if !cfg!(target_arch = "wasm32") {
+        // Doesn't work on sys
+        Component::new(&store.engine(), universal_bytes)
+            .map(|_| ())
+            .expect_err("should not load component normally with universal bytes");
+    } else {
+        // But it works on js
+        let component = Component::new(&store.engine(), &universal_bytes)?;
+        run_with_component(&mut store, &component)?;
+    }
+
     let component = new_universal_component(&store.engine(), &component_bytes)?;
+    run_with_component(&mut store, &component)?;
+
+    let component = new_universal_component(&store.engine(), &universal_bytes)?;
     run_with_component(&mut store, &component)?;
 
     Ok(())

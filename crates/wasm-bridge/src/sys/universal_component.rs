@@ -15,7 +15,7 @@ fn try_load_universal_component(engine: &Engine, bytes: &[u8]) -> Result<Compone
     let mut file_bytes = vec![];
 
     for i in 0..archive.len() {
-        let mut file = archive.by_index(i).unwrap();
+        let mut file = archive.by_index(i).void_error()?;
         let filename = file.name();
 
         if filename.ends_with("original_component.wasm") {
@@ -34,7 +34,7 @@ trait VoidError<T> {
     fn void_error(self) -> Result<T, Option<Error>>;
 }
 
-impl<R, E> VoidError<R> for Result<R, E> {
+impl<R, E: std::error::Error> VoidError<R> for Result<R, E> {
     fn void_error(self) -> Result<R, Option<Error>> {
         self.map_err(|_| None)
     }

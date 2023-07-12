@@ -17,7 +17,7 @@ pub fn add_original_file(file: PathBuf) -> Transformer {
         let mut component = read_path_buf(&file)?;
         component.name = "original_component.wasm".into();
 
-        files.push(read_path_buf(&file)?);
+        files.push(component);
         Ok(())
     })
 }
