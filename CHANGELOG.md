@@ -1,5 +1,9 @@
 # wasm-bridge change log
 
+## [0.1.5] YYYY-MM-DD
+
+- Added variant support to wit
+
 ## [0.1.4] 2023-07-12
 
 ### Added
