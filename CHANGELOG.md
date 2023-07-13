@@ -6,7 +6,7 @@
 
 - Remove out file as the second argument in cli, only the -o option will remain.
 
-## [0.1.5] YYYY-MM-DD
+## [0.1.5] 2023-07-13
 
 ### Added
 

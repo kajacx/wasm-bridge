@@ -70,7 +70,9 @@ This is the `component.wasm` file you would use with wasmtime normally. We will 
 
 At this point, you can run the component on the web from JS, but that's not what we want.
 
-5. Convert the "web component" _again_ with `wasm-bridge-cli out-dir component.zip --universal component.wasm`
+5. Convert the "web component" _again_ with `wasm-bridge-cli out-dir -o component.zip --universal component.wasm`
+
+Reinstall with `cargo install wasm-bridge-cli -f` to use version at least `0.1.5`.
 
 This prepares the web component so that it can be loaded from Rust on the web.
 
