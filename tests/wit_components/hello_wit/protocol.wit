@@ -13,6 +13,8 @@ world test-world {
   variant shape {
     circle(float32),
     rectangle(tuple<float32, float32>),
+    semi-circle(tuple<float32, float32>),
+    point
   }
 
   export get-area: func(shape: shape) -> float32

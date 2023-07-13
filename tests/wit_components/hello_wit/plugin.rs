@@ -14,6 +14,8 @@ impl TestWorld for Plugin {
         match shape {
             Shape::Circle(radius) => radius * radius * std::f32::consts::PI,
             Shape::Rectangle((width, height)) => width * height,
+            Shape::SemiCircle((radius, angle)) => radius * radius * angle / 2.0,
+            Shape::Point => 0.0,
         }
     }
 
