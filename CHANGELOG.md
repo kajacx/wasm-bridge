@@ -1,15 +1,26 @@
 # wasm-bridge change log
 
+## [0.2.0] YYYY-MM-DD
+
+### Planned <b style="color: red">breaking changes</b>:
+
+- Remove out file as the second argument in cli, only the -o option will remain.
+
 ## [0.1.5] YYYY-MM-DD
 
+### Added
+
 - Added variant support to wit
+
+### Changed
+- Out file in cli is defined with an -o option. Old way works for now.
 
 ## [0.1.4] 2023-07-12
 
 ### Added
 
 - Universal component zip support
-- Support rest of the primitives in wat bindgen
+- Support rest of the primitives in wit bindgen
 - Add custom records support to wit format
 
 ## [0.1.3] 2023-07-11
@@ -27,7 +38,6 @@
 - Imported and exported function, 0-8 arguments, 0-1 returns
 - Only primitives and String types supported
 - See [Component model](/component_model.md)
-
 - Error is now Send and Sync
 - Custom store data, accessible from Caller (imported fn)
 
