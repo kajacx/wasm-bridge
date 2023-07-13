@@ -40,10 +40,10 @@ fi
 echo 
 
 echo Releasing crates
-cargo release -p wasm-bridge-macros
-cargo release -p wasm-bridge-js
-cargo release -p wasm-bridge-cli
-cargo release -p wasm-bridge
+cargo publish -p wasm-bridge-macros
+cargo publish -p wasm-bridge-js
+cargo publish -p wasm-bridge-cli
+cargo publish -p wasm-bridge
 echo
 
 echo Creating git tag
