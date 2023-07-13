@@ -3,6 +3,9 @@
 Here is a simple example on how to define a WIT world, implement it in a Rust plugin,
 and call it from Rust runtime on desktop and on the web using the same source code.
 
+## Prerequisites
+
+Be sure to install all the necessary tooling, list is in [Component model](../component_model.md).
 
 ## Create the WIT protocol and plugin
   
