@@ -10,13 +10,10 @@ impl TestWorld for Plugin {
         set_salary(&employee, employee.salary + raise)
     }
 
-    fn get_area(shape: Shape) -> f32 {
-        match shape {
-            Shape::Circle(radius) => radius * radius * std::f32::consts::PI,
-            Shape::Rectangle((width, height)) => width * height,
-            Shape::SemiCircle((radius, angle)) => radius * radius * angle / 2.0,
-            Shape::Point => 0.0,
-        }
+    fn quadruple_shape(shape: Shape) -> Shape {
+        let shape = double_shape(shape);
+        let shape = double_shape(shape);
+        shape
     }
 
     fn increment_twice() {

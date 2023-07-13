@@ -17,7 +17,8 @@ world test-world {
     point
   }
 
-  export get-area: func(shape: shape) -> float32
+  import double-shape: func(shape: shape) -> shape
+  export quadruple-shape: func(shape: shape) -> shape
 
   import increment: func()
   export increment-twice: func()
