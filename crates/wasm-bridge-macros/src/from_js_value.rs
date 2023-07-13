@@ -59,7 +59,7 @@ pub fn from_js_value_enum(name: Ident, data: DataEnum) -> TokenStream {
         };
 
         let tokens = quote!(
-            if val == #variant_name_converted {
+            if tag == #variant_name_converted {
                 return Ok(#return_value);
             };
         );
