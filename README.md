@@ -58,6 +58,11 @@ Alternatively, watch the [video tutorial](https://youtu.be/CqpZjouAOvg):
 
 [![Youtube video](https://img.youtube.com/vi/CqpZjouAOvg/0.jpg)](https://youtu.be/CqpZjouAOvg)
 
+## Using `component-model`
+
+Component model is available since version `0.1.2`, but only some types are supported.
+See [Component model](/docs/component_model.md).
+
 ## Switching from `wasmtime`
 
 Simply replace the `wasmtime` dependency and imports with `wasm-bridge`, and you _should_ be good to go.
@@ -65,11 +70,6 @@ Simply replace the `wasmtime` dependency and imports with `wasm-bridge`, and you
 Most of wasmtime's API is still not implemented, so you will likely run into compile errors when compiling to wasm.
 
 Create an issue with a code snippet describing your use case.
-
-## Using `component-model`
-
-Component model is available since version `0.1.2`, but the support is still very limited.
-See [Component model](/component_model.md).
 
 ## Implemented features
 
