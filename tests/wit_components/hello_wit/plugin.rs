@@ -10,20 +10,6 @@ impl TestWorld for Plugin {
         set_salary(&employee, employee.salary + raise)
     }
 
-    fn add_hello(text: String) -> String {
-        format!("Hello {text}")
-    }
-
-    fn add_abc(text: String) -> String {
-        let text = text + "a";
-        let text = add_b(&text);
-        text + "c"
-    }
-
-    fn add_numbers(a: i32, b: i32) -> i32 {
-        add_numbers_import(a, b)
-    }
-
     fn increment_twice() {
         increment();
         increment();

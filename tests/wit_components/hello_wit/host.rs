@@ -18,14 +18,6 @@ impl TestWorldImports for HostData {
         Ok(employee)
     }
 
-    fn add_b(&mut self, text: String) -> Result<String> {
-        Ok(text + "b")
-    }
-
-    fn add_numbers_import(&mut self, a: i32, b: i32) -> Result<i32> {
-        Ok(a + b)
-    }
-
     fn increment(&mut self) -> Result<()> {
         self.number += 1;
         Ok(())
@@ -108,15 +100,6 @@ fn run_with_component(mut store: &mut Store<HostData>, component: &Component) ->
     assert_eq!(result.full_name, "John Conner");
     assert_eq!(result.age, 30);
     assert_eq!(result.salary, 15_000);
-
-    let result = instance.call_add_hello(&mut store, "world")?;
-    assert_eq!(result, "Hello world");
-
-    let result = instance.call_add_abc(&mut store, "Hello ")?;
-    assert_eq!(result, "Hello abc");
-
-    let result = instance.call_add_numbers(&mut store, 5, 6)?;
-    assert_eq!(result, 11);
 
     store.data_mut().number = 0;
     instance.call_increment_twice(&mut store)?;

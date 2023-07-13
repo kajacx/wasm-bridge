@@ -23,6 +23,8 @@ Full (minimal viable) example project setup can be found [here](https://github.c
 Alternatively, the [My first component](CM/my_first_component.md) doc
 contains detailed step-by-step tutorial on how to compile, load and run a wasm component.
 
+If your world has imports, you can read [WIT imports](CM/wit_imports.md) on how to define and use them.
+
 If you want to optimize for size, you can also check out
 the [No universal](CM/no_universal.md) guide.
 
