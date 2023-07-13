@@ -110,12 +110,12 @@ let component = wasm_bridge::component::new_universal_component(&store.engine(),
 4. Instantiate the component with a linker, like this:
 ```rust
 let linker = Linker::new(store.engine());
-let (instance, _) = Calculator::instantiate(&mut store, &component, &linker)?;
+let (calculator, _) = Calculator::instantiate(&mut store, &component, &linker)?;
 ```
 
 5. Call the exported function on the component:
 ```rust
-let result = instance.call_add(&mut store, 5, 3)?;
+let result = calculator.call_add(&mut store, 5, 3)?;
 assert_eq!(result, 8);
 ```
 
