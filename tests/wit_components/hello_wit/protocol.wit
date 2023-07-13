@@ -10,6 +10,13 @@ world test-world {
   import set-salary: func(emloyee: person, amount: u32) -> person
   export promote-person: func(emloyee: person, raise: u32) -> person
 
+  variant shape {
+    circle(float32),
+    rectangle(tuple<float32, float32>),
+  }
+
+  export get-area: func(shape: shape) -> float32
+
   import increment: func()
   export increment-twice: func()
 

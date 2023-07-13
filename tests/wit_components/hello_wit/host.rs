@@ -101,6 +101,12 @@ fn run_with_component(mut store: &mut Store<HostData>, component: &Component) ->
     assert_eq!(result.age, 30);
     assert_eq!(result.salary, 15_000);
 
+    let result = instance.call_get_area(&mut store, Shape::Circle(2.0))?;
+    assert!(result > 12.0 && result < 13.0, "Area is roughly 12.6");
+
+    let result = instance.call_get_area(&mut store, Shape::Rectangle((5.0, 8.0)))?;
+    assert_eq!(result, 5.0 * 8.0);
+
     store.data_mut().number = 0;
     instance.call_increment_twice(&mut store)?;
     assert_eq!(store.data().number, 2);
