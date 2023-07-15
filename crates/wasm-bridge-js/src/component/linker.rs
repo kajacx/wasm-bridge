@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
@@ -20,7 +22,7 @@ impl<T> Linker<T> {
         component: &Component,
     ) -> Result<Instance> {
         let import_object: JsValue = js_sys::Object::new().into();
-        let mut closures = vec![];
+        let mut closures = Vec::with_capacity(self.fns.len());
 
         for function in self.fns.iter() {
             let drop_handler = function
@@ -28,6 +30,7 @@ impl<T> Linker<T> {
             closures.push(drop_handler);
         }
 
+        let closures = Rc::from(closures);
         component.instantiate(store, &import_object, closures)
     }
 

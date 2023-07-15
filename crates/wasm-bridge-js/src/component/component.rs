@@ -56,10 +56,8 @@ impl Component {
         &self,
         _store: impl AsContextMut,
         import_object: &JsValue,
-        closures: Vec<DropHandler>,
+        closures: Rc<[DropHandler]>,
     ) -> Result<Instance> {
-        let closures = Rc::new(closures);
-
         let exports = self.instantiate.call3(
             &JsValue::UNDEFINED,
             &self.compile_core,

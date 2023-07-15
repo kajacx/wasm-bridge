@@ -5,11 +5,11 @@ use crate::{AsContextMut, DropHandler, Result};
 
 pub struct Instance {
     exports: Exports,
-    _closures: Rc<Vec<DropHandler>>,
+    _closures: Rc<[DropHandler]>,
 }
 
 impl Instance {
-    pub(crate) fn new(exports: ExportsRoot, closures: Rc<Vec<DropHandler>>) -> Self {
+    pub(crate) fn new(exports: ExportsRoot, closures: Rc<[DropHandler]>) -> Self {
         Self {
             exports: Exports::new(exports),
             _closures: closures,

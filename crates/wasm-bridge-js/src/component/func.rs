@@ -7,11 +7,11 @@ use crate::DropHandler;
 #[derive(Debug, Clone)]
 pub struct Func {
     pub(crate) function: Function,
-    _closures: Rc<Vec<DropHandler>>,
+    _closures: Rc<[DropHandler]>,
 }
 
 impl Func {
-    pub(crate) fn new(function: Function, closures: Rc<Vec<DropHandler>>) -> Self {
+    pub(crate) fn new(function: Function, closures: Rc<[DropHandler]>) -> Self {
         Self {
             function,
             _closures: closures,
