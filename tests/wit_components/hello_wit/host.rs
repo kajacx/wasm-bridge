@@ -27,6 +27,15 @@ impl TestWorldImports for HostData {
         })
     }
 
+    fn rotate_cw(&mut self, way: Direction) -> Result<Direction> {
+        Ok(match way {
+            Direction::Left => Direction::Down,
+            Direction::Down => Direction::Right,
+            Direction::Right => Direction::Up,
+            Direction::Up => Direction::Left,
+        })
+    }
+
     fn increment(&mut self) -> Result<()> {
         self.number += 1;
         Ok(())
@@ -146,6 +155,9 @@ fn run_with_component(mut store: &mut Store<HostData>, component: &Component) ->
         ()
     );
 
+    let result = instance.call_rotate_ccw(&mut store, Direction::Up)?;
+    assert_eq!(result, Direction::Right);
+
     store.data_mut().number = 0;
     instance.call_increment_twice(&mut store)?;
     assert_eq!(store.data().number, 2);
@@ -164,9 +176,9 @@ fn run_with_component(mut store: &mut Store<HostData>, component: &Component) ->
     assert_eq!(data1.number, data2.number);
 
     // TODO: need to manually drop read "references" before making a mutable one
-    #[allow(dropping_references)]
+    #[allow(warnings)]
     drop(data1);
-    #[allow(dropping_references)]
+    #[allow(warnings)]
     drop(data2);
 
     let result = instance.call_add_sub_one(&mut store, 5)?;

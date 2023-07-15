@@ -20,6 +20,13 @@ world test-world {
   import double-shape: func(shape: shape) -> shape
   export quadruple-shape: func(shape: shape) -> shape
 
+  enum direction {
+    left, right, up, down,
+  }
+
+  import rotate-cw: func(way: direction) -> direction
+  export rotate-ccw: func(way: direction) -> direction
+
   import increment: func()
   export increment-twice: func()
 

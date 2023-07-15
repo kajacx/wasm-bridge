@@ -16,6 +16,13 @@ impl TestWorld for Plugin {
         shape
     }
 
+    fn rotate_ccw(way: Direction) -> Direction {
+        let way = rotate_cw(way);
+        let way = rotate_cw(way);
+        let way = rotate_cw(way);
+        way
+    }
+
     fn increment_twice() {
         increment();
         increment();
