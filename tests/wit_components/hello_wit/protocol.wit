@@ -21,7 +21,11 @@ world test-world {
   export quadruple-shape: func(shape: shape) -> shape
 
   enum direction {
-    left, right, up, down,
+    left,
+    right,
+    up,
+    down,
+    stay-center,
   }
 
   import rotate-cw: func(way: direction) -> direction

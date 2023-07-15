@@ -33,6 +33,7 @@ impl TestWorldImports for HostData {
             Direction::Down => Direction::Right,
             Direction::Right => Direction::Up,
             Direction::Up => Direction::Left,
+            Direction::StayCenter => Direction::StayCenter,
         })
     }
 
@@ -157,6 +158,9 @@ fn run_with_component(mut store: &mut Store<HostData>, component: &Component) ->
 
     let result = instance.call_rotate_ccw(&mut store, Direction::Up)?;
     assert_eq!(result, Direction::Right);
+
+    let result = instance.call_rotate_ccw(&mut store, Direction::StayCenter)?;
+    assert_eq!(result, Direction::StayCenter);
 
     store.data_mut().number = 0;
     instance.call_increment_twice(&mut store)?;

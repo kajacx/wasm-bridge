@@ -33,7 +33,7 @@ the [No universal](CM/no_universal.md) guide.
 - All primitive types (numbers, char, bool, string) supported
 - Exported and imported functions with 0-N arguments and 0-N return values
 - `list`, `option` and `tuple` types
-- Custom `record` and `variant` types
+- Custom `record`, `enum` and `variant` types
 - Use the same component file on sys and web with the "universal component"
 
 See the [`wit_components`](/tests/wit_components) test folder for supported example usages.
