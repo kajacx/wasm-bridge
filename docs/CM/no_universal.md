@@ -2,6 +2,12 @@
 
 First, read [My first component](./my_first_component.md) to understand how to get started.
 
+## Full minimal example
+
+Full example of not using universal mode can be found [here](https://github.com/kajacx/wasm-playground/tree/wasm-bridge-02).
+
+## Summary
+
 In universal mode, the zipped component contains both the original wasm component, and the jco transpiled modules.
 
 This makes the file about twice as large as it needs to be, but it's instead possible to separate the two components.

@@ -3,6 +3,10 @@
 Here is a simple example on how to define a WIT world, implement it in a Rust plugin,
 and call it from Rust runtime on desktop and on the web using the same source code.
 
+## Full minimal example
+
+Full minimal example can be found [here](https://github.com/kajacx/wasm-playground/tree/wasm-bridge-03-universal-component).
+
 ## Prerequisites
 
 Be sure to install all the necessary tooling, list is in [Component model](../component_model.md).

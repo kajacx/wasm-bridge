@@ -2,6 +2,12 @@
 
 First, read [My first component](./my_first_component.md) to understand how to get started.
 
+## Full minimal example
+
+A full example of using wit imports can be found [here](https://github.com/kajacx/wasm-playground/tree/wasm-bridge-04-wit-imports).
+
+## Steps to add imports
+
 Wit imports work the same way as they do in wasmtime. Here is a quick refresher:
 
 1. Define a wit file with imports

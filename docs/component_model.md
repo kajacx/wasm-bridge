@@ -18,7 +18,7 @@ Steps 1-6 are the same when running a wit component on the web from JS "the inte
 
 ## Project setup
 
-Full (minimal viable) example project setup can be found [here](https://github.com/kajacx/wasm-playground/tree/wasm-bridge-02).
+Full (minimal viable) example project setup can be found [here](https://github.com/kajacx/wasm-playground/tree/wasm-bridge-03-universal-component).
 
 Alternatively, the [My first component](CM/my_first_component.md) doc
 contains detailed step-by-step tutorial on how to compile, load and run a wasm component.
