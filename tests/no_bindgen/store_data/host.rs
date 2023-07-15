@@ -19,6 +19,8 @@ pub fn run_test(bytes: &[u8]) -> Result<()> {
         "imported_fns",
         "add_one_i32",
         |mut caller: Caller<Data>, val: i32| {
+            // mut in unneeded on sys, since data is a normal reference there
+            #[allow(unused_mut)]
             let mut data = caller.data_mut();
             data.times_called += 1;
             val.wrapping_add(1)

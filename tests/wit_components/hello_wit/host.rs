@@ -164,7 +164,9 @@ fn run_with_component(mut store: &mut Store<HostData>, component: &Component) ->
     assert_eq!(data1.number, data2.number);
 
     // TODO: need to manually drop read "references" before making a mutable one
+    #[allow(dropping_references)]
     drop(data1);
+    #[allow(dropping_references)]
     drop(data2);
 
     let result = instance.call_add_sub_one(&mut store, 5)?;
