@@ -10,19 +10,6 @@ impl TestWorld for Plugin {
         set_salary(&employee, employee.salary + raise)
     }
 
-    fn quadruple_shape(shape: Shape) -> Shape {
-        let shape = double_shape(shape);
-        let shape = double_shape(shape);
-        shape
-    }
-
-    fn rotate_ccw(way: Direction) -> Direction {
-        let way = rotate_cw(way);
-        let way = rotate_cw(way);
-        let way = rotate_cw(way);
-        way
-    }
-
     fn increment_twice() {
         increment();
         increment();
@@ -40,10 +27,6 @@ impl TestWorld for Plugin {
     fn add_sub_twenty(num: i32) -> (i32, i32) {
         let (a, b) = add_sub_ten(num);
         (a + 10, b - 10)
-    }
-
-    fn sqrt(num: Option<f64>) -> Option<f64> {
-        sqrt_import(num)
     }
 }
 

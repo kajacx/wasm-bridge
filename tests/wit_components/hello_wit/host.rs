@@ -18,25 +18,6 @@ impl TestWorldImports for HostData {
         Ok(employee)
     }
 
-    fn double_shape(&mut self, shape: Shape) -> Result<Shape> {
-        Ok(match shape {
-            Shape::Circle(r) => Shape::Circle(r * 2.0),
-            Shape::Rectangle((w, h)) => Shape::Rectangle((w * 2.0, h * 2.0)),
-            Shape::SemiCircle((r, a)) => Shape::SemiCircle((r * 2.0, a)),
-            Shape::Point => Shape::Point,
-        })
-    }
-
-    fn rotate_cw(&mut self, way: Direction) -> Result<Direction> {
-        Ok(match way {
-            Direction::Left => Direction::Down,
-            Direction::Down => Direction::Right,
-            Direction::Right => Direction::Up,
-            Direction::Up => Direction::Left,
-            Direction::StayCenter => Direction::StayCenter,
-        })
-    }
-
     fn increment(&mut self) -> Result<()> {
         self.number += 1;
         Ok(())
@@ -61,13 +42,6 @@ impl TestWorldImports for HostData {
         g: String,
     ) -> Result<f64> {
         Ok(a as f64 + b as f64 + c as f64 + d as f64 + e as f64 + f + g.parse::<f64>().unwrap())
-    }
-
-    fn sqrt_import(&mut self, num: Option<f64>) -> Result<Option<f64>> {
-        Ok(match num {
-            Some(value) if value >= 0.0 => Some(value.sqrt()),
-            _ => None,
-        })
     }
 }
 
@@ -120,48 +94,6 @@ fn run_with_component(mut store: &mut Store<HostData>, component: &Component) ->
     assert_eq!(result.age, 30);
     assert_eq!(result.salary, 15_000);
 
-    let result = instance.call_quadruple_shape(&mut store, Shape::Circle(2.0))?;
-    assert_eq!(
-        match result {
-            Shape::Circle(radius) => radius,
-            _ => unreachable!(),
-        },
-        8.0
-    );
-
-    let result = instance.call_quadruple_shape(&mut store, Shape::Rectangle((2.0, 3.0)))?;
-    assert_eq!(
-        match result {
-            Shape::Rectangle((w, h)) => (w, h),
-            _ => unreachable!(),
-        },
-        (8.0, 12.0)
-    );
-
-    let result = instance.call_quadruple_shape(&mut store, Shape::SemiCircle((2.0, 4.0)))?;
-    assert_eq!(
-        match result {
-            Shape::SemiCircle((r, a)) => (r, a),
-            _ => unreachable!(),
-        },
-        (8.0, 4.0)
-    );
-
-    let result = instance.call_quadruple_shape(&mut store, Shape::Point)?;
-    assert_eq!(
-        match result {
-            Shape::Point => (),
-            _ => unreachable!(),
-        },
-        ()
-    );
-
-    let result = instance.call_rotate_ccw(&mut store, Direction::Up)?;
-    assert_eq!(result, Direction::Right);
-
-    let result = instance.call_rotate_ccw(&mut store, Direction::StayCenter)?;
-    assert_eq!(result, Direction::StayCenter);
-
     store.data_mut().number = 0;
     instance.call_increment_twice(&mut store)?;
     assert_eq!(store.data().number, 2);
@@ -190,13 +122,6 @@ fn run_with_component(mut store: &mut Store<HostData>, component: &Component) ->
 
     let result = instance.call_add_sub_twenty(&mut store, 5)?;
     assert_eq!(result, (25, -15));
-
-    let result = instance.call_sqrt(&mut store, Some(16.0))?;
-    assert_eq!(result, Some(4.0));
-    let result = instance.call_sqrt(&mut store, Some(-16.0))?;
-    assert_eq!(result, None);
-    let result = instance.call_sqrt(&mut store, None)?;
-    assert_eq!(result, None);
 
     Ok(())
 }

@@ -1,0 +1,27 @@
+package wasm-bridge:protocol
+
+world enums {
+  variant shape {
+    circle(float32),
+    rectangle(tuple<float32, float32>),
+    semi-circle(tuple<float32, float32>),
+    point
+  }
+
+  import double-shape: func(shape: shape) -> shape
+  export quadruple-shape: func(shape: shape) -> shape
+
+  enum direction {
+    left,
+    right,
+    up,
+    down,
+    stay-center,
+  }
+
+  import rotate-cw: func(way: direction) -> direction
+  export rotate-ccw: func(way: direction) -> direction
+
+  import sqrt-import: func(num: option<float64>) -> option<float64>
+  export sqrt: func(num: option<float64>) -> option<float64>
+}

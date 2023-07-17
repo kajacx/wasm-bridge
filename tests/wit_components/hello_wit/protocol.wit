@@ -10,27 +10,6 @@ world test-world {
   import set-salary: func(emloyee: person, amount: u32) -> person
   export promote-person: func(emloyee: person, raise: u32) -> person
 
-  variant shape {
-    circle(float32),
-    rectangle(tuple<float32, float32>),
-    semi-circle(tuple<float32, float32>),
-    point
-  }
-
-  import double-shape: func(shape: shape) -> shape
-  export quadruple-shape: func(shape: shape) -> shape
-
-  enum direction {
-    left,
-    right,
-    up,
-    down,
-    stay-center,
-  }
-
-  import rotate-cw: func(way: direction) -> direction
-  export rotate-ccw: func(way: direction) -> direction
-
   import increment: func()
   export increment-twice: func()
 
@@ -42,7 +21,4 @@ world test-world {
 
   import add-sub-ten: func(num: s32) -> (added: s32, subtracted: s32)
   export add-sub-twenty: func(num: s32) -> (added: s32, subtracted: s32)
-
-  import sqrt-import: func(num: option<float64>) -> option<float64>
-  export sqrt: func(num: option<float64>) -> option<float64>
 }
