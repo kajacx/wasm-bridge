@@ -31,12 +31,7 @@ pub fn flags(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 #[proc_macro]
 pub fn bindgen_sys(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let as_string = replace_namespace(original::bindgen(input));
-
-    // TODO: this should not be needed
-    let as_string = format!("mod wasmtime {{ pub use wasm_bridge::*; }}\n\n{as_string}");
-
-    proc_macro::TokenStream::from_str(&as_string).unwrap()
+    replace_namespace(original::bindgen(input))
 }
 
 #[proc_macro]
