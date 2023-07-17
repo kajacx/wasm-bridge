@@ -35,8 +35,8 @@ impl<Params, Return> TypedFunc<Params, Return> {
         Return: FromJsValue,
     {
         let argument = params.to_function_args();
-        let results = self.func.function.apply(&JsValue::UNDEFINED, &argument)?;
-        Return::from_js_value(&results)
+        let result = self.func.function.apply(&JsValue::UNDEFINED, &argument);
+        Return::from_fn_result(&result)
     }
 
     pub fn post_return(&self, _store: impl AsContextMut) -> Result<()> {

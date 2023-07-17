@@ -8,6 +8,16 @@ pub trait FromJsValue: Sized {
 
     fn from_js_value(value: &JsValue) -> Result<Self>;
 
+    // When type is the (direct) result of an exported function
+    fn from_fn_result(result: &Result<JsValue, JsValue>) -> Result<Self> {
+        Self::from_js_value(
+            &result
+                .as_ref()
+                .expect("only the Result type can have the Err variant"),
+        )
+    }
+
+    // When type is an argument of an imported function
     fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self>;
 }
 
@@ -180,6 +190,13 @@ impl<T: FromJsValue, E: FromJsValue> FromJsValue for Result<T, E> {
         } else {
             Err(value.into()) // TODO: Better error
         }
+    }
+
+    fn from_fn_result(result: &Result<JsValue, JsValue>) -> Result<Self> {
+        Ok(match result {
+            Ok(val) => Ok(T::from_js_value(val)?),
+            Err(err) => Err(E::from_js_value(err)?),
+        })
     }
 
     fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
