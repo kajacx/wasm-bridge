@@ -166,6 +166,27 @@ impl<T: FromJsValue> FromJsValue for Option<T> {
     }
 }
 
+impl<T: FromJsValue, E: FromJsValue> FromJsValue for Result<T, E> {
+    type WasmAbi = JsValue;
+
+    fn from_js_value(value: &JsValue) -> Result<Self> {
+        // TODO: better error handling
+        let tag = Reflect::get(value, &"tag".into())?.as_string().unwrap();
+        let val = Reflect::get(value, &"val".into())?;
+        if tag == "ok" {
+            Ok(Ok(T::from_js_value(&val)?))
+        } else if tag == "err" {
+            Ok(Err(E::from_js_value(&val)?))
+        } else {
+            Err(value.into()) // TODO: Better error
+        }
+    }
+
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Self::from_js_value(&abi)
+    }
+}
+
 impl<T: FromJsValue> FromJsValue for Vec<T> {
     type WasmAbi = JsValue;
 

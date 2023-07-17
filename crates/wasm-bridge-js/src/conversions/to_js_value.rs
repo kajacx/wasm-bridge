@@ -1,6 +1,6 @@
 use js_sys::{
     Array, BigInt64Array, BigUint64Array, Float32Array, Float64Array, Int16Array, Int32Array,
-    Int8Array, Reflect, Uint16Array, Uint32Array, Uint8Array,
+    Int8Array, Object, Reflect, Uint16Array, Uint32Array, Uint8Array,
 };
 use wasm_bindgen::{convert::ReturnWasmAbi, JsValue};
 
@@ -127,6 +127,25 @@ impl<T: ToJsValue> ToJsValue for Option<T> {
             Self::Some(value) => value.to_js_value(),
             None => JsValue::undefined(),
         }
+    }
+
+    fn to_return_abi(&self) -> Self::ReturnAbi {
+        self.to_js_value()
+    }
+}
+
+impl<T: ToJsValue, E: ToJsValue> ToJsValue for Result<T, E> {
+    type ReturnAbi = JsValue;
+
+    fn to_js_value(&self) -> JsValue {
+        let result: JsValue = Object::new().into();
+        let (tag, val) = match self {
+            Ok(value) => ("ok", value.to_js_value()),
+            Err(err) => ("err", err.to_js_value()),
+        };
+        Reflect::set(&result, &"tag".into(), &tag.into()).unwrap();
+        Reflect::set(&result, &"val".into(), &val).unwrap();
+        result
     }
 
     fn to_return_abi(&self) -> Self::ReturnAbi {
