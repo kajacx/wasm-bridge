@@ -1,6 +1,7 @@
 package wasm-bridge:protocol
 
 world enums {
+  // Variant enums
   variant shape {
     circle(float32),
     rectangle(tuple<float32, float32>),
@@ -11,6 +12,7 @@ world enums {
   import double-shape: func(shape: shape) -> shape
   export quadruple-shape: func(shape: shape) -> shape
 
+  // "Normal" enums
   enum direction {
     left,
     right,
@@ -22,6 +24,11 @@ world enums {
   import rotate-cw: func(way: direction) -> direction
   export rotate-ccw: func(way: direction) -> direction
 
+  // Option
   import sqrt-import: func(num: option<float64>) -> option<float64>
   export sqrt: func(num: option<float64>) -> option<float64>
+
+  // Results
+  import add-one-both: func(num: s32) -> result<s32, string>
+  export add-three-both: func(num: s32) -> result<s32, string>
 }

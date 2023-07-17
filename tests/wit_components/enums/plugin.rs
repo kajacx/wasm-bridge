@@ -22,6 +22,13 @@ impl Enums for Plugin {
     fn sqrt(num: Option<f64>) -> Option<f64> {
         sqrt_import(num)
     }
+
+    fn add_three_both(num: i32) -> Result<i32, String> {
+        let num = add_one_both(num)?;
+        let num = add_one_both(num)?;
+        let num = add_one_both(num)?;
+        Ok(num)
+    }
 }
 
 export_enums!(Plugin);
