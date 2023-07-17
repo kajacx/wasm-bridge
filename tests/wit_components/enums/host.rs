@@ -37,12 +37,8 @@ impl EnumsImports for HostData {
         })
     }
 
-    fn add_one_both(&mut self, num: i32) -> Result<Result<i32, String>> {
-        Ok(if num < 0 {
-            Err("Negative".into())
-        } else {
-            Ok(num + 1)
-        })
+    fn add_one_both(&mut self, num: Result<i32, u8>) -> Result<Result<i32, u8>> {
+        Ok((move || Ok(num? + 1))())
     }
 }
 
@@ -109,10 +105,10 @@ pub fn run_test(component_bytes: &[u8], _universal_bytes: &[u8]) -> Result<()> {
     let result = instance.call_sqrt(&mut store, None)?;
     assert_eq!(result, None);
 
-    let result = instance.call_add_three_both(&mut store, 10)?;
+    let result = instance.call_add_three_both(&mut store, Ok(10))?;
     assert_eq!(result, Ok(13));
-    let result = instance.call_add_three_both(&mut store, -10)?;
-    assert_eq!(result, Err("Negative".into()));
+    let result = instance.call_add_three_both(&mut store, Err(7))?;
+    assert_eq!(result, Err(7));
 
     Ok(())
 }

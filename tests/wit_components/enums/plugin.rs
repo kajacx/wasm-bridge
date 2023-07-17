@@ -23,11 +23,11 @@ impl Enums for Plugin {
         sqrt_import(num)
     }
 
-    fn add_three_both(num: i32) -> Result<i32, String> {
-        let num = add_one_both(num)?;
-        let num = add_one_both(num)?;
-        let num = add_one_both(num)?;
-        Ok(num)
+    fn add_three_both(num: Result<i32, u8>) -> Result<i32, u8> {
+        let num = add_one_both(num);
+        let num = add_one_both(num);
+        let num = add_one_both(num);
+        num
     }
 }
 
