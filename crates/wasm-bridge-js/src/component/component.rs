@@ -4,7 +4,10 @@ use js_sys::{Function, Object, Reflect, Uint8Array, WebAssembly};
 use wasm_bindgen::prelude::*;
 use zip::{read::ZipFile, ZipArchive};
 
-use crate::{helpers, AsContextMut, DropHandler, Engine, Result};
+use crate::{
+    helpers::{self, map_js_error},
+    AsContextMut, DropHandler, Engine, Result,
+};
 
 use super::*;
 
@@ -58,21 +61,29 @@ impl Component {
         import_object: &JsValue,
         closures: Rc<[DropHandler]>,
     ) -> Result<Instance> {
-        let exports = self.instantiate.call3(
-            &JsValue::UNDEFINED,
-            &self.compile_core,
-            import_object,
-            &self.instantiate_core,
-        )?;
+        let exports = self
+            .instantiate
+            .call3(
+                &JsValue::UNDEFINED,
+                &self.compile_core,
+                import_object,
+                &self.instantiate_core,
+            )
+            .map_err(map_js_error("Call component instantiate"))?;
 
         let names = Object::get_own_property_names(&exports.clone().into());
         let mut export_fns = HashMap::<String, Func>::new();
 
         for i in 0..names.length() {
-            let name = Reflect::get_u32(&names, i)?;
-            let function: Function = Reflect::get(&exports, &name)?.into();
+            let name =
+                Reflect::get_u32(&names, i).map_err(map_js_error("Get name of exported fn"))?;
+
+            let function: Function = Reflect::get(&exports, &name)
+                .map_err(map_js_error("Get exported fn"))?
+                .into();
+
             export_fns.insert(
-                name.as_string().unwrap(),
+                name.as_string().unwrap(), // TODO: user error
                 Func::new(function, closures.clone()),
             );
         }
@@ -92,7 +103,9 @@ impl Component {
         std::io::copy(&mut file, &mut file_bytes).unwrap();
         let text = String::from_utf8(file_bytes).unwrap(); // TODO: this needs to be user error
 
-        let instantiate: Function = js_sys::eval(&text)?.into();
+        let instantiate: Function = js_sys::eval(&text)
+            .map_err(map_js_error("Eval sync_component.js"))?
+            .into();
         Ok(instantiate)
     }
 

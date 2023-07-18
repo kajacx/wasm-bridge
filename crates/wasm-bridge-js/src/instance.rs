@@ -1,4 +1,5 @@
-use crate::*;
+use crate::{helpers::map_js_error, *};
+use anyhow::bail;
 use js_sys::{Function, Object, Reflect, WebAssembly};
 use wasm_bindgen::JsValue;
 
@@ -19,8 +20,10 @@ impl Instance {
         imports: &Object,
         closures: Vec<DropHandler>,
     ) -> Result<Self> {
-        let instance = WebAssembly::Instance::new(&module.module, imports)?;
-        let exports = Reflect::get(instance.as_ref(), &"exports".into())?;
+        let instance = WebAssembly::Instance::new(&module.module, imports)
+            .map_err(map_js_error("Instantiate WebAssembly module"))?;
+        let exports = Reflect::get(instance.as_ref(), &"exports".into())
+            .map_err(map_js_error("Get instance's exports"))?;
         Ok(Self {
             instance,
             exports,
@@ -33,20 +36,21 @@ impl Instance {
         _store: impl AsContextMut,
         name: &str,
     ) -> Result<TypedFunc<Params, Results>, Error> {
-        let function = Reflect::get(&self.exports, &name.into())?;
+        let function = Reflect::get(&self.exports, &name.into())
+            .map_err(map_js_error("Get exported fn with reflect"))?;
 
         if !function.is_function() {
-            return Err(Error::ExportedFnNotFound(name.into()));
+            bail!("Exported function with name '{name}' not found");
         }
 
         let function: Function = function.into();
 
         if function.length() != Params::number_of_args() {
-            return Err(Error::IncorrectNumOfArgs(
-                name.into(),
+            bail!(
+                "Exported function {name} should have {} arguments, but it has {} instead.",
                 Params::number_of_args(),
                 function.length(),
-            ));
+            );
         }
 
         Ok(TypedFunc::new(&self.instance, function))

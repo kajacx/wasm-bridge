@@ -1,7 +1,8 @@
+use anyhow::Context;
 use js_sys::Reflect;
 use wasm_bindgen::{convert::FromWasmAbi, JsValue};
 
-use crate::*;
+use crate::{helpers::map_js_error, *};
 
 pub trait FromJsValue: Sized {
     type WasmAbi: FromWasmAbi;
@@ -10,8 +11,11 @@ pub trait FromJsValue: Sized {
 
     // When type is the (direct) result of an exported function
     fn from_fn_result(result: &Result<JsValue, JsValue>) -> Result<Self> {
-        // TODO: better user error
-        Self::from_js_value(result.as_ref()?)
+        Self::from_js_value(
+            result
+                .as_ref()
+                .map_err(map_js_error("Exported function threw an exception"))?,
+        )
     }
 
     // When type is an argument of an imported function
@@ -25,7 +29,7 @@ impl FromJsValue for () {
         if value.is_undefined() || value.is_null() {
             Ok(())
         } else {
-            Err(value.into())
+            Err(map_js_error("Expected null or undefined")(value))
         }
     }
 
@@ -40,7 +44,7 @@ impl FromJsValue for bool {
     fn from_js_value(value: &JsValue) -> Result<Self> {
         match value.as_bool() {
             Some(value) => Ok(value),
-            None => Err(value.into()), // TODO: better error, in other types too
+            None => Err(map_js_error("Expected a boolean value")(value)),
         }
     }
 
@@ -57,7 +61,7 @@ macro_rules! from_js_value_signed {
             fn from_js_value(value: &JsValue) -> Result<Self> {
                 match value.as_f64() {
                     Some(number) => Ok(number as _),
-                    None => Err(value.into()), // TODO: better error, in other types too
+                    None => Err(map_js_error("Expected a number")(value)),
                 }
             }
 
@@ -76,7 +80,10 @@ impl FromJsValue for i64 {
     type WasmAbi = Self;
 
     fn from_js_value(value: &JsValue) -> Result<Self> {
-        Ok(value.clone().try_into()?)
+        value
+            .clone()
+            .try_into()
+            .map_err(map_js_error("Expected a bigint"))
     }
 
     fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
@@ -94,7 +101,7 @@ macro_rules! from_js_value_unsigned {
                     // Value might be bigger than $name::MAX / 2 or smaller than 0
                     Some(number) if number < 0.0 => Ok(number as $signed as _),
                     Some(number) => Ok(number as _),
-                    None => Err(value.into()),
+                    None => Err(map_js_error("Expected a number")(value)),
                 }
             }
 
@@ -114,8 +121,9 @@ impl FromJsValue for u64 {
 
     fn from_js_value(value: &JsValue) -> Result<Self> {
         // Value is BigInt, but it might be positive over u64::MAX / 2, or negative
-        Ok(u64::try_from(value.clone())
-            .or_else(|_| i64::try_from(value.clone()).map(|value| value as u64))?)
+        u64::try_from(value.clone())
+            .or_else(|_| i64::try_from(value.clone()).map(|value| value as u64))
+            .map_err(map_js_error("Expected a bigint"))
     }
 
     fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
@@ -133,7 +141,7 @@ impl FromJsValue for char {
     fn from_js_value(value: &JsValue) -> Result<Self> {
         match value.as_string() {
             Some(text) if !text.is_empty() => Ok(text.chars().next().unwrap()),
-            _ => Err(value.into()),
+            _ => Err(map_js_error("Expected a single-character string")(value)),
         }
     }
 
@@ -148,7 +156,7 @@ impl FromJsValue for String {
     fn from_js_value(value: &JsValue) -> Result<Self, crate::Error> {
         match value.as_string() {
             Some(value) => Ok(value),
-            None => Err(value.into()), // TODO: better error
+            None => Err(map_js_error("Expected a string")(value)),
         }
     }
 
@@ -178,14 +186,20 @@ impl<T: FromJsValue, E: FromJsValue> FromJsValue for Result<T, E> {
 
     fn from_js_value(value: &JsValue) -> Result<Self> {
         // TODO: better error handling
-        let tag = Reflect::get(value, &"tag".into())?.as_string().unwrap();
-        let val = Reflect::get(value, &"val".into())?;
+        let tag = Reflect::get(value, &"tag".into())
+            .map_err(map_js_error("Get tag from result"))?
+            .as_string()
+            .context("Result tag should be string")?;
+
+        let val =
+            Reflect::get(value, &"val".into()).map_err(map_js_error("Get val from result"))?;
+
         if tag == "ok" {
             Ok(Ok(T::from_js_value(&val)?))
         } else if tag == "err" {
             Ok(Err(E::from_js_value(&val)?))
         } else {
-            Err(value.into()) // TODO: Better error
+            Err(map_js_error("Unknown result tag")(value))
         }
     }
 
@@ -199,8 +213,8 @@ impl<T: FromJsValue, E: FromJsValue> FromJsValue for Result<T, E> {
                 // One should be Ok(Err(value))
                 // The other should be Err(value)
 
-                // TODO: better user error
-                let payload = Reflect::get(err, &"payload".into())?;
+                let payload = Reflect::get(err, &"payload".into())
+                    .map_err(map_js_error("Get result error payload"))?;
                 Err(E::from_js_value(&payload)?)
             }
         })
@@ -216,13 +230,16 @@ impl<T: FromJsValue> FromJsValue for Vec<T> {
 
     fn from_js_value(value: &JsValue) -> Result<Self> {
         // TODO: Add user error?
-        let length = Reflect::get(value, &"length".into())?;
-        let length = length.as_f64().unwrap() as u32;
+        let length = Reflect::get(value, &"length".into())
+            .map_err(map_js_error("Get length of array"))?
+            .as_f64()
+            .context("Array length should be a number")? as u32;
 
         let mut result = Vec::with_capacity(length as usize);
 
         for index in 0..length {
-            let item = Reflect::get_u32(value, index)?;
+            let item = Reflect::get_u32(value, index)
+                .map_err(map_js_error("Get array value at an index"))?;
             result.push(T::from_js_value(&item)?);
         }
 
@@ -256,7 +273,7 @@ macro_rules! from_js_value_many {
             type WasmAbi = JsValue;
 
             fn from_js_value(results: &JsValue) -> Result<Self> {
-                Ok(( $($name::from_js_value(&Reflect::get_u32(results, $index)?)?,)* ))
+                Ok(( $($name::from_js_value(&Reflect::get_u32(results, $index).map_err(map_js_error("Get tuple value"))?)?,)* ))
             }
 
             fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {

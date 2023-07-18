@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{helpers::map_js_error, *};
 use js_sys::{Uint8Array, WebAssembly};
 
 #[derive(Clone, Debug)]
@@ -17,8 +17,7 @@ impl Module {
         // If it's not text, give back the original error, it's probably more useful
         let text: &str = std::str::from_utf8(wat).map_err(move |_| original_err)?;
 
-        let bytes =
-            wat::parse_str(text).map_err(|err| Error::InvalidWatText(format!("{err:?}")))?;
+        let bytes = wat::parse_str(text)?;
 
         Self::from_bytes(&bytes)
     }
@@ -34,7 +33,8 @@ impl Module {
         // Uint8Array::view(bytes.as_ref());
 
         let byte_array = Uint8Array::from(bytes);
-        let module = WebAssembly::Module::new(&byte_array.into())?;
+        let module = WebAssembly::Module::new(&byte_array.into())
+            .map_err(map_js_error("New WebAssembly module from bytes"))?;
         Ok(Self { module })
     }
 }
