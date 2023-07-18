@@ -12,7 +12,7 @@ pub trait FromJsValue: Sized {
     fn from_fn_result(result: &Result<JsValue, JsValue>) -> Result<Self> {
         Self::from_js_value(
             &result
-                .as_ref()
+                .as_ref() // TODO: turn to user error
                 .expect("only the Result type can have the Err variant"),
         )
     }
@@ -177,7 +177,7 @@ impl<T: FromJsValue> FromJsValue for Option<T> {
 }
 
 impl<T: FromJsValue, E: FromJsValue> FromJsValue for Result<T, E> {
-    type WasmAbi = JsValue;
+    type WasmAbi = JsValue; // TODO: this might be wrong?
 
     fn from_js_value(value: &JsValue) -> Result<Self> {
         // TODO: better error handling
@@ -195,7 +195,11 @@ impl<T: FromJsValue, E: FromJsValue> FromJsValue for Result<T, E> {
     fn from_fn_result(result: &Result<JsValue, JsValue>) -> Result<Self> {
         Ok(match result {
             Ok(val) => Ok(T::from_js_value(val)?),
-            Err(err) => Err(E::from_js_value(err)?),
+            Err(err) => {
+                // TODO: better user error
+                let payload = Reflect::get(err, &"payload".into())?;
+                Err(E::from_js_value(&payload)?)
+            }
         })
     }
 
@@ -236,6 +240,10 @@ impl<T: FromJsValue> FromJsValue for (T,) {
 
     fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
         Ok((T::from_wasm_abi(abi)?,))
+    }
+
+    fn from_fn_result(result: &Result<JsValue, JsValue>) -> Result<Self> {
+        Ok((T::from_fn_result(result)?,))
     }
 }
 
