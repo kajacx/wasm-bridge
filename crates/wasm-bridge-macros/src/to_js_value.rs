@@ -36,8 +36,8 @@ pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
                 value
             }
 
-            fn into_return_abi(self) -> Self::ReturnAbi {
-                self.to_js_value()
+            fn into_return_abi(self) -> Result<Self::ReturnAbi, wasm_bridge::wasm_bindgen::JsValue> {
+                Ok(self.to_js_value())
             }
         }
     }
@@ -70,8 +70,8 @@ pub fn to_js_value_enum(name: Ident, data: DataEnum) -> TokenStream {
                 }
             }
 
-            fn into_return_abi(self) -> Self::ReturnAbi {
-                self.to_js_value()
+            fn into_return_abi(self) -> Result<Self::ReturnAbi, wasm_bridge::wasm_bindgen::JsValue> {
+                Ok(self.to_js_value())
             }
         }
     }
@@ -121,8 +121,8 @@ pub fn to_js_value_variant(name: Ident, data: DataEnum) -> TokenStream {
                 }
             }
 
-            fn into_return_abi(self) -> Self::ReturnAbi {
-                self.to_js_value()
+            fn into_return_abi(self) -> Result<Self::ReturnAbi, wasm_bridge::wasm_bindgen::JsValue> {
+                Ok(self.to_js_value())
             }
         }
     }

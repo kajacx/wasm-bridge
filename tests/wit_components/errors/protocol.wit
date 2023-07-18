@@ -1,0 +1,17 @@
+package wasm-bridge:protocol
+
+world errors {
+  enum where-fail {
+    guest-panic,
+    guest-err,
+    host-err,
+    host-ok-err,
+    host-ok-ok,
+  }
+   
+  import simple-fail-host: func(where: where-fail) -> where-fail
+  export simple-fail-guest: func(where: where-fail) -> where-fail
+
+  import full-fail-host: func(where: where-fail) -> result<where-fail, where-fail>
+  export full-fail-guest: func(where: where-fail) -> result<where-fail, where-fail>
+}

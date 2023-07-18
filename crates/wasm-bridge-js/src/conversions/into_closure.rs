@@ -23,7 +23,7 @@ where
             let caller = Caller::new(handle);
             let self_clone = self_rc.clone();
 
-            let closure = Closure::<dyn Fn() -> R::ReturnAbi>::new(move || {
+            let closure = Closure::<dyn Fn() -> Result<R::ReturnAbi, JsValue>>::new(move || {
                 self_clone(caller.clone()).into_return_abi()
             });
 
@@ -49,9 +49,9 @@ macro_rules! into_make_closure_single {
                     let caller = Caller::new(handle);
                     let self_clone = self_rc.clone();
 
-                    let closure = Closure::<dyn Fn($ty) -> R::ReturnAbi>::new(move |arg: $ty| {
-                        self_clone(caller.clone(), arg).into_return_abi()
-                    });
+                    let closure = Closure::<dyn Fn($ty) -> Result<R::ReturnAbi, JsValue>>::new(
+                        move |arg: $ty| self_clone(caller.clone(), arg).into_return_abi(),
+                    );
 
                     DropHandler::from_closure(closure)
                 };
@@ -86,7 +86,7 @@ macro_rules! into_make_closure_many {
                     let self_clone = self_rc.clone();
 
                     let closure =
-                        Closure::<dyn Fn($($name),*) -> R::ReturnAbi>::new(move |$($param: $name),*| {
+                        Closure::<dyn Fn($($name),*) -> Result<R::ReturnAbi, JsValue>>::new(move |$($param: $name),*| {
                             self_clone(caller.clone(), $($param),*).into_return_abi()
                         });
 

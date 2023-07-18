@@ -16,7 +16,7 @@ macro_rules! make_closure {
         where
             T: 'static,
             $($name: FromJsValue + 'static,)*
-            R: ToJsValue + 'static,
+            R: ToJsValue + 'static ,
             F: Fn(StoreContextMut<T>, ($($name, )*)) -> Result<R> + 'static,
         {
             fn into_make_closure(self) -> MakeClosure<T> {
@@ -26,9 +26,11 @@ macro_rules! make_closure {
                     let self_clone = self_rc.clone();
 
                     let closure =
-                        Closure::<dyn Fn($($name::WasmAbi),*) -> R::ReturnAbi>::new(move |$($param: $name::WasmAbi),*| {
-                            // TODO: user error?
-                            self_clone(&mut handle.borrow_mut(), ($($name::from_wasm_abi($param).unwrap(),)*)).unwrap().into_return_abi()
+                        Closure::<dyn Fn($($name::WasmAbi),*) -> Result<R::ReturnAbi, JsValue>>::new(move |$($param: $name::WasmAbi),*| {
+                            self_clone(
+                                &mut handle.borrow_mut(),
+                                ($($name::from_wasm_abi($param).map_err::<JsValue, _>(|err| format!("import value from abi error: {err:?}").into())?,)*)
+                            ).map_err(|err| format!("host imported fn returned error: {err:?}"))?.into_return_abi()
                         });
 
                     DropHandler::from_closure(closure)
