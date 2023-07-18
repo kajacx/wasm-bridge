@@ -4,7 +4,7 @@ description = "Helper crate to define proc macros for wasm-bridge"
 version.workspace = true
 edition.workspace = true
 repository.workspace = true
-license = "Apache-2.0 WITH LLVM-exception"
+license.workspace = true
 keywords.workspace = true
 categories.workspace = true
 

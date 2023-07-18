@@ -81,3 +81,12 @@ Create an issue with a code snippet describing your use case.
 - Access store's data from Caller (imported fn)
 
 See the [`no_bindgen`](/tests/no_bindgen) test folder for supported example usages.
+
+## License
+
+The source code of `wasm-bride` is licensed under MIT, but there are portions that are copied from other projects,
+and may come with a different license.
+
+Here is a full list of these exceptions:
+
+- The [`wasmtime-component-macro`](/crates/wasm-bridge-macros/src/original/) crate "fork".
