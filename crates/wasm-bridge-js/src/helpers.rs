@@ -43,11 +43,19 @@ pub(crate) fn console_log(value: impl Debug) {
 
 pub fn map_js_error<T: Debug + AsRef<JsValue>>(hint: &'static str) -> impl Fn(T) -> Error {
     move |value: T| {
-        log_js_value(hint, value.as_ref());
-        anyhow::anyhow!(
-            "{}, error value: {:?}, see console.log for detail.",
-            hint,
-            value
-        )
+        if cfg!(feature = "error-logging") {
+            log_js_value(hint, value.as_ref());
+            anyhow::anyhow!(
+                "{}, error value: {:?}, see console.error log for detail.",
+                hint,
+                value
+            )
+        } else {
+            anyhow::anyhow!(
+                "{}, error value: {:?}, enable 'error-logging' feature to log value to console.error.",
+                hint,
+                value
+            )
+        }
     }
 }

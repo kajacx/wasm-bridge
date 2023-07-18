@@ -18,7 +18,8 @@ zip = { version = "0.6.6", default-features = false, features = ["deflate"], opt
 wasm-bridge-js = { path = "../wasm-bridge-js", version = "0.1.5" }
 
 [features]
-default = ["wat"]
+default = ["wat", "error-logging"]
 component-model = ["component-model-no-universal", "zip"]
 component-model-no-universal = ["wasmtime/component-model", "wasm-bridge-macros", "wasm-bridge-js/component-model"]
 wat = ["wasmtime/wat", "wasm-bridge-js/wat"]
+error-logging = ["wasm-bridge-js/error-logging"]
