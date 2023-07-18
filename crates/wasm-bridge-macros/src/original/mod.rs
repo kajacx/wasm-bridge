@@ -1,11 +1,7 @@
 use syn::{parse_macro_input, DeriveInput, Error};
 
-mod bindgen {
-    pub use crate::bindgen::*;
-}
-mod component {
-    pub use crate::component::*;
-}
+mod bindgen;
+mod component;
 
 pub fn lift(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     component::expand(

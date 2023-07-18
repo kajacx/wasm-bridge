@@ -3,8 +3,6 @@ use std::str::FromStr;
 use regex::Regex;
 use syn::Attribute;
 
-mod bindgen;
-mod component;
 mod from_js_value;
 mod original;
 mod to_js_value;
