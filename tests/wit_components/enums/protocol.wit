@@ -29,7 +29,7 @@ world enums {
   export sqrt: func(num: option<float64>) -> option<float64>
 
   // Results
-  //import add-one-both: func(num: result<s32, u8>) -> result<s32, u8>
-  //export add-three-both: func(num: result<s32, u8>) -> result<s32, u8>
-  export add-three-both: func(num: s32) -> result<s32, u8>
+  import add-one-both: func(num: result<s32, u8>) -> result<s32, u8>
+  export add-three-both: func(num: result<s32, u8>) -> result<s32, u8>
+  //export add-three-both: func(num: s32) -> result<s32, u8>
 }
