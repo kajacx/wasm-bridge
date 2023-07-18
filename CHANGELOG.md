@@ -11,6 +11,7 @@
 ### Added
 
 - Added enum support to wit
+- Added result support to wit
 
 ## [0.1.5] 2023-07-13
 
