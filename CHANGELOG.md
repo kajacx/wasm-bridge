@@ -12,6 +12,11 @@
 
 - Added enum support to wit
 - Added result support to wit
+- Added better error messages and logging
+
+### Changed
+
+- Changed result type to be anyhow::Result to match wasmtime
 
 ## [0.1.5] 2023-07-13
 
