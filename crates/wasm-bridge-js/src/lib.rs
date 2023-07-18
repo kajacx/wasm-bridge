@@ -1,9 +1,6 @@
 mod engine;
 pub use engine::*;
 
-mod error;
-pub use error::*;
-
 mod instance;
 pub use instance::*;
 
@@ -30,6 +27,9 @@ pub use config::*;
 
 mod context;
 pub use context::*;
+
+pub type Error = anyhow::Error;
+pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
 pub(crate) mod helpers;
 
