@@ -10,11 +10,8 @@ pub trait FromJsValue: Sized {
 
     // When type is the (direct) result of an exported function
     fn from_fn_result(result: &Result<JsValue, JsValue>) -> Result<Self> {
-        Self::from_js_value(
-            &result
-                .as_ref() // TODO: turn to user error
-                .expect("only the Result type can have the Err variant"),
-        )
+        // TODO: better user error
+        Self::from_js_value(result.as_ref()?)
     }
 
     // When type is an argument of an imported function
@@ -196,6 +193,12 @@ impl<T: FromJsValue, E: FromJsValue> FromJsValue for Result<T, E> {
         Ok(match result {
             Ok(val) => Ok(T::from_js_value(val)?),
             Err(err) => {
+                // FIXME: we have a sticky situation
+                // Returning a Result from an exported fn can "fail" with the "Err" variant
+                // Or it can "fail" with a panic inside ...
+                // One should be Ok(Err(value))
+                // The other should be Err(value)
+
                 // TODO: better user error
                 let payload = Reflect::get(err, &"payload".into())?;
                 Err(E::from_js_value(&payload)?)
