@@ -31,7 +31,7 @@ pub use context::*;
 pub type Error = anyhow::Error;
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
-pub(crate) mod helpers;
+pub mod helpers;
 
 #[cfg(feature = "component-model")]
 pub mod component;

@@ -41,7 +41,7 @@ pub(crate) fn console_log(value: impl Debug) {
         .unwrap();
 }
 
-pub(crate) fn map_js_error<T: Debug + AsRef<JsValue>>(hint: &'static str) -> impl Fn(T) -> Error {
+pub fn map_js_error<T: Debug + AsRef<JsValue>>(hint: &'static str) -> impl Fn(T) -> Error {
     move |value: T| {
         log_js_value(hint, value.as_ref());
         anyhow::anyhow!(

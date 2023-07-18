@@ -15,7 +15,8 @@ pub fn from_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
         let field_name_converted = field_name_str.to_lower_camel_case();
 
         let tokens = quote!(
-            let js_field = wasm_bridge::js_sys::Reflect::get(value, &#field_name_converted.into())?;
+            let js_field = wasm_bridge::js_sys::Reflect::get(value, &#field_name_converted.into())
+                .map_err(wasm_bridge::helpers::map_js_error("Get struct field"))?;
             let #field_name = #field_type::from_js_value(&js_field)?;
         );
         impl_block.append_all(tokens);
@@ -62,12 +63,14 @@ pub fn from_js_value_enum(name: Ident, data: DataEnum) -> TokenStream {
             type WasmAbi = wasm_bridge::wasm_bindgen::JsValue;
 
             fn from_js_value(value: &wasm_bridge::wasm_bindgen::JsValue) -> wasm_bridge::Result<Self> {
-                let tag = value.as_string().ok_or(value)?;
+                let tag = value
+                    .as_string()
+                    .ok_or(value)
+                    .map_err(wasm_bridge::helpers::map_js_error("Enum should be a string"))?;
 
                 #impl_block
 
-                // TODO: better user error
-                Err(value.into())
+                Err(wasm_bridge::helpers::map_js_error("Unknown enum tag")(value))
             }
 
             fn from_wasm_abi(abi: Self::WasmAbi) -> wasm_bridge::Result<Self> {
@@ -108,15 +111,18 @@ pub fn from_js_value_variant(name: Ident, data: DataEnum) -> TokenStream {
             type WasmAbi = wasm_bridge::wasm_bindgen::JsValue;
 
             fn from_js_value(value: &wasm_bridge::wasm_bindgen::JsValue) -> wasm_bridge::Result<Self> {
-                let tag = wasm_bridge::js_sys::Reflect::get(value, &"tag".into())?;
-                let tag = tag.as_string().ok_or(value)?;
+                let tag = wasm_bridge::js_sys::Reflect::get(value, &"tag".into())
+                    .map_err(wasm_bridge::helpers::map_js_error("Get variant tag"))?
+                    .as_string()
+                    .ok_or(value)
+                    .map_err(wasm_bridge::helpers::map_js_error("Variant tag should be a string"))?;
 
-                let val = wasm_bridge::js_sys::Reflect::get(value, &"val".into())?;
+                let val = wasm_bridge::js_sys::Reflect::get(value, &"val".into())
+                    .map_err(wasm_bridge::helpers::map_js_error("Get variant val"))?;
 
                 #impl_block
 
-                // TODO: better user error
-                Err(value.into())
+                Err(wasm_bridge::helpers::map_js_error("Unknown variant tag")(value))
             }
 
             fn from_wasm_abi(abi: Self::WasmAbi) -> wasm_bridge::Result<Self> {
