@@ -40,6 +40,18 @@ impl EnumsImports for HostData {
     fn add_one_both(&mut self, num: Result<i32, u8>) -> Result<Result<i32, u8>> {
         Ok((move || Ok(num? + 1))())
     }
+
+    fn add_one_ok(&mut self, num: Result<i32, ()>) -> Result<Result<i32, ()>> {
+        Ok((move || Ok(num? + 1))())
+    }
+
+    fn add_one_err(&mut self, num: Result<(), u8>) -> Result<Result<(), u8>> {
+        Ok(num)
+    }
+
+    fn add_one_none(&mut self, num: Result<(), ()>) -> Result<Result<(), ()>> {
+        Ok(num)
+    }
 }
 
 pub fn run_test(component_bytes: &[u8], _universal_bytes: &[u8]) -> Result<()> {
@@ -110,12 +122,20 @@ pub fn run_test(component_bytes: &[u8], _universal_bytes: &[u8]) -> Result<()> {
     let result = instance.call_add_three_both(&mut store, Err(7))?;
     assert_eq!(result, Err(7));
 
-    // let result = instance.call_add_three_both(&mut store, Ok(10))?;
-    // assert_eq!(result, Ok(13));
-    // let result = instance.call_add_three_both(&mut store, Ok(-7))?;
-    // assert_eq!(result, Err(0));
-    // let result = instance.call_add_three_both(&mut store, Err(15))?;
-    // assert_eq!(result, Err(15));
+    let result = instance.call_add_three_ok(&mut store, Ok(10))?;
+    assert_eq!(result, Ok(13));
+    let result = instance.call_add_three_ok(&mut store, Err(()))?;
+    assert_eq!(result, Err(()));
+
+    let result = instance.call_add_three_err(&mut store, Ok(()))?;
+    assert_eq!(result, Ok(()));
+    let result = instance.call_add_three_err(&mut store, Err(7))?;
+    assert_eq!(result, Err(7));
+
+    let result = instance.call_add_three_none(&mut store, Ok(()))?;
+    assert_eq!(result, Ok(()));
+    let result = instance.call_add_three_none(&mut store, Err(()))?;
+    assert_eq!(result, Err(()));
 
     Ok(())
 }

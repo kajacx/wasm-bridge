@@ -10,7 +10,7 @@ pub trait ToJsValue: Sized {
     fn to_js_value(&self) -> JsValue;
 
     /// When this is returned from a closure
-    fn to_return_abi(&self) -> Self::ReturnAbi;
+    fn into_return_abi(self) -> Self::ReturnAbi;
 
     /// Number of function arguments when this type is used as a function input type
     fn number_of_args() -> u32 {
@@ -35,7 +35,7 @@ impl ToJsValue for () {
         JsValue::undefined()
     }
 
-    fn to_return_abi(&self) -> Self::ReturnAbi {}
+    fn into_return_abi(self) -> Self::ReturnAbi {}
 
     fn number_of_args() -> u32 {
         0
@@ -55,8 +55,8 @@ macro_rules! to_js_value_single {
                 (*self).into()
             }
 
-            fn to_return_abi(&self) -> Self::ReturnAbi {
-                *self
+            fn into_return_abi(self) -> Self::ReturnAbi {
+                self
             }
 
             fn create_array_of_size(size: u32) -> JsValue {
@@ -89,8 +89,8 @@ impl ToJsValue for char {
         self.to_string().into()
     }
 
-    fn to_return_abi(&self) -> Self::ReturnAbi {
-        *self
+    fn into_return_abi(self) -> Self::ReturnAbi {
+        self
     }
 }
 
@@ -101,7 +101,7 @@ impl<'a> ToJsValue for &'a str {
         (*self).into()
     }
 
-    fn to_return_abi(&self) -> Self::ReturnAbi {
+    fn into_return_abi(self) -> Self::ReturnAbi {
         self
     }
 }
@@ -113,7 +113,7 @@ impl ToJsValue for String {
         self.into()
     }
 
-    fn to_return_abi(&self) -> Self::ReturnAbi {
+    fn into_return_abi(self) -> Self::ReturnAbi {
         self.clone() // TODO: unnecessary copy ... ?
     }
 }
@@ -129,13 +129,13 @@ impl<T: ToJsValue> ToJsValue for Option<T> {
         }
     }
 
-    fn to_return_abi(&self) -> Self::ReturnAbi {
+    fn into_return_abi(self) -> Self::ReturnAbi {
         self.to_js_value()
     }
 }
 
 impl<T: ToJsValue, E: ToJsValue> ToJsValue for Result<T, E> {
-    type ReturnAbi = JsValue;
+    type ReturnAbi = Result<JsValue, JsValue>;
 
     fn to_js_value(&self) -> JsValue {
         let result: JsValue = Object::new().into();
@@ -148,8 +148,8 @@ impl<T: ToJsValue, E: ToJsValue> ToJsValue for Result<T, E> {
         result
     }
 
-    fn to_return_abi(&self) -> Self::ReturnAbi {
-        self.to_js_value()
+    fn into_return_abi(self) -> Self::ReturnAbi {
+        self.as_ref().map(T::to_js_value).map_err(E::to_js_value)
     }
 }
 
@@ -160,8 +160,8 @@ impl<'a, T: ToJsValue> ToJsValue for &'a T {
         T::to_js_value(self)
     }
 
-    fn to_return_abi(&self) -> Self::ReturnAbi {
-        T::to_return_abi(self)
+    fn into_return_abi(self) -> Self::ReturnAbi {
+        unimplemented!("References should never be returned")
     }
 }
 
@@ -178,7 +178,7 @@ impl<'a, T: ToJsValue> ToJsValue for &'a [T] {
         array
     }
 
-    fn to_return_abi(&self) -> Self::ReturnAbi {
+    fn into_return_abi(self) -> Self::ReturnAbi {
         self.to_js_value()
     }
 }
@@ -191,7 +191,7 @@ impl<T: ToJsValue> ToJsValue for Vec<T> {
         as_slice.to_js_value()
     }
 
-    fn to_return_abi(&self) -> Self::ReturnAbi {
+    fn into_return_abi(self) -> Self::ReturnAbi {
         self.to_js_value()
     }
 }
@@ -203,8 +203,8 @@ impl<T: ToJsValue> ToJsValue for (T,) {
         self.0.to_js_value()
     }
 
-    fn to_return_abi(&self) -> Self::ReturnAbi {
-        self.0.to_return_abi()
+    fn into_return_abi(self) -> Self::ReturnAbi {
+        self.0.into_return_abi()
     }
 
     fn number_of_args() -> u32 {
@@ -225,7 +225,7 @@ macro_rules! to_js_value_many {
                 self.to_function_args().into()
             }
 
-            fn to_return_abi(&self) -> Self::ReturnAbi {
+            fn into_return_abi(self) -> Self::ReturnAbi {
                 self.to_js_value()
             }
 

@@ -36,7 +36,7 @@ pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
                 value
             }
 
-            fn to_return_abi(&self) -> Self::ReturnAbi {
+            fn into_return_abi(self) -> Self::ReturnAbi {
                 self.to_js_value()
             }
         }
@@ -70,7 +70,7 @@ pub fn to_js_value_enum(name: Ident, data: DataEnum) -> TokenStream {
                 }
             }
 
-            fn to_return_abi(&self) -> Self::ReturnAbi {
+            fn into_return_abi(self) -> Self::ReturnAbi {
                 self.to_js_value()
             }
         }
@@ -121,7 +121,7 @@ pub fn to_js_value_variant(name: Ident, data: DataEnum) -> TokenStream {
                 }
             }
 
-            fn to_return_abi(&self) -> Self::ReturnAbi {
+            fn into_return_abi(self) -> Self::ReturnAbi {
                 self.to_js_value()
             }
         }

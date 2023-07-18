@@ -28,7 +28,7 @@ macro_rules! make_closure {
                     let closure =
                         Closure::<dyn Fn($($name::WasmAbi),*) -> R::ReturnAbi>::new(move |$($param: $name::WasmAbi),*| {
                             // TODO: user error?
-                            self_clone(&mut handle.borrow_mut(), ($($name::from_wasm_abi($param).unwrap(),)*)).unwrap().to_return_abi()
+                            self_clone(&mut handle.borrow_mut(), ($($name::from_wasm_abi($param).unwrap(),)*)).unwrap().into_return_abi()
                         });
 
                     DropHandler::from_closure(closure)

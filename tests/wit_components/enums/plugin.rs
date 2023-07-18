@@ -29,6 +29,27 @@ impl Enums for Plugin {
         let num = add_one_both(num);
         num
     }
+
+    fn add_three_ok(num: Result<i32, ()>) -> Result<i32, ()> {
+        let num = add_one_ok(num);
+        let num = add_one_ok(num);
+        let num = add_one_ok(num);
+        num
+    }
+
+    fn add_three_err(num: Result<(), u8>) -> Result<(), u8> {
+        let num = add_one_err(num);
+        let num = add_one_err(num);
+        let num = add_one_err(num);
+        num
+    }
+
+    fn add_three_none(num: Result<(), ()>) -> Result<(), ()> {
+        let num = add_one_none(num);
+        let num = add_one_none(num);
+        let num = add_one_none(num);
+        num
+    }
 }
 
 export_enums!(Plugin);

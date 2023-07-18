@@ -174,7 +174,7 @@ impl<T: FromJsValue> FromJsValue for Option<T> {
 }
 
 impl<T: FromJsValue, E: FromJsValue> FromJsValue for Result<T, E> {
-    type WasmAbi = JsValue; // TODO: this might be wrong?
+    type WasmAbi = JsValue;
 
     fn from_js_value(value: &JsValue) -> Result<Self> {
         // TODO: better error handling
