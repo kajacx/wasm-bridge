@@ -45,6 +45,12 @@ impl TestWorldImports for HostData {
     }
 }
 
+impl test::protocol::host::Host for HostData {
+    fn add_one(&mut self, num: i32) -> Result<i32> {
+        Ok(num + 1)
+    }
+}
+
 pub fn run_test(component_bytes: &[u8], universal_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
     config.wasm_component_model(true);
@@ -122,6 +128,11 @@ fn run_with_component(mut store: &mut Store<HostData>, component: &Component) ->
 
     let result = instance.call_add_sub_twenty(&mut store, 5)?;
     assert_eq!(result, (25, -15));
+
+    let result = instance
+        .test_protocol_guest()
+        .call_add_three(&mut store, 5)?;
+    assert_eq!(result, 8);
 
     Ok(())
 }

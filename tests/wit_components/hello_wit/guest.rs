@@ -3,9 +3,9 @@ wit_bindgen::generate!({
     world: "test-world",
 });
 
-struct Guest;
+struct GuestImpl;
 
-impl TestWorld for Guest {
+impl TestWorld for GuestImpl {
     fn promote_person(employee: Person, raise: u32) -> Person {
         set_salary(&employee, employee.salary + raise)
     }
@@ -30,4 +30,13 @@ impl TestWorld for Guest {
     }
 }
 
-export_test_world!(Guest);
+impl exports::test::protocol::guest::Guest for GuestImpl {
+    fn add_three(num: i32) -> i32 {
+        let num = test::protocol::host::add_one(num);
+        let num = test::protocol::host::add_one(num);
+        let num = test::protocol::host::add_one(num);
+        num
+    }
+}
+
+export_test_world!(GuestImpl);

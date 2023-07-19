@@ -1,5 +1,13 @@
 package wasm-bridge:protocol
 
+interface host {
+  add-one: func(num: s32) -> s32
+}
+
+interface guest {
+  add-three: func(num: s32) -> s32
+}
+
 world test-world {
   record person {
     full-name: string,
@@ -9,6 +17,9 @@ world test-world {
 
   import set-salary: func(emloyee: person, amount: u32) -> person
   export promote-person: func(emloyee: person, raise: u32) -> person
+
+  import host
+  export guest
 
   import increment: func()
   export increment-twice: func()
