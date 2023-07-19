@@ -1,6 +1,6 @@
 # My first component
 
-Here is a simple example on how to define a WIT world, implement it in a Rust plugin,
+Here is a simple example on how to define a WIT world, implement it in Rust guest (plugin),
 and call it from Rust runtime on desktop and on the web using the same source code.
 
 ## Full minimal example
@@ -11,7 +11,7 @@ Full minimal example can be found [here](https://github.com/kajacx/wasm-playgrou
 
 Be sure to install all the necessary tooling, list is in [Component model](../component_model.md).
 
-## Create the WIT protocol and plugin
+## Create the WIT protocol
   
 1. Create a simple file describing the interface using the [wit format](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md), for example:
 ```wit
@@ -22,10 +22,12 @@ world calculator {
 }
 ```
 
-2. Create a new Rust crate for the plugin and add `wit-bindgen` crate as a dependency. Example `Cargo.toml`:
+## Create the Rust guest
+
+1. Create a new Rust crate for the guest and add `wit-bindgen` crate as a dependency. Example `Cargo.toml`:
 ```toml
 [package]
-name = "plugin"
+name = "guest"
 version = "0.1.0"
 edition = "2021"
 
@@ -36,7 +38,7 @@ crate-type = ["cdylib"]
 wit-bindgen = "0.8.0"
 ```
 
-3. Import the WIT world definition in the plugin like this:
+2. Import the WIT world definition in the guest like this:
 ```rust
 wit_bindgen::generate!({
     path: "../protocol.wit", // Path to the wit file created earlier
@@ -44,7 +46,7 @@ wit_bindgen::generate!({
 });
 ```
 
-4. Implement the generated `Calculator` (name based on world name) trait for a custom struct:
+3. Implement the generated `Calculator` (name based on world name) trait for a custom struct:
 ```rust
 struct MyCalculator;
 
@@ -55,18 +57,18 @@ impl Calculator for MyCalculator {
 }
 ```
 
-5. Export your struct with the `export_calculator` (name based on world name again) macro:
+4. Export your struct with the `export_calculator` (name based on world name again) macro:
 ```rust
 export_calculator!(MyCalculator);
 ```
 
-## Build the plugin
+## Build the guest
 
-1. Build the plugin with `cargo build --target=wasm32-unknown-unknown`
+1. Build the guest with `cargo build --target=wasm32-unknown-unknown`
 
 2. `cd` into the build folder `target/wasm32-unknown-unknown/debug` (use `/release` in release mode)
 
-3. Convert the WASM module into a WASM component with `wasm-tools component new plugin.wasm -o component.wasm`
+3. Convert the WASM module into a WASM component with `wasm-tools component new guest.wasm -o component.wasm`
 
 This is the `component.wasm` file you would use with wasmtime normally. We will need it in the next two steps.
 

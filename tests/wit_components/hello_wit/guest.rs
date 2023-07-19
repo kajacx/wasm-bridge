@@ -3,9 +3,9 @@ wit_bindgen::generate!({
     world: "test-world",
 });
 
-struct Plugin;
+struct Guest;
 
-impl TestWorld for Plugin {
+impl TestWorld for Guest {
     fn promote_person(employee: Person, raise: u32) -> Person {
         set_salary(&employee, employee.salary + raise)
     }
@@ -30,4 +30,4 @@ impl TestWorld for Plugin {
     }
 }
 
-export_test_world!(Plugin);
+export_test_world!(Guest);

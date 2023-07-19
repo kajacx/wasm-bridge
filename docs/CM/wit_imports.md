@@ -22,9 +22,9 @@ world calculator {
 }
 ```
 
-2. Use the imported functions in the plugin
+2. Use the imported functions in the guest
 ```rust
-// In plugin
+// In guest
 
 struct MyCalculator;
 
@@ -84,7 +84,7 @@ If store's data *is* CalculatorData, it can just return the input.
 
 7. And that's it
 
-Now you can instantiate you plugin with this linker:
+Now you can instantiate you guest with this linker:
 
 ```rust
 let (calculator, _) = Calculator::instantiate(&mut store, &component, &linker)?;

@@ -3,9 +3,9 @@ wit_bindgen::generate!({
     world: "primitives",
 });
 
-struct Plugin;
+struct Guest;
 
-impl Primitives for Plugin {
+impl Primitives for Guest {
     fn negate_times(mut value: bool, times: u32) -> bool {
         for _ in 0..times {
             value = negate(value);
@@ -65,4 +65,4 @@ impl Primitives for Plugin {
     }
 }
 
-export_primitives!(Plugin);
+export_primitives!(Guest);

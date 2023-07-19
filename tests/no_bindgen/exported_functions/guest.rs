@@ -34,5 +34,5 @@ pub fn add_sub_ten_i32(number: i32) -> (i32, i32) {
 // Panic test
 #[no_mangle]
 pub fn panics() {
-    panic!("Panic in plugin code");
+    panic!("Panic in guest code");
 }

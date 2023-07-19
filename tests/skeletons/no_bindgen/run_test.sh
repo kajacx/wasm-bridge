@@ -10,18 +10,18 @@ test="no_bindgen/$1"
 mkdir -p instances/no_bindgen
 
 # copy the "no_bindgen" skeleton
-cp -r skeletons/no_bindgen/plugin instances/no_bindgen
+cp -r skeletons/no_bindgen/guest instances/no_bindgen
 cp -r skeletons/no_bindgen/host_sys instances/no_bindgen
 cp -r skeletons/no_bindgen/host_js instances/no_bindgen
 
-# copy the plugin code
-cp $test/plugin.rs instances/no_bindgen/plugin/src/lib.rs
+# copy the guest code
+cp $test/guest.rs instances/no_bindgen/guest/src/lib.rs
 
-# build the plugin
-cd instances/no_bindgen/plugin && cargo rustc --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && cd ../../..
+# build the guest
+cd instances/no_bindgen/guest && cargo rustc --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && cd ../../..
 if [ $? -ne 0 ]; then
   echo
-  echo "Oh no, there is an error in the $test plugin."
+  echo "Oh no, there is an error in the $test guest."
   echo "Inspect the instances/no_bindgen for more detail."
   exit 1
 fi

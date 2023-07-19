@@ -10,27 +10,27 @@ test="wit_components/$1"
 mkdir -p instances/wit_components
 
 # copy the "wit_components" skeleton
-cp -r skeletons/wit_components/plugin instances/wit_components
+cp -r skeletons/wit_components/guest instances/wit_components
 cp -r skeletons/wit_components/host_sys instances/wit_components
 cp -r skeletons/wit_components/host_js instances/wit_components
 
 # copy the protocol
 cp $test/protocol.wit instances/wit_components/protocol.wit
 
-# copy the plugin code
-cp $test/plugin.rs instances/wit_components/plugin/src/lib.rs
+# copy the guest code
+cp $test/guest.rs instances/wit_components/guest/src/lib.rs
 
-# build the plugin
-cd instances/wit_components/plugin && cargo rustc --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && \
+# build the guest
+cd instances/wit_components/guest && cargo rustc --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && \
 cd target/wasm32-unknown-unknown/debug && \
-wasm-tools component new wit_components_plugin.wasm -o component.wasm && \
+wasm-tools component new wit_components_guest.wasm -o component.wasm && \
 jco transpile component.wasm --instantiation -o out-dir && \
 cargo run --manifest-path ../../../../../../../crates/wasm-bridge-cli/Cargo.toml out-dir -o out-dir.zip && \
 cargo run --manifest-path ../../../../../../../crates/wasm-bridge-cli/Cargo.toml out-dir -u component.wasm -o universal.zip && \
 cd ../../../../../..
 if [ $? -ne 0 ]; then
   echo
-  echo "Oh no, there is an error in the $test plugin."
+  echo "Oh no, there is an error in the $test guest."
   echo "Inspect the instances/wit_components for more detail."
   exit 1
 fi

@@ -3,9 +3,9 @@ wit_bindgen::generate!({
     world: "errors",
 });
 
-struct Plugin;
+struct Guest;
 
-impl Errors for Plugin {
+impl Errors for Guest {
     fn simple_fail_guest(fail: WhereFail) -> WhereFail {
         match fail {
             WhereFail::GuestPanic => panic!("Fail in guest code with panic"),
@@ -22,4 +22,4 @@ impl Errors for Plugin {
     }
 }
 
-export_errors!(Plugin);
+export_errors!(Guest);

@@ -3,9 +3,9 @@ wit_bindgen::generate!({
     world: "enums",
 });
 
-struct Plugin;
+struct Guest;
 
-impl Enums for Plugin {
+impl Enums for Guest {
     fn quadruple_shape(shape: Shape) -> Shape {
         let shape = double_shape(shape);
         let shape = double_shape(shape);
@@ -52,4 +52,4 @@ impl Enums for Plugin {
     }
 }
 
-export_enums!(Plugin);
+export_enums!(Guest);

@@ -3,9 +3,9 @@ wit_bindgen::generate!({
     world: "lists",
 });
 
-struct Plugin;
+struct Guest;
 
-impl Lists for Plugin {
+impl Lists for Guest {
     fn push_bools(bools: Vec<bool>, a: bool, b: bool) -> Vec<bool> {
         let bools = push_bool(&bools, a);
         let bools = push_bool(&bools, b);
@@ -89,4 +89,4 @@ impl Lists for Plugin {
     }
 }
 
-export_lists!(Plugin);
+export_lists!(Guest);
