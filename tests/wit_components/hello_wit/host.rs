@@ -51,6 +51,12 @@ impl component_test::wit_protocol::host_add::Host for HostData {
     }
 }
 
+impl host_sub::Host for HostData {
+    fn sub_one(&mut self, num: i32) -> Result<i32> {
+        Ok(num - 1)
+    }
+}
+
 pub fn run_test(component_bytes: &[u8], universal_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
     config.wasm_component_model(true);
@@ -133,6 +139,9 @@ fn run_with_component(mut store: &mut Store<HostData>, component: &Component) ->
         .component_test_wit_protocol_guest_add()
         .call_add_three(&mut store, 5)?;
     assert_eq!(result, 8);
+
+    let result = instance.guest_sub().call_sub_three(&mut store, 5)?;
+    assert_eq!(result, 2);
 
     Ok(())
 }

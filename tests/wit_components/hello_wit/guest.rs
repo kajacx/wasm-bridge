@@ -39,4 +39,13 @@ impl exports::component_test::wit_protocol::guest_add::GuestAdd for GuestImpl {
     }
 }
 
+impl exports::guest_sub::GuestSub for GuestImpl {
+    fn sub_three(num: i32) -> i32 {
+        let num = host_sub::sub_one(num);
+        let num = host_sub::sub_one(num);
+        let num = host_sub::sub_one(num);
+        num
+    }
+}
+
 export_test_world!(GuestImpl);
