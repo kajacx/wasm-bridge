@@ -73,7 +73,12 @@ impl ExportsRoot {
     }
 
     pub fn instance(&self, name: &str) -> Option<ExportInstance> {
-        Some(ExportInstance::new(self.exported_objects.get(name)?))
+        Some(ExportInstance::new(
+            self.exported_objects
+                .get(name)
+                // TODO: This is a workaround for https://github.com/bytecodealliance/jco/issues/110
+                .or_else(|| self.exported_objects.get(&name.to_lower_camel_case()))?,
+        ))
     }
 }
 
