@@ -32,10 +32,11 @@ impl TestWorld for GuestImpl {
 
 impl exports::test::protocol::guest::Guest for GuestImpl {
     fn add_three(num: i32) -> i32 {
-        let num = test::protocol::host::add_one(num);
-        let num = test::protocol::host::add_one(num);
-        let num = test::protocol::host::add_one(num);
-        num
+        // let num = test::protocol::host::add_one(num);
+        // let num = test::protocol::host::add_one(num);
+        // let num = test::protocol::host::add_one(num);
+        // num
+        num + 3
     }
 }
 

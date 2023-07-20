@@ -1,8 +1,8 @@
 package test:protocol
 
-interface host {
-  add-one: func(num: s32) -> s32
-}
+//interface host {
+  //add-one: func(num: s32) -> s32
+//}
 
 interface guest {
   add-three: func(num: s32) -> s32
@@ -18,7 +18,7 @@ world test-world {
   import set-salary: func(emloyee: person, amount: u32) -> person
   export promote-person: func(emloyee: person, raise: u32) -> person
 
-  import host
+ // import host
   export guest
 
   import increment: func()
