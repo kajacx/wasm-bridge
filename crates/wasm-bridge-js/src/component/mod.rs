@@ -20,6 +20,9 @@ pub use typed_func::*;
 mod make_closure;
 pub use make_closure::*;
 
+mod component_loader;
+pub(crate) use component_loader::*;
+
 pub use wasm_bridge_macros::bindgen_js as bindgen;
 
 pub use wasm_bridge_macros::FromJsValue;

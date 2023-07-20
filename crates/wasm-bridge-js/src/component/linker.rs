@@ -11,6 +11,7 @@ use super::*;
 pub struct Linker<T> {
     fns: Vec<PreparedFn<T>>,
     instances: HashMap<String, Linker<T>>,
+    wasi_imports: Option<Object>,
 }
 
 impl<T> Linker<T> {
@@ -18,6 +19,7 @@ impl<T> Linker<T> {
         Self {
             fns: vec![],
             instances: HashMap::new(),
+            wasi_imports: None,
         }
     }
 
@@ -26,7 +28,12 @@ impl<T> Linker<T> {
         mut store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
-        let import_object: JsValue = js_sys::Object::new().into();
+        let import_object = js_sys::Object::new();
+        if let Some(imports) = &self.wasi_imports {
+            js_sys::Object::assign(&import_object, imports);
+        }
+        let import_object: JsValue = import_object.into();
+
         let mut closures = Vec::with_capacity(self.fns.len());
         let data_handle = store.as_context_mut().data_handle();
 
@@ -72,6 +79,11 @@ impl<T> Linker<T> {
             .instances
             .entry(name.to_owned())
             .or_insert_with(|| Linker::new(&Engine {}))) // TODO: engine re-creation
+    }
+
+    // TODO: kind of a hacky way to do it ... refactor
+    pub(crate) fn set_wasi_imports(&mut self, imports: Object) {
+        self.wasi_imports = Some(imports);
     }
 }
 

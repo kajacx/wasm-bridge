@@ -1,5 +1,6 @@
 use std::{borrow::Borrow, collections::HashMap, rc::Rc};
 
+use anyhow::Context;
 use js_sys::{Function, Uint8Array, WebAssembly};
 use wasm_bindgen::prelude::*;
 use zip::{read::ZipFile, ZipArchive};
@@ -19,17 +20,23 @@ pub struct Component {
 }
 
 impl Component {
-    pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
-        // TODO: many unwrap()s .. make it a user error instead
-        let cursor = std::io::Cursor::new(bytes);
-        let mut archive = ZipArchive::new(cursor).unwrap();
+    pub fn new(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
+        new_universal_component(engine, &bytes).or_else(|_| {
+            let loader = ComponentLoader::new().unwrap(); // TODO: bad unwrap
+            loader.compile_component(bytes.as_ref())
+        })
+    }
+
+    pub fn from_zip(zip_bytes: impl AsRef<[u8]>) -> Result<Self> {
+        let cursor = std::io::Cursor::new(zip_bytes);
+        let mut archive = ZipArchive::new(cursor)?;
 
         let mut wasm_cores = HashMap::<String, Vec<u8>>::new();
         let mut instantiate = Option::<Function>::None;
         let mut version = Option::<String>::None;
 
         for i in 0..archive.len() {
-            let file = archive.by_index(i).unwrap();
+            let file = archive.by_index(i)?;
             let filename = file.name().to_owned();
 
             if filename.ends_with(".wasm") {
@@ -48,7 +55,7 @@ impl Component {
         Self::check_version(version.as_deref());
 
         Ok(Self {
-            instantiate: instantiate.unwrap(), // TODO: add user error
+            instantiate: instantiate.context("modified js file not found in archive")?,
             compile_core,
             instantiate_core,
             _drop_handles: [drop0, drop1],
@@ -139,6 +146,6 @@ impl Component {
     }
 }
 
-pub fn new_universal_component(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Component> {
-    Component::new(engine, bytes)
+pub fn new_universal_component(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Component> {
+    Component::from_zip(bytes)
 }
