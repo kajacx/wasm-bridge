@@ -1,4 +1,4 @@
-package wasm-bridge:protocol
+package test:protocol
 
 interface host {
   add-one: func(num: s32) -> s32

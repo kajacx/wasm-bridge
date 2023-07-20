@@ -1,4 +1,4 @@
-package wasm-bridge:protocol
+package test:protocol
 
 world primitives {
   import negate: func(value: bool) -> bool
