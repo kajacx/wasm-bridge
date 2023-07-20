@@ -1,5 +1,6 @@
 use std::{collections::HashMap, rc::Rc};
 
+use heck::ToLowerCamelCase;
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
@@ -27,28 +28,28 @@ impl<T> Linker<T> {
     ) -> Result<Instance> {
         let import_object: JsValue = js_sys::Object::new().into();
         let mut closures = Vec::with_capacity(self.fns.len());
+        let data_handle = store.as_context_mut().data_handle();
 
-        let mut collect_fns = |obj: &JsValue, fns: &[PreparedFn<T>]| {
-            for function in fns.iter() {
-                let drop_handler =
-                    function.add_to_imports(obj, store.as_context_mut().data_handle().clone());
-                closures.push(drop_handler);
-            }
-        };
+        for function in self.fns.iter() {
+            let drop_handler = function.add_to_imports(&import_object, data_handle.clone());
+            closures.push(drop_handler);
+        }
 
-        collect_fns(&import_object, &self.fns);
-
-        //helpers::console_log(&self.instances.keys());
         for (instance_name, instance_linker) in self.instances.iter() {
             let instance_obj = Object::new();
 
-            collect_fns(&instance_obj, &instance_linker.fns);
+            for function in instance_linker.fns.iter() {
+                let drop_handler =
+                    function.add_to_instance_imports(&instance_obj, data_handle.clone());
+                closures.push(drop_handler);
+            }
 
-            let import_key = format!("imports.{instance_name}");
+            // let import_key = format!("imports.{instance_name}");
 
-            Reflect::set(&import_object, &import_key.into(), &instance_obj).unwrap();
+            Reflect::set(&import_object, &instance_name.into(), &instance_obj).unwrap();
         }
 
+        //helpers::console_log(&self.instances.keys());
         crate::helpers::log_js_value("IMPORTS", &import_object);
 
         let closures = Rc::from(closures);
@@ -101,6 +102,16 @@ impl<T> PreparedFn<T> {
         Reflect::set(&object, &"default".into(), &js_val).expect("object is object");
 
         Reflect::set(imports, &self.name.as_str().into(), &object).expect("imports is object");
+
+        handler
+    }
+
+    #[must_use]
+    fn add_to_instance_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandler {
+        let (js_val, handler) = (self.creator)(handle);
+
+        Reflect::set(imports, &self.name.to_lower_camel_case().into(), &js_val)
+            .expect("imports is object");
 
         handler
     }
