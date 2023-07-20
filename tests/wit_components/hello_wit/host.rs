@@ -45,11 +45,11 @@ impl TestWorldImports for HostData {
     }
 }
 
-// impl test::protocol::host::Host for HostData {
-//     fn add_one(&mut self, num: i32) -> Result<i32> {
-//         Ok(num + 1)
-//     }
-// }
+impl test::protocol::host::Host for HostData {
+    fn add_one(&mut self, num: i32) -> Result<i32> {
+        Ok(num + 1)
+    }
+}
 
 pub fn run_test(component_bytes: &[u8], universal_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
