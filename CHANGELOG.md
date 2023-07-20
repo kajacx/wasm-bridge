@@ -13,6 +13,7 @@
 - Added enum support to wit
 - Added result support to wit
 - Added better error messages and logging
+- Added interface support to wit
 
 ### Changed
 
