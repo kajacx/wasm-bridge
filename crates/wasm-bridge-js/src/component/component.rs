@@ -3,7 +3,7 @@ use std::{borrow::Borrow, collections::HashMap, rc::Rc};
 use anyhow::Context;
 use js_sys::{Function, Uint8Array, WebAssembly};
 use wasm_bindgen::prelude::*;
-use zip::{read::ZipFile, ZipArchive};
+use zip::ZipArchive;
 
 use crate::{
     helpers::{self, map_js_error},
@@ -20,8 +20,8 @@ pub struct Component {
 }
 
 impl Component {
-    pub fn new(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
-        new_universal_component(engine, &bytes).or_else(|_| {
+    pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
+        Self::from_zip(&bytes).or_else(|_| {
             let loader = ComponentLoader::new().unwrap(); // TODO: bad unwrap
             loader.compile_component(bytes.as_ref())
         })
@@ -31,31 +31,48 @@ impl Component {
         let cursor = std::io::Cursor::new(zip_bytes);
         let mut archive = ZipArchive::new(cursor)?;
 
-        let mut wasm_cores = HashMap::<String, Vec<u8>>::new();
-        let mut instantiate = Option::<Function>::None;
         let mut version = Option::<String>::None;
 
+        let mut files = vec![];
+
         for i in 0..archive.len() {
-            let file = archive.by_index(i)?;
+            let mut file = archive.by_index(i)?;
             let filename = file.name().to_owned();
 
-            if filename.ends_with(".wasm") {
-                let file_bytes = Self::load_wasm_core(file)?;
-                wasm_cores.insert(filename, file_bytes); // TODO: remove folder from filename?
-            } else if filename.ends_with("sync_component.js") {
-                instantiate = Some(Self::load_instantiate(file)?);
-            } else if filename.ends_with("version.txt") {
-                version = Some(Self::get_version(file)?);
+            let mut file_bytes = Vec::<u8>::with_capacity(file.size() as usize);
+            std::io::copy(&mut file, &mut file_bytes)?;
+
+            if filename.ends_with("version.txt") {
+                version = Some(String::from_utf8(file_bytes)?);
+            } else {
+                files.push((filename, file_bytes));
             }
         }
+
+        Self::check_version(version.as_deref());
+
+        Self::from_files(files)
+    }
+
+    pub(crate) fn from_files(files: Vec<(String, Vec<u8>)>) -> Result<Self> {
+        let mut wasm_cores = HashMap::<String, Vec<u8>>::new();
+        let mut instantiate = Option::<Function>::None;
+
+        for (filename, file_bytes) in files.into_iter() {
+            if filename.ends_with(".wasm") {
+                wasm_cores.insert(filename, file_bytes); // TODO: remove folder from filename?
+            } else if filename.ends_with("sync_component.js") {
+                instantiate = Some(Self::load_instantiate(&file_bytes)?);
+            }
+        }
+
+        let instantiate = instantiate.context("component js file not found in zip")?;
 
         let (compile_core, drop0) = Self::make_compile_core(wasm_cores);
         let (instantiate_core, drop1) = Self::make_instantiate_core();
 
-        Self::check_version(version.as_deref());
-
         Ok(Self {
-            instantiate: instantiate.context("modified js file not found in archive")?,
+            instantiate,
             compile_core,
             instantiate_core,
             _drop_handles: [drop0, drop1],
@@ -84,28 +101,15 @@ impl Component {
         ))
     }
 
-    fn load_wasm_core(mut file: ZipFile) -> Result<Vec<u8>> {
-        let mut file_bytes = Vec::<u8>::new(); // TODO: reuse same vec to make it more efficient
-        std::io::copy(&mut file, &mut file_bytes).unwrap();
+    fn load_instantiate(file_bytes: &[u8]) -> Result<Function> {
+        let text =
+            std::str::from_utf8(file_bytes).context("component js file is not valid utf-8")?;
 
-        Ok(file_bytes)
-    }
-
-    fn load_instantiate(mut file: ZipFile) -> Result<Function> {
-        let mut file_bytes = Vec::<u8>::new();
-        std::io::copy(&mut file, &mut file_bytes).unwrap();
-        let text = String::from_utf8(file_bytes).unwrap(); // TODO: this needs to be user error
-
-        let instantiate: Function = js_sys::eval(&text)
+        let instantiate: Function = js_sys::eval(text)
             .map_err(map_js_error("Eval sync_component.js"))?
             .into();
-        Ok(instantiate)
-    }
 
-    fn get_version(mut file: ZipFile) -> Result<String> {
-        let mut file_bytes = Vec::<u8>::new();
-        std::io::copy(&mut file, &mut file_bytes).unwrap();
-        Ok(String::from_utf8(file_bytes).unwrap()) // TODO: this needs to be user error
+        Ok(instantiate)
     }
 
     fn check_version(version: Option<&str>) {
@@ -146,6 +150,7 @@ impl Component {
     }
 }
 
-pub fn new_universal_component(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Component> {
-    Component::from_zip(bytes)
+pub fn new_universal_component(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Component> {
+    // Component::from_zip(bytes)
+    Component::new(engine, bytes)
 }

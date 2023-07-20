@@ -1,8 +1,9 @@
-use js_sys::{Function, Object};
+use anyhow::Context;
+use js_sys::{Function, Object, Reflect, Uint8Array};
 use wasm_bindgen::JsValue;
 
 use super::*;
-use crate::{Result, Store, ToJsValue};
+use crate::{helpers::map_js_error, Result, Store, ToJsValue};
 
 static JCO_BYTES: &'static [u8] = include_bytes!("../../../../resources/transformed/jco-web.zip");
 static WASI_IMPORTS: &'static str =
@@ -41,13 +42,45 @@ impl ComponentLoader {
         let compile_fn = Self::get_compilation_fn();
         let bytes_js = bytes.to_js_value();
 
-        let files = compile_fn
+        let files_js = compile_fn
             .call2(&JsValue::UNDEFINED, &self.generate, &bytes_js)
             .expect("call compile_fn");
 
-        crate::helpers::log_js_value("files", &files);
+        let files_js: Object = Object::from_entries(&files_js)
+            .map_err(map_js_error("Files object from entries"))?
+            .into();
 
-        todo!("how are files?")
+        let names = Object::get_own_property_names(&files_js);
+
+        let length = names.length();
+        let mut files = Vec::with_capacity(length as _);
+
+        for index in 0..length {
+            crate::helpers::console_log(format!("Processing file {index}"));
+            let name_js =
+                Reflect::get_u32(&names, index).map_err(map_js_error("Get file from generate"))?;
+
+            let mut name = name_js.as_string().context("Property name is string")?;
+            crate::helpers::console_log(format!("Processing file {name}"));
+
+            let bytes_js =
+                Reflect::get(&files_js, &name_js).map_err(map_js_error("Get object property"))?;
+
+            let bytes_js = Uint8Array::from(bytes_js);
+
+            let mut bytes = bytes_js.to_vec();
+
+            if name.ends_with(".js") {
+                name = "sync_component.js".into();
+                let text = String::from_utf8(bytes)?;
+                let text = modify_js(&text);
+                bytes = text.into();
+            }
+
+            files.push((name, bytes));
+        }
+
+        Component::from_files(files)
     }
 
     fn get_wasi_imports() -> Object {
@@ -75,4 +108,22 @@ impl ComponentLoader {
         .unwrap()
         .into()
     }
+}
+
+// TODO: duplication with wasm-bridge-cli
+fn modify_js(text: &str) -> String {
+    // function signature
+    let text = text.replace("export async function", "function");
+
+    // remove all awaits
+    let text = text.replace("await ", "");
+
+    // remove Promise.all call - not necessary
+    // let regex = Regex::new(".*Promise\\.all.*").unwrap();
+    // let text = regex.replace_all(&text, "");
+
+    // Final update
+    let text = format!("(() => {{\n{text}\nreturn instantiate;\n}})()\n");
+
+    text
 }
