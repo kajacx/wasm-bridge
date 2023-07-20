@@ -1,6 +1,6 @@
 use std::{borrow::Borrow, collections::HashMap, rc::Rc};
 
-use js_sys::{Function, Object, Reflect, Uint8Array, WebAssembly};
+use js_sys::{Function, Uint8Array, WebAssembly};
 use wasm_bindgen::prelude::*;
 use zip::{read::ZipFile, ZipArchive};
 
