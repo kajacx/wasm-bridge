@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{collections::HashMap, rc::Rc};
 
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
@@ -9,11 +9,15 @@ use super::*;
 
 pub struct Linker<T> {
     fns: Vec<PreparedFn<T>>,
+    instances: HashMap<String, Linker<T>>,
 }
 
 impl<T> Linker<T> {
     pub fn new(_engine: &Engine) -> Self {
-        Self { fns: vec![] }
+        Self {
+            fns: vec![],
+            instances: HashMap::new(),
+        }
     }
 
     pub fn instantiate(
@@ -24,11 +28,28 @@ impl<T> Linker<T> {
         let import_object: JsValue = js_sys::Object::new().into();
         let mut closures = Vec::with_capacity(self.fns.len());
 
-        for function in self.fns.iter() {
-            let drop_handler = function
-                .add_to_imports(&import_object, store.as_context_mut().data_handle().clone());
-            closures.push(drop_handler);
+        let mut collect_fns = |obj: &JsValue, fns: &[PreparedFn<T>]| {
+            for function in fns.iter() {
+                let drop_handler =
+                    function.add_to_imports(obj, store.as_context_mut().data_handle().clone());
+                closures.push(drop_handler);
+            }
+        };
+
+        collect_fns(&import_object, &self.fns);
+
+        //helpers::console_log(&self.instances.keys());
+        for (instance_name, instance_linker) in self.instances.iter() {
+            let instance_obj = Object::new();
+
+            collect_fns(&instance_obj, &instance_linker.fns);
+
+            let import_key = format!("imports.{instance_name}");
+
+            Reflect::set(&import_object, &import_key.into(), &instance_obj).unwrap();
         }
+
+        crate::helpers::log_js_value("IMPORTS", &import_object);
 
         let closures = Rc::from(closures);
         component.instantiate(store, &import_object, closures)
@@ -47,6 +68,14 @@ impl<T> Linker<T> {
             .push(PreparedFn::new(name, func.into_make_closure()));
 
         Ok(())
+    }
+
+    pub fn instance<'a>(&'a mut self, name: &str) -> Result<&'a mut Linker<T>> {
+        // This is called at linked time, "clone" is not that bad
+        Ok(self
+            .instances
+            .entry(name.to_owned())
+            .or_insert_with(|| Linker::new(&Engine {}))) // TODO: engine re-creation
     }
 }
 

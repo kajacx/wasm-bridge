@@ -79,7 +79,7 @@ impl ExportsRoot {
 
 pub struct ExportInstance<'a, 'b> {
     root: &'a ExportsRoot, // TODO: this is not the root, refactor
-    _phantom: PhantomData<(&'a (), &'b ())>,
+    _phantom: PhantomData<&'b ()>,
 }
 
 impl<'a, 'b> ExportInstance<'a, 'b> {
