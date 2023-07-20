@@ -436,9 +436,6 @@
     insecureSeed: () => insecureSeed,
     random: () => random
   });
-  var MAX_BYTES = 65536;
-  var insecureRandomValue1;
-  var insecureRandomValue2;
   var insecure = {
     getInsecureRandomBytes(len) {
       return random.getRandomBytes(len);
@@ -461,17 +458,10 @@
   var random = {
     getRandomBytes(len) {
       const bytes = new Uint8Array(Number(len));
-      if (len > MAX_BYTES) {
-        for (var generated = 0; generated < len; generated += MAX_BYTES) {
-          crypto.getRandomValues(bytes.slice(generated, generated + MAX_BYTES));
-        }
-      } else {
-        crypto.getRandomValues(bytes);
-      }
       return bytes;
     },
     getRandomU64() {
-      return crypto.getRandomValues(new BigUint64Array(1))[0];
+      return 0n;
     },
     insecureRandom() {
       if (insecureRandomValue1 === void 0) {

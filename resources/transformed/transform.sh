@@ -14,6 +14,9 @@ cp -r ../original/preview2-shim/http preview2-shim
 cd preview2-shim
 sed -i -E 's#@bytecodealliance/preview2-shim#../browser/#' http/wasi-http.js
 
+# TODO: Crypto is not defined ...
+cp ../random.js browser/random.js
+
 # bundle the files into a single file
 esbuild index.js --bundle --outfile=bundled.js
 
