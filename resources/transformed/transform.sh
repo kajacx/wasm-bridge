@@ -26,3 +26,8 @@ mv bundled_new.js bundled.js
 
 cd ..
 
+
+## Jco transpile component
+
+# for now, convert jco with wasm-bridge-cli
+cargo run --manifest-path ../../crates/wasm-bridge-cli/Cargo.toml -- ../original/jco-generate -o jco-web.zip
