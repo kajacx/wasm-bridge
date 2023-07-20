@@ -1684,7 +1684,7 @@ export async function instantiate(compileCore, imports, instantiateCore = WebAss
   postReturn1 = exports1['cabi_post_generate-types'];
   
   function generate(arg0, arg1) {
-    if (!_initialized) throwUninitialized();
+
     const ptr0 = realloc1(0, 0, 4, 48);
     const val1 = arg0;
     const len1 = val1.byteLength;
@@ -1861,7 +1861,7 @@ export async function instantiate(compileCore, imports, instantiateCore = WebAss
   }
   
   function generateTypes(arg0, arg1) {
-    if (!_initialized) throwUninitialized();
+
     const ptr0 = utf8Encode(arg0, realloc1, memory0);
     const len0 = utf8EncodedLen;
     const {wit: v1_0, world: v1_1, tlaCompat: v1_2, instantiation: v1_3, map: v1_4 } = arg1;

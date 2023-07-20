@@ -37,5 +37,9 @@ cp -r ../original/jco-generate ./jco-generate
 # fix imports 
 sed -i -E 's#@bytecodealliance/preview2-shim/##' jco-generate/js-component-bindgen-component.js
 
+# TODO: is this a bug in jco?
+# remove _initialized check
+sed -i -E 's/.*_initialized.*//' jco-generate/js-component-bindgen-component.js
+
 # for now, convert jco with wasm-bridge-cli
 cargo run --manifest-path ../../crates/wasm-bridge-cli/Cargo.toml -- jco-generate -o jco-web.zip
