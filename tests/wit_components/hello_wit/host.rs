@@ -45,7 +45,7 @@ impl TestWorldImports for HostData {
     }
 }
 
-impl test::protocol::host::Host for HostData {
+impl component_test::wit_protocol::host_add::Host for HostData {
     fn add_one(&mut self, num: i32) -> Result<i32> {
         Ok(num + 1)
     }
@@ -130,7 +130,7 @@ fn run_with_component(mut store: &mut Store<HostData>, component: &Component) ->
     assert_eq!(result, (25, -15));
 
     let result = instance
-        .test_protocol_guest()
+        .component_test_wit_protocol_guest_add()
         .call_add_three(&mut store, 5)?;
     assert_eq!(result, 8);
 

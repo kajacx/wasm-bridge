@@ -1,4 +1,4 @@
-package test:protocol
+package component-test:wit-protocol
 
 world primitives {
   import negate: func(value: bool) -> bool

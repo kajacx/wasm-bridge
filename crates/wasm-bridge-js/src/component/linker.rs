@@ -44,13 +44,8 @@ impl<T> Linker<T> {
                 closures.push(drop_handler);
             }
 
-            // let import_key = format!("imports.{instance_name}");
-
             Reflect::set(&import_object, &instance_name.into(), &instance_obj).unwrap();
         }
-
-        //helpers::console_log(&self.instances.keys());
-        crate::helpers::log_js_value("IMPORTS", &import_object);
 
         let closures = Rc::from(closures);
         component.instantiate(store, &import_object, closures)

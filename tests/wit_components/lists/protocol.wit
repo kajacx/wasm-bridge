@@ -1,4 +1,4 @@
-package test:protocol
+package component-test:wit-protocol
 
 world lists {
   import push-bool: func(bools: list<bool>, a: bool) -> list<bool> 

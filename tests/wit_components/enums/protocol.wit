@@ -1,4 +1,4 @@
-package test:protocol
+package component-test:wit-protocol
 
 world enums {
   // Variant enums

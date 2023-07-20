@@ -1,10 +1,10 @@
-package test:protocol
+package component-test:wit-protocol
 
-interface host {
+interface host-add {
   add-one: func(num: s32) -> s32
 }
 
-interface guest {
+interface guest-add {
   add-three: func(num: s32) -> s32
 }
 
@@ -18,8 +18,8 @@ world test-world {
   import set-salary: func(emloyee: person, amount: u32) -> person
   export promote-person: func(emloyee: person, raise: u32) -> person
 
-  import host
-  export guest
+  import host-add
+  export guest-add
 
   import increment: func()
   export increment-twice: func()

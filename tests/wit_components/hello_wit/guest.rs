@@ -30,11 +30,11 @@ impl TestWorld for GuestImpl {
     }
 }
 
-impl exports::test::protocol::guest::Guest for GuestImpl {
+impl exports::component_test::wit_protocol::guest_add::GuestAdd for GuestImpl {
     fn add_three(num: i32) -> i32 {
-        let num = test::protocol::host::add_one(num);
-        let num = test::protocol::host::add_one(num);
-        let num = test::protocol::host::add_one(num);
+        let num = component_test::wit_protocol::host_add::add_one(num);
+        let num = component_test::wit_protocol::host_add::add_one(num);
+        let num = component_test::wit_protocol::host_add::add_one(num);
         num
     }
 }
