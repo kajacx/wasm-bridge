@@ -29,5 +29,13 @@ cd ..
 
 ## Jco transpile component
 
+# copy the files
+rm -rf jco-generate
+cp -r ../original/jco-generate ./jco-generate
+
+# TODO: this should not be needed because of noWasiShim
+# fix imports 
+sed -i -E 's#@bytecodealliance/preview2-shim/##' jco-generate/js-component-bindgen-component.js
+
 # for now, convert jco with wasm-bridge-cli
-cargo run --manifest-path ../../crates/wasm-bridge-cli/Cargo.toml -- ../original/jco-generate -o jco-web.zip
+cargo run --manifest-path ../../crates/wasm-bridge-cli/Cargo.toml -- jco-generate -o jco-web.zip
