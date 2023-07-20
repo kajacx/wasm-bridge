@@ -71,24 +71,10 @@ impl Component {
             )
             .map_err(map_js_error("Call component instantiate"))?;
 
-        let names = Object::get_own_property_names(&exports.clone().into());
-        let mut export_fns = HashMap::<String, Func>::new();
-
-        for i in 0..names.length() {
-            let name =
-                Reflect::get_u32(&names, i).map_err(map_js_error("Get name of exported fn"))?;
-
-            let function: Function = Reflect::get(&exports, &name)
-                .map_err(map_js_error("Get exported fn"))?
-                .into();
-
-            export_fns.insert(
-                name.as_string().unwrap(), // TODO: user error
-                Func::new(function, closures.clone()),
-            );
-        }
-
-        Ok(Instance::new(ExportsRoot::new(export_fns), closures))
+        Ok(Instance::new(
+            ExportsRoot::new(exports, &closures)?,
+            closures,
+        ))
     }
 
     fn load_wasm_core(mut file: ZipFile) -> Result<Vec<u8>> {
