@@ -14,3 +14,4 @@ see [LICENSE](./LICENSE).
 - Replaced import path in `/http/wasi-http.js`
 - Added the `index.js` file
 - Added the `bundled.js` file
+- Replaced `/browser/random.js` file with a "dummy" replacement

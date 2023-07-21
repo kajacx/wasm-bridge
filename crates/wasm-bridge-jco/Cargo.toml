@@ -1,12 +1,13 @@
 [package]
 name = "wasm-bridge-jco"
-description = "TODO: jco description"
+description = "Standalone fork of the `js-component-bindgen` crate in jco"
 version.workspace = true
 edition.workspace = true
 repository.workspace = true
-license = "Apache 2.0" # TODO: license
+license = "Apache-2.0 WITH LLVM-exception"
 keywords.workspace = true
 categories.workspace = true
+authors = ["Alex Crichton <alex@alexcrichton.com>", "Guy Bedford <gbedford@fastly.com>"]
 
 [dependencies]
 anyhow = { version = "1.0.71" }
@@ -18,4 +19,5 @@ indexmap = { version = "1.9" }
 base64 = { version = "0.21.2" }
 
 [features]
+default = ["transpile-bindgen"]
 transpile-bindgen = []

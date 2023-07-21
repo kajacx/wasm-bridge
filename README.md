@@ -89,6 +89,6 @@ and may come with a different license.
 
 Here is a full list of these exceptions:
 
-- The [`wasmtime-component-macro`](/crates/wasm-bridge-macros/src/original/) crate "fork".
-- The [`jco-crates`](/resources/original/jco-crates) resource folder.
-- The [`preview2-shim`](/resources/original/preview2-shim) resource folder.
+- The [`wasmtime-component-macro`](/crates/wasm-bridge-macros/src/original) crate "fork".
+- The `preview2-shim` [original](/resources/original/preview2-shim) and [transformed](/resources/transformed/preview2-shim) resource folders.
+- The entire [`wasm-bridge-jco`](/crates/wasm-bridge-jco) crate.
