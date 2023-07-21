@@ -20,10 +20,13 @@ jobs:
           path: |
             ~/.cargo
             ~/.rustup
-          key: ${{ runner.os }}-installation-04
+          key: ${{ runner.os }}-installation-05
           restore-keys: ${{ runner.os }}-installation
 
       - name: Install wasm32 target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Install wasm32-wasi target
         run: rustup target add wasm32-unknown-unknown
 
       - name: Install wasm-pack
