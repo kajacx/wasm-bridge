@@ -28,25 +28,3 @@ echo '})();' >> bundled_new.js
 mv bundled_new.js bundled.js
 
 cd ..
-
-
-## Jco Rust crates
-
-# copy the files
-rm -rf jco-crates/js-component-*
-cp -r ../original/jco-crates/js-component-bindgen jco-crates/
-cp -r ../original/jco-crates/js-component-bindgen-component jco-crates/
-
-# update the version and edition
-sed -i -E 's/version.workspace.*/version = "0.1.0" # MODIFIED, NOT THE REAL VERSION!/' \
-jco-crates/js-component-bindgen/Cargo.toml
-
-sed -i -E 's/version.workspace.*/version = "0.1.0" # MODIFIED, NOT THE REAL VERSION!/' \
-jco-crates/js-component-bindgen-component/Cargo.toml
-
-sed -i -E 's/version.edition.*/edition = "2021"/' jco-crates/js-component-bindgen/Cargo.toml
-
-sed -i -E 's/version.edition.*/edition = "2021"/' jco-crates/js-component-bindgen-component/Cargo.toml
-
-# update the dependencies
-sed -i -E 's'

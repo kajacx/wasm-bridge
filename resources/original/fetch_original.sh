@@ -15,16 +15,6 @@ git pull
 cd ..
 
 
-## Copy the Rust crates
-
-rm -rf jco-crates/js-component-bindgen
-rm -rf jco-crates/js-component-bindgen-component
-
-cp -r jco-repo/crates/js-component-bindgen jco-crates/
-cp -r jco-repo/crates/js-component-bindgen-component jco-crates/
-
-
-
 ## Preview shim
 
 # copy the wasi shims from jco
