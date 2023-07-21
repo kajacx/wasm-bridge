@@ -1,8 +1,7 @@
 #!/usr/bin/sh
 set -e
 
-
-## Jco generate
+## First, clone and update the repo
 
 # clone the repo if it doesn't exist
 if [ ! -d "./jco-repo" ]; then
@@ -13,24 +12,17 @@ fi
 cd jco-repo
 git reset --hard
 git pull
-
-# Turn on instantiation
-sed -i -E 's/instantiation: false,/instantiation: true,/' bin/self_build.rs
-
-
-# generate the files
-npm install
-npm run build
 cd ..
 
-# copy the "generate" component
-mkdir -p jco-generate
-for file in jco-repo/obj/js-component-bindgen-*; do
-    cp $file jco-generate/
-done
 
-# remove the ts file, we dont need it
-rm jco-generate/*.ts
+## Copy the Rust crates
+
+rm -rf jco-crates/js-component-bindgen
+rm -rf jco-crates/js-component-bindgen-component
+
+cp -r jco-repo/crates/js-component-bindgen jco-crates/
+cp -r jco-repo/crates/js-component-bindgen-component jco-crates/
+
 
 
 ## Preview shim

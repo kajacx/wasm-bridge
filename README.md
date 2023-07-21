@@ -90,5 +90,5 @@ and may come with a different license.
 Here is a full list of these exceptions:
 
 - The [`wasmtime-component-macro`](/crates/wasm-bridge-macros/src/original/) crate "fork".
-- The [`jco-generate`](/resources/original/jco-generate) resource folder.
+- The [`jco-crates`](/resources/original/jco-crates) resource folder.
 - The [`preview2-shim`](/resources/original/preview2-shim) resource folder.
