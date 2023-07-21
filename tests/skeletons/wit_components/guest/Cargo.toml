@@ -6,5 +6,8 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib"]
 
+[package.metadata.component]
+package = "component:wit-guest"
+
 [dependencies]
 wit-bindgen = "0.8.0"

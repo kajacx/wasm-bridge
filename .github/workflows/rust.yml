@@ -29,8 +29,8 @@ jobs:
       - name: Install wasm-pack
         run: cargo install wasm-pack
 
-      - name: Install wasm-tools
-        run: cargo install wasm-tools
+      - name: Install cargo component
+        run: cargo install --git https://github.com/bytecodealliance/cargo-component
 
       - uses: actions/checkout@v3
 

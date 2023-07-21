@@ -18,10 +18,7 @@ cp $test/protocol.wit instance/protocol.wit
 cp $test/guest.rs instance/guest/src/lib.rs
 
 # build the guest
-cd instance/guest && cargo rustc --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && \
-cd target/wasm32-unknown-unknown/debug && \
-wasm-tools component new wit_components_guest.wasm -o component.wasm && \
-cd ../../../../..
+cd instance/guest && cargo component build --target wasm32-unknown-unknown && cd ../..
 if [ $? -ne 0 ]; then
   echo
   echo "Oh no, there is an error in the $test guest."
