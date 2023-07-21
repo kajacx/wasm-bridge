@@ -14,10 +14,11 @@ wasm-bindgen = "0.2.87"
 wasm-bindgen-futures = { version = "0.4.37" }
 wat = { version = "1.0.66", optional = true }
 wasm-bridge-macros = { path = "../wasm-bridge-macros", version = "0.1.6", optional = true }
+wasm-bridge-jco = { path = "../wasm-bridge-jco", version = "0.1.6", features = ["transpile-bindgen"], optional = true }
 anyhow = { version = "1.0.22" }
 zip = { version = "0.6.6", default-features = false, features = ["deflate"], optional = true }
 heck = { version = "0.4.1" }
 
 [features]
-component-model = ["wasm-bridge-macros", "zip"]
+component-model = ["wasm-bridge-macros", "wasm-bridge-jco", "zip"]
 error-logging = []

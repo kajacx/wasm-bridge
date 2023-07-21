@@ -30,19 +30,23 @@ mv bundled_new.js bundled.js
 cd ..
 
 
-## Jco transpile component
+## Jco Rust crates
 
 # copy the files
-rm -rf jco-generate
-cp -r ../original/jco-generate ./jco-generate
+rm -rf jco-crates/js-component-*
+cp -r ../original/jco-crates/js-component-bindgen jco-crates/
+cp -r ../original/jco-crates/js-component-bindgen-component jco-crates/
 
-# TODO: this should not be needed because of noWasiShim
-# fix imports 
-sed -i -E 's#@bytecodealliance/preview2-shim/##' jco-generate/js-component-bindgen-component.js
+# update the version and edition
+sed -i -E 's/version.workspace.*/version = "0.1.0" # MODIFIED, NOT THE REAL VERSION!/' \
+jco-crates/js-component-bindgen/Cargo.toml
 
-# TODO: is this a bug in jco?
-# remove _initialized check
-sed -i -E 's/.*_initialized.*//' jco-generate/js-component-bindgen-component.js
+sed -i -E 's/version.workspace.*/version = "0.1.0" # MODIFIED, NOT THE REAL VERSION!/' \
+jco-crates/js-component-bindgen-component/Cargo.toml
 
-# for now, convert jco with wasm-bridge-cli
-cargo run --manifest-path ../../crates/wasm-bridge-cli/Cargo.toml -- jco-generate -o jco-web.zip
+sed -i -E 's/version.edition.*/edition = "2021"/' jco-crates/js-component-bindgen/Cargo.toml
+
+sed -i -E 's/version.edition.*/edition = "2021"/' jco-crates/js-component-bindgen-component/Cargo.toml
+
+# update the dependencies
+sed -i -E 's'

@@ -82,6 +82,7 @@ impl<T> Linker<T> {
     }
 
     // TODO: kind of a hacky way to do it ... refactor
+    #[allow(unused)]
     pub(crate) fn set_wasi_imports(&mut self, imports: Object) {
         self.wasi_imports = Some(imports);
     }
