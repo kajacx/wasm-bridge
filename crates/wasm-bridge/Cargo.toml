@@ -11,10 +11,10 @@ categories.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 wasmtime = { version = "11.0.0", default-features = false, features = ["cranelift"] }
-wasm-bridge-macros = { path = "../wasm-bridge-macros", version = "0.1.6", optional = true }
+wasm-bridge-macros = { path = "../wasm-bridge-macros", version = "0.2.0", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bridge-js = { path = "../wasm-bridge-js", version = "0.1.6" }
+wasm-bridge-js = { path = "../wasm-bridge-js", version = "0.2.0" }
 
 [features]
 default = ["wat", "error-logging"]

@@ -1,14 +1,11 @@
 # wasm-bridge change log
 
-## [0.2.0] YYYY-MM-DD
-
-### Added
-
-- Can now compile components directly with `Component::new()` on js
+## [0.2.0] 2023-07-21
 
 ### Changes
 
 - Updated wasmtime to version `11.0.0` on sys
+- `Component::new()` now takes the same component bytes on desktop and on the web
 
 ### <b style="color: red">Breaking changes</b>:
 
