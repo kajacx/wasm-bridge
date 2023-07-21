@@ -44,7 +44,14 @@ jobs:
           key: ${{ runner.os }}-build-folders-${{ hashFiles('crates/*/Cargo.toml') }}
           restore-keys: ${{ runner.os }}-build-folders
 
+      - name: Run unit tests
+        env:
+          RUSTFLAGS: "-D warnings"
+        run: cd crates/wasm-bridge-js && wasm-pack test --node -- --all-features
+
       - name: Check formatting
+        env:
+          RUSTFLAGS: "-D warnings"
         run: cargo fmt --all -- --check
 
       - name: Check compile warnings
