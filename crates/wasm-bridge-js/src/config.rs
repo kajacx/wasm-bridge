@@ -10,4 +10,9 @@ impl Config {
     pub fn wasm_component_model(&mut self, _: bool) -> &mut Self {
         self
     }
+
+    // TODO: based on "async" / "wasi" flag?
+    pub fn async_support(&mut self, _: bool) -> &mut Self {
+        self
+    }
 }
