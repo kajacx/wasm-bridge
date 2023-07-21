@@ -70,25 +70,11 @@ export_calculator!(MyCalculator);
 
 3. Convert the WASM module into a WASM component with `wasm-tools component new guest.wasm -o component.wasm`
 
-This is the `component.wasm` file you would use with wasmtime normally. We will need it in the next two steps.
-
-4. Convert the WASM component so that it can run on the web with `jco transpile component.wasm --instantiation -o out-dir`
-
-At this point, you can run the component on the web from JS, but that's not what we want.
-
-5. Convert the "web component" _again_ with `wasm-bridge-cli out-dir -o component.zip --universal component.wasm`
-
-Reinstall with `cargo install wasm-bridge-cli -f` to use version at least `0.1.5`.
-
-This prepares the web component so that it can be loaded from Rust on the web.
-
-In universal mode, it also includes the original wasm component, so that the zip file can be used
-both on the web and on desktop with `wasm_bridge::component::new_universal_component`.
-
+This is the `component.wasm` file you would use with wasmtime normally. We will need it later.
 
 ## Create the runtime
 
-1. Add the `wasm-bridge` crate as a dependency with the `component-model` feature. Use version at least `0.1.4`. Example:
+1. Add the `wasm-bridge` crate as a dependency with the `component-model` feature. Use version at least `0.2.0`. Example:
 ```toml
 [dependencies]
 wasm-bridge = { version = "0.1.4", features = ["component-model"] }
@@ -104,10 +90,8 @@ wasm_bridge::component::bindgen!({
 
 3. Create a `Component` from the component bytes.
 
-Use the `component.zip` file created with `wasm-bridge-cli` and "feed" it into the `new_universal_component` function:
-
 ```rust
-let component_bytes: &[u8] = /* ... */;
+let component_bytes: &[u8] = /* read the file bytes */;
 
 let mut config = Config::new();
 config.wasm_component_model(true);
@@ -115,7 +99,7 @@ config.wasm_component_model(true);
 let engine = Engine::new(&config)?;
 let mut store = Store::new(&engine, ());
 
-let component = wasm_bridge::component::new_universal_component(&store.engine(), &component_bytes)?;
+let component = Component::new(&store.engine(), &component_bytes)?;
 ```
 
 4. Instantiate the component with a linker, like this:
@@ -132,11 +116,16 @@ assert_eq!(result, 8);
 
 ## Summary
 
-The steps are mostly identical to using wasmtime with component model "normally", but we need to create the universal component
-that can run on desktop as well as on the web, and load it with a custom function `new_universal_component` instead of using `Component::new`.
+The steps are identical to using wasmtime with component model "normally",
+except we used `wasm-bridge` instead of `wasmtime` as our dependency.
 
 ## Next steps
 
-The universal component is great for compatibility, but not for size. If you want to make your component files smaller, check out the [No universal](./no_universal.md) guide.
-
 If your wit world defines imports, you can read the [Wit imports](./wit_imports.md) guide. The code is identical to wasmtime, though.
+
+## Universal mode / zipped components discontinuation
+
+Previously, you had to convert the wasm component with `jco` and `wasm-bridle-cli`.
+
+Since wasm-bridge version 0.2.0, this is *no longer the case*,
+and you can use the component bytes in `Component::new()` on desktop as well as on the web.
