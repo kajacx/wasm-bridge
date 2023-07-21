@@ -1,4 +1,5 @@
 #![allow(unused)]
+#![allow(clippy::all)]
 
 mod files;
 mod transpile_bindgen;

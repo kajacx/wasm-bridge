@@ -10,8 +10,10 @@ impl ComponentLoader {
     }
 
     pub fn compile_component(self, bytes: &[u8]) -> Result<Component> {
-        let mut opts = wasm_bridge_jco::TranspileOpts::default();
-        opts.instantiation = true;
+        let opts = wasm_bridge_jco::TranspileOpts {
+            instantiation: true,
+            ..Default::default()
+        };
 
         let result = wasm_bridge_jco::transpile(bytes, opts)?;
         let mut files = result.files;
@@ -19,7 +21,7 @@ impl ComponentLoader {
         for (name, bytes) in files.iter_mut() {
             if name.ends_with(".js") {
                 *name = "sync_component.js".into();
-                *bytes = modify_js_bytes(&bytes)?;
+                *bytes = modify_js_bytes(bytes)?;
             }
         }
 

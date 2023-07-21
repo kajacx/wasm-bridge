@@ -64,7 +64,7 @@ impl PrimitivesImports for Imports {
     }
 }
 
-pub fn run_test(component_bytes: &[u8], _universal_bytes: &[u8]) -> Result<()> {
+pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
     config.wasm_component_model(true);
 

@@ -1,5 +1,5 @@
 use wasm_bridge::{
-    component::{new_universal_component, Component, Linker},
+    component::{Component, Linker},
     Config, Engine, Result, Store,
 };
 
@@ -57,7 +57,7 @@ impl host_sub::Host for HostData {
     }
 }
 
-pub fn run_test(component_bytes: &[u8], universal_bytes: &[u8]) -> Result<()> {
+pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
     config.wasm_component_model(true);
 
@@ -65,33 +65,11 @@ pub fn run_test(component_bytes: &[u8], universal_bytes: &[u8]) -> Result<()> {
     let mut store = Store::new(&engine, HostData { number: 0 });
 
     let component = Component::new(&store.engine(), &component_bytes)?;
-    run_with_component(&mut store, &component)?;
 
-    if !cfg!(target_arch = "wasm32") {
-        // Doesn't work on sys
-        Component::new(&store.engine(), universal_bytes)
-            .map(|_| ())
-            .expect_err("should not load component normally with universal bytes");
-    } else {
-        // But it works on js
-        let component = Component::new(&store.engine(), &universal_bytes)?;
-        run_with_component(&mut store, &component)?;
-    }
-
-    let component = new_universal_component(&store.engine(), &component_bytes)?;
-    run_with_component(&mut store, &component)?;
-
-    let component = new_universal_component(&store.engine(), &universal_bytes)?;
-    run_with_component(&mut store, &component)?;
-
-    Ok(())
-}
-
-fn run_with_component(mut store: &mut Store<HostData>, component: &Component) -> Result<()> {
     let mut linker = Linker::new(store.engine());
     TestWorld::add_to_linker(&mut linker, |data| data)?;
 
-    let (instance, _) = TestWorld::instantiate(&mut store, component, &linker)?;
+    let (instance, _) = TestWorld::instantiate(&mut store, &component, &linker)?;
 
     let result = instance.call_promote_person(
         &mut store,
