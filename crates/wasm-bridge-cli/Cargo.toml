@@ -1,16 +1,9 @@
 [package]
 name = "wasm-bridge-cli"
-description = "Command line tool to prepare jco-transpiled components"
+description = "Command line tool to prepare jco-transpiled components (deprecated)"
 version.workspace = true
 edition.workspace = true
 repository.workspace = true
 license.workspace = true
 keywords.workspace = true
 categories.workspace = true
-
-[dependencies]
-clap = { version = "4.3.11", features = ["derive"] }
-zip = { version = "0.6.6", default-features = false, features = ["deflate"] }
-tempdir = { version = "0.3.7" }
-anyhow = { version = "1.0.71" }
-regex = { version = "1.9.1" }

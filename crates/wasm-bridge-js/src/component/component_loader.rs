@@ -35,7 +35,6 @@ fn modify_js_bytes(bytes: &[u8]) -> Result<Vec<u8>> {
     Ok(text.into())
 }
 
-// TODO: duplication with wasm-bridge-cli
 fn modify_js(text: &str) -> String {
     // function signature
     let text = text.replace("export async function", "function");

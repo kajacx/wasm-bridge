@@ -24,9 +24,6 @@ cp $test/guest.rs instances/wit_components/guest/src/lib.rs
 cd instances/wit_components/guest && cargo rustc --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && \
 cd target/wasm32-unknown-unknown/debug && \
 wasm-tools component new wit_components_guest.wasm -o component.wasm && \
-jco transpile component.wasm --instantiation -o out-dir && \
-cargo run --manifest-path ../../../../../../../crates/wasm-bridge-cli/Cargo.toml out-dir -o out-dir.zip && \
-cargo run --manifest-path ../../../../../../../crates/wasm-bridge-cli/Cargo.toml out-dir -u component.wasm -o universal.zip && \
 cd ../../../../../..
 if [ $? -ne 0 ]; then
   echo

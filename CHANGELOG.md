@@ -10,9 +10,11 @@
 
 - Updated wasmtime to version `11.0.0` on sys
 
-### Planned <b style="color: red">breaking changes</b>:
+### <b style="color: red">Breaking changes</b>:
 
-- Remove out file as the second argument in cli, only the -o option will remain.
+- `wasm-bridge-cli` is removed, as you can load components with `Component::new()` directly
+- Loading "zipped" components created with earlier version of `wasm-bridge-cli` will not work
+- `new_universal_component` is completely removed, as well as the `component-model-no-universal` flag
 
 ## [0.1.6] 2023-07-20
 
