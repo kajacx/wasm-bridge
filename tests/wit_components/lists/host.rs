@@ -127,7 +127,12 @@ pub fn run_test(component_bytes: &[u8], _universal_bytes: &[u8]) -> Result<()> {
     let result = instance.call_push_chars(&mut store, &['á', 'b'], 'č', 'd')?;
     assert_eq!(result, vec!['á', 'b', 'č', 'd']);
 
-    let result = instance.call_push_strings(&mut store, &["hello", "world"], "three", "four")?;
+    let result = instance.call_push_strings(
+        &mut store,
+        &["hello".into(), "world".into()],
+        "three",
+        "four",
+    )?;
     assert_eq!(
         result,
         vec![

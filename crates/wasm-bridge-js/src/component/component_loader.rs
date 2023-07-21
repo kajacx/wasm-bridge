@@ -5,8 +5,8 @@ use wasm_bindgen::JsValue;
 use super::*;
 use crate::{helpers::map_js_error, Result, Store, ToJsValue};
 
-static JCO_BYTES: &'static [u8] = include_bytes!("../../../../resources/transformed/jco-web.zip");
-static WASI_IMPORTS: &'static str =
+static JCO_BYTES: &[u8] = include_bytes!("../../../../resources/transformed/jco-web.zip");
+static WASI_IMPORTS: &str =
     include_str!("../../../../resources/transformed/preview2-shim/bundled.js");
 
 pub struct ComponentLoader {
@@ -46,9 +46,8 @@ impl ComponentLoader {
             .call2(&JsValue::UNDEFINED, &self.generate, &bytes_js)
             .expect("call compile_fn");
 
-        let files_js: Object = Object::from_entries(&files_js)
-            .map_err(map_js_error("Files object from entries"))?
-            .into();
+        let files_js =
+            Object::from_entries(&files_js).map_err(map_js_error("Files object from entries"))?;
 
         let names = Object::get_own_property_names(&files_js);
 
@@ -56,12 +55,10 @@ impl ComponentLoader {
         let mut files = Vec::with_capacity(length as _);
 
         for index in 0..length {
-            crate::helpers::console_log(format!("Processing file {index}"));
             let name_js =
                 Reflect::get_u32(&names, index).map_err(map_js_error("Get file from generate"))?;
 
             let mut name = name_js.as_string().context("Property name is string")?;
-            crate::helpers::console_log(format!("Processing file {name}"));
 
             let bytes_js =
                 Reflect::get(&files_js, &name_js).map_err(map_js_error("Get object property"))?;
