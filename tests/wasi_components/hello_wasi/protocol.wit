@@ -1,0 +1,5 @@
+package component-test:wit-protocol
+
+world test-world {
+  export add-three: func(num: s32) -> s32
+}

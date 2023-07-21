@@ -1,15 +1,15 @@
 #!/usr/bin/sh
 
 # Run from the "tests" folder and pass the instance name as an argument
-test="wit_components/$1"
+test="wasi_components/$1"
 
 # create the instance folder if it doesn't exist
 mkdir -p instance
 
-# copy the "wit_components" skeleton
-cp -r skeletons/wit_components/guest instance
-cp -r skeletons/wit_components/host_sys instance
-cp -r skeletons/wit_components/host_js instance
+# copy the "wasi_components" skeleton
+cp -r skeletons/wasi_components/guest instance
+cp -r skeletons/wasi_components/host_sys instance
+cp -r skeletons/wasi_components/host_js instance
 
 # copy the protocol
 cp $test/protocol.wit instance/protocol.wit
@@ -18,10 +18,7 @@ cp $test/protocol.wit instance/protocol.wit
 cp $test/guest.rs instance/guest/src/lib.rs
 
 # build the guest
-cd instance/guest && cargo rustc --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && \
-cd target/wasm32-unknown-unknown/debug && \
-wasm-tools component new wit_components_guest.wasm -o component.wasm && \
-cd ../../../../..
+cd instance/guest && cargo component build && cd ../..
 if [ $? -ne 0 ]; then
   echo
   echo "Oh no, there is an error in the $test guest."

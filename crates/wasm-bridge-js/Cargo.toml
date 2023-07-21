@@ -20,4 +20,5 @@ heck = { version = "0.4.1" }
 
 [features]
 component-model = ["wasm-bridge-macros", "wasm-bridge-jco"]
+wasi = ["wasm-bridge-macros/async"]
 error-logging = []

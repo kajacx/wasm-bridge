@@ -1,0 +1,8 @@
+[package]
+name = "wit-components-host-sys"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wasm-bridge = { path = "../../../crates/wasm-bridge", default-features = false, features = ["component-model", "wasi"] }
+tokio = { version = "1.29.1", features = ["macros", "rt"] }

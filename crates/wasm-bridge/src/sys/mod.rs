@@ -10,3 +10,8 @@ pub mod component {
     pub use wasm_bridge_macros::Lift;
     pub use wasm_bridge_macros::Lower;
 }
+
+#[cfg(feature = "wasi")]
+pub mod wasi {
+    pub use wasmtime_wasi::*;
+}

@@ -10,3 +10,8 @@ for test in wit_components/*; do
   test=$(echo "$test" | sed 's#wit_components/##')
   sh skeletons/wit_components/run_test.sh "$test"
 done
+
+for test in wasi_components/*; do
+  test=$(echo "$test" | sed 's#wasi_components/##')
+  sh skeletons/wasi_components/run_test.sh "$test"
+done

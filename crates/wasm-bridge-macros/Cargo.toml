@@ -21,3 +21,6 @@ wasmtime-wit-bindgen = { version = "11.0.0" }
 wit-parser = { version = "0.8.0" }
 regex = "1.8"
 heck = "0.4"
+
+[features]
+async = []
