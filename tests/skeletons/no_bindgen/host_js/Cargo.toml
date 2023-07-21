@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-wasm-bridge = { path = "../../../../crates/wasm-bridge", default-features = false, features = ["wat"] }
+wasm-bridge = { path = "../../../crates/wasm-bridge", default-features = false, features = ["wat"] }
 
 [dev-dependencies]
 wasm-bindgen-test = { version = "0.3.37" }
