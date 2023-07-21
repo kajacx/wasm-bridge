@@ -2,6 +2,14 @@
 
 ## [0.2.0] YYYY-MM-DD
 
+### Added
+
+- Can now compile components directly with `Component::new()` on js
+
+### Changes
+
+- Updated wasmtime to version `11.0.0` on sys
+
 ### Planned <b style="color: red">breaking changes</b>:
 
 - Remove out file as the second argument in cli, only the -o option will remain.

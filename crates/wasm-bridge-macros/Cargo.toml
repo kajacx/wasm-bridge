@@ -16,8 +16,8 @@ anyhow = "1.0"
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "1.0", features = ["extra-traits"] }
-wasmtime-component-util = { version = "10.0.1" }
-wasmtime-wit-bindgen = { version = "10.0.1" }
+wasmtime-component-util = { version = "11.0.0" }
+wasmtime-wit-bindgen = { version = "11.0.0" }
 wit-parser = { version = "0.8.0" }
 regex = "1.8"
 heck = "0.4"

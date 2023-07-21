@@ -10,7 +10,7 @@ categories.workspace = true
 
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-wasmtime = { version = "10.0.1", default-features = false, features = ["cranelift"] }
+wasmtime = { version = "11.0.0", default-features = false, features = ["cranelift"] }
 wasm-bridge-macros = { path = "../wasm-bridge-macros", version = "0.1.6", optional = true }
 zip = { version = "0.6.6", default-features = false, features = ["deflate"], optional = true }
 
