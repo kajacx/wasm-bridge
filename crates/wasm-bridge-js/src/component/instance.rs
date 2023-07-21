@@ -29,4 +29,8 @@ impl<T> InstancePre<T> {
     pub fn instantiate(&self, _store: impl AsContextMut<Data = T>) -> Result<Instance> {
         todo!()
     }
+
+    pub async fn instantiate_async(&self, _store: impl AsContextMut<Data = T>) -> Result<Instance> {
+        todo!()
+    }
 }

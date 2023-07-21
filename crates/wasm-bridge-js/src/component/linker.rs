@@ -58,6 +58,15 @@ impl<T> Linker<T> {
         component.instantiate(store, &import_object, closures)
     }
 
+    pub async fn instantiate_async(
+        &self,
+        store: impl AsContextMut<Data = T>,
+        component: &Component,
+    ) -> Result<Instance> {
+        // TODO: proper async instantiation
+        self.instantiate(store, component)
+    }
+
     pub fn root(&mut self) -> &mut Self {
         self
     }

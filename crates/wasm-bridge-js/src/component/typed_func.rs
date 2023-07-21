@@ -39,7 +39,19 @@ impl<Params, Return> TypedFunc<Params, Return> {
         Return::from_fn_result(&result)
     }
 
+    pub async fn call_async(&self, store: impl AsContextMut, params: Params) -> Result<Return>
+    where
+        Params: ToJsValue,
+        Return: FromJsValue,
+    {
+        self.call(store, params)
+    }
+
     pub fn post_return(&self, _store: impl AsContextMut) -> Result<()> {
         Ok(())
+    }
+
+    pub async fn post_return_async(&self, store: impl AsContextMut) -> Result<()> {
+        self.post_return(store)
     }
 }

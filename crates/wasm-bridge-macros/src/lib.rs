@@ -70,7 +70,7 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let regex = Regex::new("#\\[derive\\([^)]*Lower\\)\\]").unwrap();
     let as_string = regex.replace_all(&as_string, "#[derive(wasm_bridge::component::ToJsValue)]");
 
-    // eprintln!("BINDGEN: {as_string}");
+    eprintln!("BINDGEN: {as_string}");
 
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
