@@ -1,3 +1,4 @@
+#[derive(Debug, Clone, Default)]
 pub struct WasiCtx {}
 
 impl WasiCtx {

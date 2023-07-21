@@ -17,7 +17,7 @@ pub struct Component {
 
 impl Component {
     pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
-        let loader = ComponentLoader::new().context("create new component loader")?;
+        let loader = ComponentLoader::new();
         loader.compile_component(bytes.as_ref())
     }
 

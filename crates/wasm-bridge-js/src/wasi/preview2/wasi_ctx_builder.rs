@@ -1,6 +1,7 @@
 use super::*;
 use crate::Result;
 
+#[derive(Debug, Clone, Default)]
 pub struct WasiCtxBuilder {}
 
 impl WasiCtxBuilder {

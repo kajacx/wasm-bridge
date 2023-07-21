@@ -9,3 +9,5 @@ pub use table::*;
 
 mod wasi_view;
 pub use wasi_view::*;
+
+pub mod wasi;

@@ -18,6 +18,9 @@ wasm-bridge-jco = { path = "../wasm-bridge-jco", version = "0.2.0", optional = t
 anyhow = { version = "1.0.22" }
 heck = { version = "0.4.1" }
 
+[dev-dependencies]
+wasm-bindgen-test = "0.3.37"
+
 [features]
 component-model = ["wasm-bridge-macros", "wasm-bridge-jco"]
 wasi = ["wasm-bridge-macros/async"]

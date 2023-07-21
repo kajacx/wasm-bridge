@@ -90,8 +90,7 @@ impl<T> Linker<T> {
             .or_insert_with(|| Linker::new(&Engine {}))) // TODO: engine re-creation
     }
 
-    // TODO: kind of a hacky way to do it ... refactor
-    #[allow(unused)]
+    #[cfg(feature = "wasi")]
     pub(crate) fn set_wasi_imports(&mut self, imports: Object) {
         self.wasi_imports = Some(imports);
     }

@@ -1,12 +1,12 @@
 use super::*;
 use crate::Result;
 
+#[derive(Debug, Clone, Default)]
 pub struct ComponentLoader {}
 
 impl ComponentLoader {
-    // TODO: this should not really be a "result" ... add a unit test?
-    pub fn new() -> Result<Self> {
-        Ok(Self {})
+    pub fn new() -> Self {
+        Self {}
     }
 
     pub fn compile_component(self, bytes: &[u8]) -> Result<Component> {

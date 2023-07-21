@@ -10,7 +10,7 @@
   __export(clocks_exports, {
     monotonicClock: () => monotonicClock,
     timezone: () => timezone,
-    wallClock: () => wallClock
+    wallClock: () => wallClock,
   });
   function _hrtimeBigint() {
     return BigInt(Math.floor(performance.now() * 1e9));
@@ -25,7 +25,7 @@
     },
     subscribe(_when, _absolute) {
       console.log(`[monotonic-clock] Subscribe`);
-    }
+    },
   };
   var timezone = {
     display(timezone2, when) {
@@ -37,24 +37,24 @@
     },
     dropTimezone(timezone2) {
       console.log(`[timezone] DROP ${timezone2}`);
-    }
+    },
   };
   var wallClock = {
     now() {
       const seconds = BigInt(Math.floor(Date.now() / 1e3));
-      const nanoseconds = Date.now() % 1e3 * 1e6;
+      const nanoseconds = (Date.now() % 1e3) * 1e6;
       return { seconds, nanoseconds };
     },
     resolution() {
       console.log(`[wall-clock] Wall clock resolution`);
-    }
+    },
   };
 
   // browser/filesystem.js
   var filesystem_exports = {};
   __export(filesystem_exports, {
     filesystem: () => filesystem,
-    filesystemFilesystem: () => filesystem
+    filesystemFilesystem: () => filesystem,
   });
   var filesystem = {
     readViaStream(fd, offset) {
@@ -85,7 +85,12 @@
       console.log(`[filesystem] SET SIZE`, fd, size);
     },
     setTimes(fd, dataAccessTimestamp, dataModificationTimestamp) {
-      console.log(`[filesystem] SET TIMES`, fd, dataAccessTimestamp, dataModificationTimestamp);
+      console.log(
+        `[filesystem] SET TIMES`,
+        fd,
+        dataAccessTimestamp,
+        dataModificationTimestamp
+      );
     },
     read(fd, length, offset) {
       console.log(`[filesystem] READ`, fd, length, offset);
@@ -161,7 +166,7 @@
     },
     dropDirectoryEntryStream(stream) {
       console.log(`[filesystem] DROP DIRECTORY ENTRY`, stream);
-    }
+    },
   };
 
   // browser/http.js
@@ -170,7 +175,7 @@
     incomingHandler: () => incomingHandler,
     outgoingHandler: () => outgoingHandler,
     send: () => send,
-    types: () => types
+    types: () => types,
   });
 
   // http/error.js
@@ -181,7 +186,7 @@
       super(message);
       this.payload = {
         tag: "unexpected-error",
-        val: message
+        val: message,
       };
     }
   };
@@ -199,30 +204,34 @@
         }
       }
       xhr.send(req.body && req.body.length > 0 ? req.body : null);
-      const body = xhr.response ? new TextEncoder().encode(xhr.response) : void 0;
+      const body = xhr.response
+        ? new TextEncoder().encode(xhr.response)
+        : void 0;
       const headers = [];
-      xhr.getAllResponseHeaders().trim().split(/[\r\n]+/).forEach((line) => {
-        var parts = line.split(": ");
-        var key = parts.shift();
-        var value = parts.join(": ");
-        headers.push([key, value]);
-      });
+      xhr
+        .getAllResponseHeaders()
+        .trim()
+        .split(/[\r\n]+/)
+        .forEach((line) => {
+          var parts = line.split(": ");
+          var key = parts.shift();
+          var value = parts.join(": ");
+          headers.push([key, value]);
+        });
       return {
         status: xhr.status,
         headers,
-        body
+        body,
       };
     } catch (err) {
       throw new UnexpectedError(err.message);
     }
   }
   var incomingHandler = {
-    handle() {
-    }
+    handle() {},
   };
   var outgoingHandler = {
-    handle() {
-    }
+    handle() {},
   };
   var types = {
     dropFields(_fields) {
@@ -323,13 +332,13 @@
     },
     listenToFutureIncomingResponse(_f) {
       console.log("[types] Listen to future incoming response");
-    }
+    },
   };
 
   // browser/io.js
   var io_exports = {};
   __export(io_exports, {
-    streams: () => streams
+    streams: () => streams,
   });
   var streams = {
     read(s, len) {
@@ -391,24 +400,23 @@
     },
     dropOutputStream(s) {
       console.log(`[streams] Drop output stream ${s}`);
-    }
+    },
   };
 
   // browser/logging.js
   var logging_exports = {};
   __export(logging_exports, {
     handler: () => handler,
-    setLevel: () => setLevel
+    setLevel: () => setLevel,
   });
   var levels = ["trace", "debug", "info", "warn", "error"];
   var logLevel = levels.indexOf("warn");
   var handler = {
     log(level, context, msg) {
-      if (logLevel > levels.indexOf(level))
-        return;
+      if (logLevel > levels.indexOf(level)) return;
       console[level](`(${context}) ${msg}
 `);
-    }
+    },
   };
   function setLevel(level) {
     logLevel = levels.indexOf(level);
@@ -417,7 +425,7 @@
   // browser/poll.js
   var poll_exports = {};
   __export(poll_exports, {
-    poll: () => poll
+    poll: () => poll,
   });
   var poll = {
     dropPollable(pollable) {
@@ -426,7 +434,7 @@
     pollOneoff(input) {
       console.log(`[poll] Oneoff (${input})`);
       return [];
-    }
+    },
   };
 
   // browser/random.js
@@ -434,7 +442,7 @@
   __export(random_exports, {
     insecure: () => insecure,
     insecureSeed: () => insecureSeed,
-    random: () => random
+    random: () => random,
   });
   var insecure = {
     getInsecureRandomBytes(len) {
@@ -442,7 +450,7 @@
     },
     getInsecureRandomU64() {
       return random.getRandomU64();
-    }
+    },
   };
   var insecureSeedValue1;
   var insecureSeedValue2;
@@ -453,7 +461,7 @@
         insecureSeedValue2 = random.getRandomU64();
       }
       return [insecureSeedValue1, insecureSeedValue2];
-    }
+    },
   };
   var random = {
     getRandomBytes(len) {
@@ -469,7 +477,7 @@
         insecureRandomValue2 = random.getRandomU64();
       }
       return [insecureRandomValue1, insecureRandomValue2];
-    }
+    },
   };
 
   // browser/sockets.js
@@ -481,130 +489,77 @@
     tcp: () => tcp,
     tcpCreateSocket: () => tcpCreateSocket,
     udp: () => udp,
-    udpCreateSocket: () => udpCreateSocket
+    udpCreateSocket: () => udpCreateSocket,
   });
   var instanceNetwork = {
     instanceNetwork() {
       console.log(`[sockets] instance network`);
-    }
+    },
   };
   var ipNameLookup = {
-    dropResolveAddressStream() {
-    },
-    subscribe() {
-    },
-    resolveAddresses() {
-    },
-    resolveNextAddress() {
-    },
-    nonBlocking() {
-    },
-    setNonBlocking() {
-    }
+    dropResolveAddressStream() {},
+    subscribe() {},
+    resolveAddresses() {},
+    resolveNextAddress() {},
+    nonBlocking() {},
+    setNonBlocking() {},
   };
   var network = {
-    dropNetwork() {
-    }
+    dropNetwork() {},
   };
   var tcpCreateSocket = {
-    createTcpSocket() {
-    }
+    createTcpSocket() {},
   };
   var tcp = {
-    subscribe() {
-    },
-    dropTcpSocket() {
-    },
-    bind() {
-    },
-    connect() {
-    },
-    listen() {
-    },
-    accept() {
-    },
-    localAddress() {
-    },
-    remoteAddress() {
-    },
-    addressFamily() {
-    },
-    ipv6Only() {
-    },
-    setIpv6Only() {
-    },
-    setListenBacklogSize() {
-    },
-    keepAlive() {
-    },
-    setKeepAlive() {
-    },
-    noDelay() {
-    },
-    setNoDelay() {
-    },
-    unicastHopLimit() {
-    },
-    setUnicastHopLimit() {
-    },
-    receiveBufferSize() {
-    },
-    setReceiveBufferSize() {
-    },
-    sendBufferSize() {
-    },
-    setSendBufferSize() {
-    },
-    nonBlocking() {
-    },
-    setNonBlocking() {
-    },
-    shutdown() {
-    }
+    subscribe() {},
+    dropTcpSocket() {},
+    bind() {},
+    connect() {},
+    listen() {},
+    accept() {},
+    localAddress() {},
+    remoteAddress() {},
+    addressFamily() {},
+    ipv6Only() {},
+    setIpv6Only() {},
+    setListenBacklogSize() {},
+    keepAlive() {},
+    setKeepAlive() {},
+    noDelay() {},
+    setNoDelay() {},
+    unicastHopLimit() {},
+    setUnicastHopLimit() {},
+    receiveBufferSize() {},
+    setReceiveBufferSize() {},
+    sendBufferSize() {},
+    setSendBufferSize() {},
+    nonBlocking() {},
+    setNonBlocking() {},
+    shutdown() {},
   };
   var udp = {
-    subscribe() {
-    },
-    dropUdpSocket() {
-    },
-    bind() {
-    },
-    connect() {
-    },
-    receive() {
-    },
-    send() {
-    },
-    localAddress() {
-    },
-    remoteAddress() {
-    },
-    addressFamily() {
-    },
-    ipv6Only() {
-    },
-    setIpv6Only() {
-    },
-    unicastHopLimit() {
-    },
-    setUnicastHopLimit() {
-    },
-    receiveBufferSize() {
-    },
-    setReceiveBufferSize() {
-    },
-    sendBufferSize() {
-    },
-    setSendBufferSize() {
-    },
-    nonBlocking() {
-    },
-    setNonBlocking() {
-    }
+    subscribe() {},
+    dropUdpSocket() {},
+    bind() {},
+    connect() {},
+    receive() {},
+    send() {},
+    localAddress() {},
+    remoteAddress() {},
+    addressFamily() {},
+    ipv6Only() {},
+    setIpv6Only() {},
+    unicastHopLimit() {},
+    setUnicastHopLimit() {},
+    receiveBufferSize() {},
+    setReceiveBufferSize() {},
+    sendBufferSize() {},
+    setSendBufferSize() {},
+    nonBlocking() {},
+    setNonBlocking() {},
   };
   var udpCreateSocket = {
-    createUdpSocket() {
-    }
+    createUdpSocket() {},
   };
 
   // browser/cli-base.js
@@ -616,7 +571,7 @@
     preopens: () => preopens,
     stderr: () => stderr,
     stdin: () => stdin,
-    stdout: () => stdout
+    stdout: () => stdout,
   });
   var _env;
   function _setEnv(envObj) {
@@ -624,10 +579,9 @@
   }
   var environment = {
     getEnvironment() {
-      if (!_env)
-        _env = [];
+      if (!_env) _env = [];
       return _env;
-    }
+    },
   };
   var ComponentExit = class extends Error {
     constructor(code) {
@@ -638,27 +592,27 @@
   var exit = {
     exit(status) {
       throw new ComponentExit(status.tag === "err" ? 1 : 0);
-    }
+    },
   };
   var preopens = {
     getDirectories() {
       return [];
-    }
+    },
   };
   var stdin = {
     getStdin() {
       return 0;
-    }
+    },
   };
   var stdout = {
     getStdout() {
       return 1;
-    }
+    },
   };
   var stderr = {
     getStderr() {
       return 2;
-    }
+    },
   };
 
   // browser/index.js
@@ -671,13 +625,20 @@
     poll: poll_exports,
     random: random_exports,
     sockets: sockets_exports,
-    cliBase: cli_base_exports
+    cliBase: cli_base_exports,
   };
   var browser_default = importObject;
 
   // index.js
   function getWasiImports() {
-    return { ...browser_default, "cli-base": browser_default.cliBase };
+    let exports = { ...browser_default, "cli-base": browser_default.cliBase };
+    let wasiExports = {};
+    for (let name in exports) {
+      for (let name2 in exports[name]) {
+        wasiExports[`wasi:${name}/${name2}`] = exports[name][name2];
+      }
+    }
+    return wasiExports;
   }
 
   return getWasiImports();

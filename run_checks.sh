@@ -1,11 +1,18 @@
 #!/usr/bin/sh
 set -e
 
-RUSTFLAGS="-D warnings" cargo check --all-features
+# Unit tests
+cd crates/wasm-bridge-js
+wasm-pack test --node -- --all-features
+cd ../..
 
-RUSTFLAGS="-D warnings" cargo clippy --all-features -- -D clippy::all
+# Warnigns
+cargo check --all-features
+cargo clippy --all-features -- -D clippy::all
 
+# Formatting
 cargo fmt --all -- --check
 
+# Acceptance tests
 cd tests
 ./run_all_tests.sh
