@@ -36,7 +36,7 @@ impl WasiView for State {
     }
 }
 
-#[async_trait::async_trait]
+#[wasm_bridge::async_trait]
 impl TestWorldImports for State {
     async fn add_one(&mut self, num: i32) -> Result<i32> {
         Ok(num + 1)

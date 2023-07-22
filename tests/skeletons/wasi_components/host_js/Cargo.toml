@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 wasm-bridge = { path = "../../../crates/wasm-bridge", default-features = false, features = ["component-model", "wasi"] }
-async-trait = { version =  "0.1.71" }
 
 [dev-dependencies]
 wasm-bindgen-test = { version = "0.3.37" }

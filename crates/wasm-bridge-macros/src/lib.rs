@@ -124,8 +124,11 @@ pub fn to_js_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     proc_macro::TokenStream::from_str(&tokens.to_string()).unwrap()
 }
 
-#[proc_macro]
-pub fn async_trait(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+#[proc_macro_attribute]
+pub fn async_trait(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
     let as_string = input.to_string();
 
     // TODO: this is a really hacky way to do it

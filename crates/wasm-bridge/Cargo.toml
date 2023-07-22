@@ -13,6 +13,7 @@ categories.workspace = true
 wasmtime = { version = "11.0.0", default-features = false, features = ["cranelift"] }
 wasm-bridge-macros = { path = "../wasm-bridge-macros", version = "0.2.0", optional = true }
 wasmtime-wasi = { version = "11.0.0", optional = true }
+async-trait = { version =  "0.1.72", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bridge-js = { path = "../wasm-bridge-js", version = "0.2.0" }
@@ -21,6 +22,7 @@ wasm-bridge-js = { path = "../wasm-bridge-js", version = "0.2.0" }
 default = ["wat", "error-logging"]
 wat = ["wasmtime/wat", "wasm-bridge-js/wat"]
 component-model = ["wasmtime/component-model", "wasm-bridge-macros", "wasm-bridge-js/component-model"]
-async = ["wasmtime/async","wasm-bridge-macros/async" ]
+async = ["wasmtime/async", "async-trait", "wasm-bridge-macros/async", "wasm-bridge-js/async"]
 wasi = ["wasmtime-wasi",  "wasm-bridge-js/wasi", "async"]
 error-logging = ["wasm-bridge-js/error-logging"]
+
