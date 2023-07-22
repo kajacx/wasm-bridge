@@ -205,6 +205,18 @@ impl<T: ToJsValue> ToJsValue for Vec<T> {
     }
 }
 
+impl ToJsValue for JsValue {
+    type ReturnAbi = Self;
+
+    fn to_js_value(&self) -> JsValue {
+        self.clone()
+    }
+
+    fn into_return_abi(self) -> Result<Self::ReturnAbi, JsValue> {
+        Ok(self)
+    }
+}
+
 impl<T: ToJsValue> ToJsValue for (T,) {
     type ReturnAbi = T::ReturnAbi;
 

@@ -71,11 +71,23 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let as_string = regex.replace_all(&as_string, "#[derive(wasm_bridge::component::ToJsValue)]");
 
     // Remove asynchrony
-    // TODO: this removes "await"s even in places where it isn't supposed to
     let as_string = if cfg!(feature = "async") {
         let regex = Regex::new("Box[^:]*::[^n]*new[^(]*\\([^a]*async[^m]*move").unwrap();
         let as_string = regex.replace_all(&as_string, "(");
 
+        let regex = Regex::new("<\\s*T\\s*:\\s*Send\\s*>").unwrap();
+        let as_string = regex.replace_all(&as_string, "<T>");
+
+        let regex = Regex::new("where\\s*<[^>]*>\\s*::\\s*Data\\s*:\\s*Send\\s*,?").unwrap();
+        let as_string = regex.replace_all(&as_string, "");
+
+        let regex = Regex::new("\\+\\s*Send\\s*,").unwrap();
+        let as_string = regex.replace_all(&as_string, ",");
+
+        let regex = Regex::new("T\\s*:\\s*Send\\s*,?").unwrap();
+        let as_string = regex.replace_all(&as_string, "");
+
+        // TODO: this removes "await"s even in places where it isn't supposed to
         as_string.replace(".await", "")
     } else {
         as_string.to_string()

@@ -207,12 +207,6 @@ impl<T: FromJsValue, E: FromJsValue> FromJsValue for Result<T, E> {
         Ok(match result {
             Ok(val) => Ok(T::from_js_value(val)?),
             Err(err) => {
-                // FIXME: we have a sticky situation
-                // Returning a Result from an exported fn can "fail" with the "Err" variant
-                // Or it can "fail" with a panic inside ...
-                // One should be Ok(Err(value))
-                // The other should be Err(value)
-
                 let payload = Reflect::get(err, &"payload".into())
                     .map_err(map_js_error("Get result error payload"))?;
                 Err(E::from_js_value(&payload)?)
@@ -248,6 +242,18 @@ impl<T: FromJsValue> FromJsValue for Vec<T> {
 
     fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
         Self::from_js_value(&abi)
+    }
+}
+
+impl FromJsValue for JsValue {
+    type WasmAbi = Self;
+
+    fn from_js_value(value: &JsValue) -> Result<Self> {
+        Ok(value.clone())
+    }
+
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Ok(abi)
     }
 }
 

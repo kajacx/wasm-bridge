@@ -13,6 +13,10 @@ cp -r skeletons/wasi_components/host_js instance
 
 # copy the protocol
 cp $test/protocol.wit instance/protocol.wit
+if [ $? -ne 0 ]; then
+  echo "Non-existing test: $test"
+  exit 1
+fi
 
 # copy the guest code
 cp $test/guest.rs instance/guest/src/lib.rs
@@ -42,6 +46,7 @@ if [ "$test" = "wasi_components/io_redirect" ]; then
     echo "Inspect the instance folder for more detail."
     exit 1
   fi
+  cat instance/host_sys/*.txt
   
   # test the files for output
   print1=$(grep PRINT_OUT_1 instance/host_sys/out.txt)
@@ -61,9 +66,11 @@ if [ "$test" = "wasi_components/io_redirect" ]; then
 
   if [ "$no_print1" != "" ]; then
     echo "Sys host should NOT have printed NO_PRINT to stdout"
+    exit 1
   fi
   if [ "$no_print2" != "" ]; then
     echo "Sys host should NOT have printed NO_PRINT to stderr"
+    exit 1
   fi
 
   # run the js host test
@@ -75,6 +82,7 @@ if [ "$test" = "wasi_components/io_redirect" ]; then
     echo "Inspect the instance folder for more detail."
     exit 1
   fi
+  cat instance/host_js/*.txt
 
   # test the files for output
   print1=$(grep PRINT_OUT_1 instance/host_js/out.txt)
@@ -94,9 +102,11 @@ if [ "$test" = "wasi_components/io_redirect" ]; then
 
   if [ "$no_print1" != "" ]; then
     echo "Js host should NOT have printed NO_PRINT to stdout"
+    exit 1
   fi
   if [ "$no_print2" != "" ]; then
     echo "Js host should NOT have printed NO_PRINT to stderr"
+    exit 1
   fi
 
 else
