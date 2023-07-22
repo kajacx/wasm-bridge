@@ -97,7 +97,7 @@ async fn inherit(component_bytes: &[u8]) -> Result<()> {
     Ok(())
 }
 
-struct OutStream(Arc<Mutex<Vec<u8>>>);
+struct OutStream(Arc<Mutex<Vec<u8>>>, usize);
 
 #[wasm_bridge::async_trait]
 impl OutputStream for OutStream {
@@ -110,8 +110,9 @@ impl OutputStream for OutStream {
     }
 
     async fn write(&mut self, buf: &[u8]) -> Result<u64> {
-        self.0.try_lock().unwrap().extend(buf);
-        Ok(buf.len() as u64)
+        let amount = buf.len().min(self.1);
+        self.0.try_lock().unwrap().extend(&buf[..amount]);
+        Ok(amount as u64)
     }
 }
 
@@ -121,10 +122,10 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
     config.async_support(true);
 
     let out_bytes = Arc::new(Mutex::new(Vec::<u8>::new()));
-    let out_stream = OutStream(out_bytes.clone());
+    let out_stream = OutStream(out_bytes.clone(), 3);
 
     let err_bytes = Arc::new(Mutex::new(Vec::<u8>::new()));
-    let err_stream = OutStream(err_bytes.clone());
+    let err_stream = OutStream(err_bytes.clone(), 3);
 
     let mut table = Table::new();
     let wasi = WasiCtxBuilder::new().set_stdout(out_stream).set_stderr(err_stream).build(&mut table)?;

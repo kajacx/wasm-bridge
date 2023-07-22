@@ -1,3 +1,4 @@
+use anyhow::bail;
 use js_sys::Object;
 
 use crate::component::Linker;
@@ -31,7 +32,7 @@ pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()
                     .write(&buffer)
                     .expect("write to err"),
 
-                _ => panic!("TODO: unexpected stream id"),
+                id => bail!("unexpected stream id: {id}"),
             };
 
             Ok(bytes_written)
