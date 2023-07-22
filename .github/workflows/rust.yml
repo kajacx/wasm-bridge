@@ -40,9 +40,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            target
-            tests/instances
             Cargo.lock
+            target
+            tests/instance
           key: ${{ runner.os }}-build-folders-${{ hashFiles('crates/*/Cargo.toml') }}
           restore-keys: ${{ runner.os }}-build-folders
 
