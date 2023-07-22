@@ -7,10 +7,14 @@
 
 - Added first wasi use case example
 
+### Changed
+
+- Replace `wasm-bridge-jco` with [`js-component-bindgen`](https://crates.io/crates/js-component-bindgen)
+
 
 ## [0.2.0] 2023-07-21
 
-### Changes
+### Changed
 
 - Updated wasmtime to version `11.0.0` on sys
 - `Component::new()` now takes the same component bytes on desktop and on the web

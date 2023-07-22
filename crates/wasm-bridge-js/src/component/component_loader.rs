@@ -1,3 +1,5 @@
+use js_component_bindgen::{transpile, TranspileOpts};
+
 use super::*;
 use crate::Result;
 
@@ -10,12 +12,12 @@ impl ComponentLoader {
     }
 
     pub fn compile_component(self, bytes: &[u8]) -> Result<Component> {
-        let opts = wasm_bridge_jco::TranspileOpts {
+        let opts = TranspileOpts {
             instantiation: true,
             ..Default::default()
         };
 
-        let result = wasm_bridge_jco::transpile(bytes, opts)?;
+        let result = transpile(bytes, opts)?;
         let mut files = result.files;
 
         for (name, bytes) in files.iter_mut() {
