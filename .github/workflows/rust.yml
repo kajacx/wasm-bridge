@@ -20,14 +20,13 @@ jobs:
           path: |
             ~/.cargo
             ~/.rustup
-          key: ${{ runner.os }}-installation-05
-          restore-keys: ${{ runner.os }}-installation
+          key: ${{ runner.os }}-installation
 
       - name: Install wasm32 target
         run: rustup target add wasm32-unknown-unknown
 
       - name: Install wasm32-wasi target
-        run: rustup target add wasm32-unknown-unknown
+        run: rustup target add wasm32-wasi
 
       - name: Install wasm-pack
         run: cargo install wasm-pack
@@ -68,4 +67,6 @@ jobs:
         run: cargo clippy --all-features -- -D clippy::all
 
       - name: Run tests
+        env:
+          RUSTFLAGS: "-D warnings"
         run: cd tests && bash run_all_tests.sh
