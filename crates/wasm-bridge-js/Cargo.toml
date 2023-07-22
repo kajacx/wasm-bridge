@@ -17,11 +17,13 @@ wasm-bridge-macros = { path = "../wasm-bridge-macros", version = "0.2.0", option
 wasm-bridge-jco = { path = "../wasm-bridge-jco", version = "0.2.0", optional = true }
 anyhow = { version = "1.0.22" }
 heck = { version = "0.4.1" }
+async-trait = { version = "0.1.72", optional = true }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.37"
 
 [features]
 component-model = ["wasm-bridge-macros", "wasm-bridge-jco"]
-wasi = ["wasm-bridge-macros/async"]
+async = ["wasm-bridge-macros/async", "async-trait"]
+wasi = ["async"]
 error-logging = []

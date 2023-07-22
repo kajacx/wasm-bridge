@@ -70,7 +70,14 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let regex = Regex::new("#\\[derive\\([^)]*Lower\\)\\]").unwrap();
     let as_string = regex.replace_all(&as_string, "#[derive(wasm_bridge::component::ToJsValue)]");
 
-    // eprintln!("BINDGEN: {as_string}");
+    // eprintln!("#[cfg(test)]");
+    // eprintln!("#[allow(warnings)]");
+    // eprintln!("mod test {{");
+    // eprintln!("pub mod wasm_bridge {{");
+    // eprintln!("pub use crate::*;");
+    // eprintln!("}}");
+    // eprintln!("{as_string}");
+    // eprintln!("}}");
 
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
@@ -115,6 +122,16 @@ pub fn to_js_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     // eprintln!("ToJsValue IMPL: {}", tokens.to_string());
 
     proc_macro::TokenStream::from_str(&tokens.to_string()).unwrap()
+}
+
+#[proc_macro]
+pub fn async_trait(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let as_string = input.to_string();
+
+    // TODO: this is a really hacky way to do it
+    let as_string = as_string.replace("async fn ", "fn ");
+
+    proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
 
 fn replace_namespace(stream: proc_macro::TokenStream) -> proc_macro::TokenStream {

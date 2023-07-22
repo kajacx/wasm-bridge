@@ -30,4 +30,7 @@ pub use wasm_bridge_macros::ToJsValue;
 
 pub mod __internal {
     pub use anyhow;
+
+    #[cfg(feature = "async")]
+    pub use async_trait::async_trait;
 }

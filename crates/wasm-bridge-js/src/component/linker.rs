@@ -82,6 +82,14 @@ impl<T> Linker<T> {
         Ok(())
     }
 
+    pub fn func_wrap_async<Params, Results, F>(&mut self, name: &str, func: F) -> Result<()>
+    where
+        T: 'static,
+        F: IntoMakeClosure<T, Params, Results>,
+    {
+        self.func_wrap(name, func)
+    }
+
     pub fn instance<'a>(&'a mut self, name: &str) -> Result<&'a mut Linker<T>> {
         // This is called at linked time, "clone" is not that bad
         Ok(self

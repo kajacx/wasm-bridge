@@ -11,7 +11,7 @@ impl Config {
         self
     }
 
-    // TODO: based on "async" / "wasi" flag?
+    #[cfg(feature = "async")]
     pub fn async_support(&mut self, _: bool) -> &mut Self {
         self
     }
