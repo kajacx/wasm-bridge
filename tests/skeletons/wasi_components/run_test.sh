@@ -30,20 +30,93 @@ fi
 cp $test/host.rs instance/host_sys/src/host.rs
 cp $test/host.rs instance/host_js/src/host.rs
 
-# run the sys host test
-cd instance/host_sys && cargo run && cd ../..
-if [ $? -ne 0 ]; then
-  echo
-  echo "Oh no, there is an error in the $test sys host."
-  echo "Inspect the instance folder for more detail."
-  exit 1
-fi
+if [ "$test" = "wasi_components/io_redirect" ]; then
+  # run test and capture its output
 
-# run the js host test
-cd instance/host_js && wasm-pack test --node && cd ../..
-if [ $? -ne 0 ]; then
-  echo
-  echo "Oh no, there is an error in the $test js host."
-  echo "Inspect the instance folder for more detail."
-  exit 1
+  # run the sys host test
+  cd instance/host_sys && cargo run > out.txt 2> err.txt && cd ../..
+  if [ $? -ne 0 ]; then
+    cat *.txt
+    echo
+    echo "Oh no, there is an error in the $test sys host."
+    echo "Inspect the instance folder for more detail."
+    exit 1
+  fi
+  
+  # test the files for output
+  print1=$(grep PRINT_OUT_1 instance/host_sys/out.txt)
+  print2=$(grep PRINT_ERR_1 instance/host_sys/err.txt)
+  
+  no_print1=$(grep NO_PRINT instance/host_sys/out.txt)
+  no_print2=$(grep NO_PRINT instance/host_sys/err.txt)
+
+  if [ "$print1" = "" ]; then
+    echo "Sys host should have printed PRINT_OUT_1 to stdout"
+    exit 1
+  fi
+  if [ "$print2" = "" ]; then
+    echo "Sys host should have printed PRINT_ERR_1 to stderr"
+    exit 1
+  fi
+
+  if [ "$no_print1" != "" ]; then
+    echo "Sys host should NOT have printed NO_PRINT to stdout"
+  fi
+  if [ "$no_print2" != "" ]; then
+    echo "Sys host should NOT have printed NO_PRINT to stderr"
+  fi
+
+  # run the js host test
+  cd instance/host_js && wasm-pack test --node > out.txt 2> err.txt && cd ../..
+  if [ $? -ne 0 ]; then
+    cat *.txt
+    echo
+    echo "Oh no, there is an error in the $test js host."
+    echo "Inspect the instance folder for more detail."
+    exit 1
+  fi
+
+  # test the files for output
+  print1=$(grep PRINT_OUT_1 instance/host_js/out.txt)
+  print2=$(grep PRINT_ERR_1 instance/host_js/err.txt)
+  
+  no_print1=$(grep NO_PRINT instance/host_js/out.txt)
+  no_print2=$(grep NO_PRINT instance/host_js/err.txt)
+
+  if [ "$print1" = "" ]; then
+    echo "Js host should have printed PRINT_OUT_1 to stdout"
+    exit 1
+  fi
+  if [ "$print2" = "" ]; then
+    echo "Js host should have printed PRINT_ERR_1 to stderr"
+    exit 1
+  fi
+
+  if [ "$no_print1" != "" ]; then
+    echo "Js host should NOT have printed NO_PRINT to stdout"
+  fi
+  if [ "$no_print2" != "" ]; then
+    echo "Js host should NOT have printed NO_PRINT to stderr"
+  fi
+
+else
+  # run test normally
+
+  # run the sys host test
+  cd instance/host_sys && cargo run && cd ../..
+  if [ $? -ne 0 ]; then
+    echo
+    echo "Oh no, there is an error in the $test sys host."
+    echo "Inspect the instance folder for more detail."
+    exit 1
+  fi
+  
+  # run the js host test
+  cd instance/host_js && wasm-pack test --node && cd ../..
+  if [ $? -ne 0 ]; then
+    echo
+    echo "Oh no, there is an error in the $test js host."
+    echo "Inspect the instance folder for more detail."
+    exit 1
+  fi
 fi
