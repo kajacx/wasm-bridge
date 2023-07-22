@@ -58,7 +58,8 @@ impl<T> Linker<T> {
         component.instantiate(store, &import_object, closures)
     }
 
-    pub async fn instantiate_async(
+    // TODO: async was removed thanks to the macro
+    pub fn instantiate_async(
         &self,
         store: impl AsContextMut<Data = T>,
         component: &Component,

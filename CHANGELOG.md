@@ -1,5 +1,13 @@
 # wasm-bridge change log
 
+
+## [0.2.1] YYYY-MM-DD
+
+### Added
+
+- Added first wasi use case example
+
+
 ## [0.2.0] 2023-07-21
 
 ### Changes
@@ -12,6 +20,7 @@
 - `wasm-bridge-cli` is removed, as you can load components with `Component::new()` directly
 - Loading "zipped" components created with earlier version of `wasm-bridge-cli` will not work
 - `new_universal_component` is completely removed, as well as the `component-model-no-universal` flag
+
 
 ## [0.1.6] 2023-07-20
 
@@ -26,6 +35,7 @@
 
 - Changed result type to be anyhow::Result to match wasmtime
 
+
 ## [0.1.5] 2023-07-13
 
 ### Added
@@ -35,6 +45,7 @@
 ### Changed
 - Out file in cli is defined with an -o option. Old way works for now.
 
+
 ## [0.1.4] 2023-07-12
 
 ### Added
@@ -43,12 +54,14 @@
 - Support rest of the primitives in wit bindgen
 - Add custom records support to wit format
 
+
 ## [0.1.3] 2023-07-11
 
 ### Added
 
 - Tuple return in WIT imported and exported fns
 - Support option and list in WIT format
+
 
 ## [0.1.2] 2023-07-09
 
@@ -61,11 +74,13 @@
 - Error is now Send and Sync
 - Custom store data, accessible from Caller (imported fn)
 
+
 ## [0.1.1] 2023-07-05
 
 ### Added
 
 - Export `Result` type
+
 
 ## [0.1.0] 2023-07-02
 

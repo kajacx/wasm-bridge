@@ -70,13 +70,24 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let regex = Regex::new("#\\[derive\\([^)]*Lower\\)\\]").unwrap();
     let as_string = regex.replace_all(&as_string, "#[derive(wasm_bridge::component::ToJsValue)]");
 
+    // Remove asynchrony
+    // TODO: this removes "await"s even in places where it isn't supposed to
+    let as_string = if cfg!(feature = "async") {
+        let regex = Regex::new("Box[^:]*::[^n]*new[^(]*\\([^a]*async[^m]*move").unwrap();
+        let as_string = regex.replace_all(&as_string, "(");
+
+        as_string.replace(".await", "")
+    } else {
+        as_string.to_string()
+    };
+
     // eprintln!("#[cfg(test)]");
     // eprintln!("#[allow(warnings)]");
     // eprintln!("mod test {{");
-    // eprintln!("pub mod wasm_bridge {{");
-    // eprintln!("pub use crate::*;");
-    // eprintln!("}}");
-    // eprintln!("{as_string}");
+    // eprintln!("  pub mod wasm_bridge {{");
+    // eprintln!("    pub use crate::*;");
+    // eprintln!("  }}");
+    // eprintln!("  {as_string}");
     // eprintln!("}}");
 
     proc_macro::TokenStream::from_str(&as_string).unwrap()
