@@ -5,7 +5,7 @@ and call it from Rust runtime on desktop and on the web using the same source co
 
 ## Full minimal example
 
-Full minimal example can be found [here](https://github.com/kajacx/wasm-playground/tree/wasm-bridge-03-universal-component).
+Full minimal example can be found [here](https://github.com/kajacx/wasm-playground/tree/wasm-bridge-05-cargo-component).
 
 ## Prerequisites
 
@@ -13,18 +13,20 @@ Be sure to install all the necessary tooling, list is in [Component model](../co
 
 ## Create the WIT protocol
   
-1. Create a simple file describing the interface using the [wit format](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md), for example:
+1. Create a simple file describing the interface using
+the [wit format](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md), for example:
+
 ```wit
 package usage:example
 
 world calculator {
-  export add: func(a: s32, b: s32) -> s32
+  export add_three: func(a: s32) -> s32
 }
 ```
 
 ## Create the Rust guest
 
-1. Create a new Rust crate for the guest and add `wit-bindgen` crate as a dependency. Example `Cargo.toml`:
+1. Create a new Rust library crate for the guest and add `wit-bindgen` crate as a dependency. Example `Cargo.toml`:
 ```toml
 [package]
 name = "guest"
@@ -34,9 +36,15 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib"]
 
+[package.metadata.component]
+package = "component:guest"
+
 [dependencies]
 wit-bindgen = "0.8.0"
 ```
+
+Be sure to specify `cdylib` as the library type and include the `package.metadata.component` info
+so that `cargo component` can recognize the crate as a proper wasm component.
 
 2. Import the WIT world definition in the guest like this:
 ```rust
@@ -51,8 +59,8 @@ wit_bindgen::generate!({
 struct MyCalculator;
 
 impl Calculator for MyCalculator {
-    fn add(a: i32, b: i32) -> i32 {
-        a + b
+    fn add_three(num: i32) -> i32 {
+        num + 3
     }
 }
 ```
@@ -64,20 +72,19 @@ export_calculator!(MyCalculator);
 
 ## Build the guest
 
-1. Build the guest with `cargo build --target=wasm32-unknown-unknown`
+1. Build the guest with `cargo component --target=wasm32-unknown-unknown`
 
-2. `cd` into the build folder `target/wasm32-unknown-unknown/debug` (use `/release` in release mode)
+2. This should generate a `guest.wasm` file in the `target/wasm32-unknown-unknown/debug` folder
 
-3. Convert the WASM module into a WASM component with `wasm-tools component new guest.wasm -o component.wasm`
+3. Your wasm component will be in `target/wasm32-unknown-unknown/debug` if you use `--release`
 
-This is the `component.wasm` file you would use with wasmtime normally. We will need it later.
 
 ## Create the runtime
 
-1. Add the `wasm-bridge` crate as a dependency with the `component-model` feature. Use version at least `0.2.0`. Example:
+1. Create a new Rust crate with `wasm-bridge` as a dependency with the `component-model` feature. Use version at least `0.2.0`. Example:
 ```toml
 [dependencies]
-wasm-bridge = { version = "0.1.4", features = ["component-model"] }
+wasm-bridge = { version = "0.2.0", features = ["component-model"] }
 ```
 
 2. Generate the host bindings with the `bindgen` macro, like this:
@@ -108,20 +115,25 @@ let linker = Linker::new(store.engine());
 let (calculator, _) = Calculator::instantiate(&mut store, &component, &linker)?;
 ```
 
-5. Call the exported function on the component:
+5. Call the exported function on the component instance:
 ```rust
-let result = calculator.call_add(&mut store, 5, 3)?;
+let result = calculator.call_add_three(&mut store, 5)?;
 assert_eq!(result, 8);
 ```
+
 
 ## Summary
 
 The steps are identical to using wasmtime with component model "normally",
 except we used `wasm-bridge` instead of `wasmtime` as our dependency.
 
+
 ## Next steps
 
-If your wit world defines imports, you can read the [Wit imports](./wit_imports.md) guide. The code is identical to wasmtime, though.
+If your wit world defines imports, you can read the [Wit imports](./wit_imports.md) guide.
+
+The code is again the same as when using wasmtime.
+
 
 ## Universal mode / zipped components discontinuation
 

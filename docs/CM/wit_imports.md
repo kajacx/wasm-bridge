@@ -4,21 +4,22 @@ First, read [My first component](./my_first_component.md) to understand how to g
 
 ## Full minimal example
 
-A full example of using wit imports can be found [here](https://github.com/kajacx/wasm-playground/tree/wasm-bridge-04-wit-imports).
+A full example of using wit imports can be found [here](https://github.com/kajacx/wasm-playground/tree/wasm-bridge-06-readd-imports).
 
 ## Steps to add imports
 
-Wit imports work the same way as they do in wasmtime. Here is a quick refresher:
+Wit imports work the same way as they do in wasmtime.
 
-1. Define a wit file with imports
+This is how to add imports to the "My first component" created in the previous tutorial:
+
+1. Add an "import" function to the wit file
 ```wit
 package usage:example
 
 world calculator {
-  import store-variable(name: string, value: s32)
-  import get-variable(name: string) -> option<s32>
+  import add-one: func(num: s32) -> s32
 
-  export add: func(a: s32, b: s32) -> s32
+  export add-three: func(num: s32) -> s32
 }
 ```
 
@@ -29,10 +30,11 @@ world calculator {
 struct MyCalculator;
 
 impl Calculator for MyCalculator {
-    fn add(a: i32, b: i32) -> i32 {
-        let times_called = get_variable("times_called").unwrap_or(0);
-        store_variable("times_called", times_called + 1);
-        a + b + times_called
+    fn add(num: i32) -> i32 {
+        let num = add_one(num);
+        let num = add_one(num);
+        let num = add_one(num);
+        num
     }
 }
 ```
@@ -41,32 +43,28 @@ impl Calculator for MyCalculator {
 ```rust
 // In host (runtime)
 
-struct CalculatorData {
-    variables: HashMap<String, i32>,
-}
+struct CalculatorData {}
 ```
 
 4. Implement the world imports for your struct
 ```rust
 // Name based on world name
 impl CalculatorImports for CalculatorData {
-    fn store_variable(&mut self, name: String, value: i32) -> Result<()> {
-        self.variables.insert(name, value);
-        Ok(())
-    }
-
-    fn get_variable(&mut self, name: String) -> Result<Option<i32>> {
-        Ok(self.variables.get(&name).copied())
+    fn add_one(&mut self, num: i32) -> Result<i32> {
+        Ok(num + 1)
     }
 }
 ```
 
-The functions must return a `wasm_bride::Result`, but handling the `Err` case is not yet implemented and will result in a panic on the web.
+The functions must return a `wasm_bride::Result`, which is re-exported `anyhow::Result`.
+
+Returning an `Err` variant will result in an error return on the call site,
+but the instance will not be re-entriable.
 
 5. Add your struct to the store's data.
 
 ```rust
-let mut store = Store::new(&engine, CalculatorData::new());
+let mut store = Store::new(&engine, CalculatorData {});
 ```
 
 Note: the store's data can be a different type than your struct that implements the imports,
@@ -84,29 +82,11 @@ If store's data *is* CalculatorData, it can just return the input.
 
 7. And that's it
 
-Now you can instantiate you guest with this linker:
+Now you can instantiate your guest with this linker and call exported functions on the instance as before:
 
 ```rust
 let (calculator, _) = Calculator::instantiate(&mut store, &component, &linker)?;
 
 let result = calculator.call_add(5, 3)?;
 assert_eq!(result, 8);
-
-// Calling again, should add an extra 1
-let result = calculator.call_add(5, 3)?;
-assert_eq!(result, 9);
 ```
-
-8. Access store's data
-
-You can also read and manipulate the store's data between calls:
-
-```rust
-// Get a variable
-let var_x = store.data().variables.get("x").copied();
-
-// Clear all variables
-store.data_mut().variables.clear();
-```
-
-This is not unique to the component model, but it might come in handy.
