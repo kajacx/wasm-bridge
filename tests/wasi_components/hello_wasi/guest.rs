@@ -7,7 +7,10 @@ struct GuestImpl;
 
 impl TestWorld for GuestImpl {
     fn add_three(num: i32) -> i32 {
-        num + 3
+        let num = add_one(num);
+        let num = add_one(num);
+        let num = add_one(num);
+        num
     }
 }
 
