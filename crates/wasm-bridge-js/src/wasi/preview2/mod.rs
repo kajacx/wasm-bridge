@@ -11,3 +11,6 @@ mod wasi_view;
 pub use wasi_view::*;
 
 pub mod wasi;
+
+pub mod stream;
+pub use stream::*;

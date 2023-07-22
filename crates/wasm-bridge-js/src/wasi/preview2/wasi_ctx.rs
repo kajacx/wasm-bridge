@@ -1,33 +1,26 @@
-use js_sys::Function;
+use super::*;
 
-use crate::DropHandler;
-
-#[derive(Debug, Default)]
 pub struct WasiCtx {
-    stdout: Option<FunctionWithDrop>,
-    stderr: Option<FunctionWithDrop>,
+    stdout: Box<dyn OutputStream>,
+    stderr: Box<dyn OutputStream>,
 }
 
 impl WasiCtx {
-    pub(crate) fn new(stdout: Option<FunctionWithDrop>, stderr: Option<FunctionWithDrop>) -> Self {
-        Self { stdout, stderr }
+    pub(crate) fn new(
+        stdout: Option<Box<dyn OutputStream>>,
+        stderr: Option<Box<dyn OutputStream>>,
+    ) -> Self {
+        Self {
+            stdout: stdout.unwrap_or_else(|| Box::new(voiding_stream())),
+            stderr: stderr.unwrap_or_else(|| Box::new(voiding_stream())),
+        }
     }
 
-    pub(crate) fn stdout(&self) -> Option<&Function> {
-        self.stdout.as_ref().map(|f| &f.0)
+    pub(crate) fn stdout(&mut self) -> &mut dyn OutputStream {
+        &mut *self.stdout
     }
 
-    pub(crate) fn stderr(&self) -> Option<&Function> {
-        self.stderr.as_ref().map(|f| &f.0)
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct FunctionWithDrop(Function, Option<DropHandler>);
-
-impl FunctionWithDrop {
-    pub fn from_js_function(function: Function) -> Self {
-        assert!(function.is_function(), "FunctionWithDrop is function");
-        Self(function, None)
+    pub(crate) fn stderr(&mut self) -> &mut dyn OutputStream {
+        &mut *self.stderr
     }
 }
