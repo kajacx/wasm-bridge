@@ -44,7 +44,6 @@ echo Releasing crates
 cargo publish -p wasm-bridge-macros
 cargo publish -p wasm-bridge-jco
 cargo publish -p wasm-bridge-js
-cargo publish -p wasm-bridge-cli
 cargo publish -p wasm-bridge
 echo
 
