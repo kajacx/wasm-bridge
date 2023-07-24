@@ -4,12 +4,16 @@ use wasm_bindgen::JsValue;
 use crate::*;
 
 pub struct Linker<T> {
+    engine: Engine,
     fns: Vec<PreparedFn<T>>,
 }
 
 impl<T> Linker<T> {
-    pub fn new(_engine: &Engine) -> Self {
-        Self { fns: vec![] }
+    pub fn new(engine: &Engine) -> Self {
+        Self {
+            engine: engine.clone(),
+            fns: vec![],
+        }
     }
 
     pub fn instantiate(
@@ -39,7 +43,7 @@ impl<T> Linker<T> {
     where
         F: IntoMakeClosure<T, Params, Results> + 'static,
     {
-        let creator = func.into_make_closure();
+        let creator = func.into_make_closure(self.engine.clone());
 
         self.fns.push(PreparedFn::new(module, name, creator));
 

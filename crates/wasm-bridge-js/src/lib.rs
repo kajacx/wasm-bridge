@@ -28,6 +28,12 @@ pub use config::*;
 mod context;
 pub use context::*;
 
+mod memory;
+pub use memory::*;
+
+mod func;
+pub use func::*;
+
 pub type Error = anyhow::Error;
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 

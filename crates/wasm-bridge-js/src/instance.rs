@@ -53,6 +53,23 @@ impl Instance {
             );
         }
 
-        Ok(TypedFunc::new(&self.instance, function))
+        Ok(TypedFunc::new(self.instance.clone(), function))
+    }
+
+    pub fn get_func(&self, _store: impl AsContextMut, name: &str) -> Option<Func> {
+        let function = Reflect::get(&self.exports, &name.into()).ok()?;
+
+        if !function.is_function() {
+            return None;
+        }
+
+        let function: Function = function.into();
+
+        Some(Func::new(self.instance.clone(), function))
+    }
+
+    pub fn get_memory<T>(&self, _: &mut Store<T>, id: &str) -> Option<Memory> {
+        let memory = Reflect::get(&self.exports, &id.into()).ok()?.into();
+        Some(Memory { memory })
     }
 }

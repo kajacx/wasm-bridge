@@ -1,4 +1,4 @@
-use crate::Store;
+use crate::{Caller, Store};
 
 pub trait AsContext {
     type Data;
@@ -30,6 +30,14 @@ impl<'a, T: AsContext> AsContext for &'a mut T {
     }
 }
 
+impl<T> AsContext for Caller<T> {
+    type Data = T;
+
+    fn as_context(&self) -> &Store<Self::Data> {
+        &self.store
+    }
+}
+
 pub trait AsContextMut: AsContext {
     fn as_context_mut(&mut self) -> &mut Store<Self::Data>;
 }
@@ -43,5 +51,11 @@ impl<T> AsContextMut for Store<T> {
 impl<'a, T: AsContextMut> AsContextMut for &'a mut T {
     fn as_context_mut(&mut self) -> &mut Store<Self::Data> {
         T::as_context_mut(*self)
+    }
+}
+
+impl<T> AsContextMut for Caller<T> {
+    fn as_context_mut(&mut self) -> &mut Store<Self::Data> {
+        &mut self.store
     }
 }

@@ -7,6 +7,8 @@ use wasm_bindgen::{
     JsValue,
 };
 
+use crate::Val;
+
 pub trait ToJsValue: Sized {
     type ReturnAbi: ReturnWasmAbi + IntoWasmAbi;
 
@@ -286,3 +288,39 @@ to_js_value_many!(10, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, 
 to_js_value_many!(11, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9), (10, T10));
 #[rustfmt::skip]
 to_js_value_many!(12, (0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9), (10, T10), (11, T11));
+
+impl ToJsValue for Val {
+    type ReturnAbi = f64;
+
+    fn to_js_value(&self) -> JsValue {
+        let v = match self.clone() {
+            Val::I32(i) => i as f64,
+            Val::I64(i) => i as f64,
+            Val::F32(i) => f32::from_bits(i as u32) as f64,
+            Val::F64(i) => f64::from_bits(i),
+        };
+        JsValue::from_f64(v)
+    }
+
+    fn into_return_abi(self) -> Result<Self::ReturnAbi, JsValue> {
+        let v = match self.clone() {
+            Val::I32(i) => i as f64,
+            Val::I64(i) => i as f64,
+            Val::F32(i) => f32::from_bits(i as u32) as f64,
+            Val::F64(i) => f64::from_bits(i),
+        };
+        Ok(v)
+    }
+}
+
+impl ToJsValue for anyhow::Error {
+    type ReturnAbi = js_sys::Error;
+
+    fn to_js_value(&self) -> JsValue {
+        js_sys::Error::new(&format!("{:?}", self)).into()
+    }
+
+    fn into_return_abi(self) -> Result<Self::ReturnAbi, JsValue> {
+        Ok(js_sys::Error::new(&format!("{:?}", self)))
+    }
+}

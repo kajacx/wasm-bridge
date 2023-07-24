@@ -7,7 +7,7 @@ use crate::*;
 pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>) -> (JsValue, DropHandler)>;
 
 pub trait IntoMakeClosure<T, Params, Results> {
-    fn into_make_closure(self) -> MakeClosure<T>;
+    fn into_make_closure(self, engine: Engine) -> MakeClosure<T>;
 }
 
 impl<T, R, F> IntoMakeClosure<T, (), R> for F
@@ -16,11 +16,14 @@ where
     F: Fn(Caller<T>) -> R + 'static,
     R: ToJsValue + 'static,
 {
-    fn into_make_closure(self) -> MakeClosure<T> {
+    fn into_make_closure(self, engine: Engine) -> MakeClosure<T> {
         let self_rc = Rc::new(self);
 
         let make_closure = move |handle: DataHandle<T>| {
-            let caller = Caller::new(handle);
+            let caller = Caller::new(Store {
+                engine: engine.clone(),
+                data: handle,
+            });
             let self_clone = self_rc.clone();
 
             let closure = Closure::<dyn Fn() -> Result<R::ReturnAbi, JsValue>>::new(move || {
@@ -42,11 +45,14 @@ macro_rules! into_make_closure_single {
             F: Fn(Caller<T>, $ty) -> R + 'static,
             R: ToJsValue + 'static,
         {
-            fn into_make_closure(self) -> MakeClosure<T> {
+            fn into_make_closure(self, engine: Engine) -> MakeClosure<T> {
                 let self_rc = Rc::new(self);
 
                 let make_closure = move |handle: DataHandle<T>| {
-                    let caller = Caller::new(handle);
+                    let caller = Caller::new(Store {
+                        engine: engine.clone(),
+                        data: handle,
+                    });
                     let self_clone = self_rc.clone();
 
                     let closure = Closure::<dyn Fn($ty) -> Result<R::ReturnAbi, JsValue>>::new(
@@ -78,11 +84,11 @@ macro_rules! into_make_closure_many {
             $($name: FromWasmAbi + 'static,)*
             R: ToJsValue + 'static,
         {
-            fn into_make_closure(self) -> MakeClosure<T> {
+            fn into_make_closure(self, engine: Engine) -> MakeClosure<T> {
                 let self_rc = Rc::new(self);
 
                 let make_closure = move |handle: DataHandle<T>| {
-                    let caller = Caller::new(handle);
+                    let caller = Caller::new(Store { engine: engine.clone(), data: handle });
                     let self_clone = self_rc.clone();
 
                     let closure =

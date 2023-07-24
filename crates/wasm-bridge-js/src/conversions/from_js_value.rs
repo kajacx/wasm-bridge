@@ -310,3 +310,19 @@ from_js_value_many!((0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6
 from_js_value_many!((0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9), (10, T10));
 #[rustfmt::skip]
 from_js_value_many!((0, T0), (1, T1), (2, T2), (3, T3), (4, T4), (5, T5), (6, T6), (7, T7), (8, T8), (9, T9), (10, T10), (11, T11));
+
+impl FromJsValue for Val {
+    type WasmAbi = JsValue;
+
+    fn from_js_value(value: &JsValue) -> Result<Self> {
+        let number = match value.as_f64() {
+            Some(number) => Ok(number),
+            None => Err(map_js_error("Expected a number")(value)),
+        }?;
+        Ok(Val::F64(f64::to_bits(number)))
+    }
+
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Self::from_js_value(&abi)
+    }
+}

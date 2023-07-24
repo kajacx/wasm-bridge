@@ -5,14 +5,14 @@ use crate::*;
 use std::marker::PhantomData;
 
 #[derive(Clone, Debug)]
-pub struct TypedFunc<'a, Params, Results> {
+pub struct TypedFunc<Params, Results> {
     _phantom: PhantomData<fn(params: Params) -> Results>,
-    instance: &'a WebAssembly::Instance,
+    instance: WebAssembly::Instance,
     function: Function,
 }
 
-impl<'a, Params: ToJsValue, Results: FromJsValue> TypedFunc<'a, Params, Results> {
-    pub(crate) fn new(instance: &'a WebAssembly::Instance, function: Function) -> Self {
+impl<Params: ToJsValue, Results: FromJsValue> TypedFunc<Params, Results> {
+    pub(crate) fn new(instance: WebAssembly::Instance, function: Function) -> Self {
         Self {
             _phantom: PhantomData,
             instance,

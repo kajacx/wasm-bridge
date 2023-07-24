@@ -6,10 +6,10 @@ use std::{
 
 use crate::*;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct Store<T> {
-    engine: Engine,
-    data: DataHandle<T>,
+    pub(crate) engine: Engine,
+    pub(crate) data: DataHandle<T>,
 }
 
 impl<T> Store<T> {
@@ -34,6 +34,19 @@ impl<T> Store<T> {
 
     pub(crate) fn data_handle(&self) -> &DataHandle<T> {
         &self.data
+    }
+
+    pub fn into_data(self) -> Option<T> {
+        Some(Rc::into_inner(self.data)?.into_inner())
+    }
+}
+
+impl<T> Clone for Store<T> {
+    fn clone(&self) -> Self {
+        Store {
+            engine: self.engine.clone(),
+            data: self.data.clone(),
+        }
     }
 }
 
