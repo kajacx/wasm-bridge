@@ -3,6 +3,7 @@ use crate::Result;
 
 #[derive(Default)]
 pub struct WasiCtxBuilder {
+    stdin: Option<Box<dyn InputStream>>,
     stdout: Option<Box<dyn OutputStream>>,
     stderr: Option<Box<dyn OutputStream>>,
 }
@@ -13,7 +14,7 @@ impl WasiCtxBuilder {
     }
 
     pub fn build(self, _table: &mut Table) -> Result<WasiCtx> {
-        Ok(WasiCtx::new(self.stdout, self.stderr))
+        Ok(WasiCtx::new(self.stdin, self.stdout, self.stderr))
     }
 
     pub fn set_stdout(self, out: impl OutputStream + 'static) -> Self {
@@ -31,7 +32,8 @@ impl WasiCtxBuilder {
     }
 
     pub fn inherit_stdin(self) -> Self {
-        self // TODO: this could (in theory) be implemented with prompt, but no one probably wants that
+        // TODO: could be implemented at least on node, but readline is asynchronous
+        self
     }
 
     pub fn inherit_stdout(self) -> Self {

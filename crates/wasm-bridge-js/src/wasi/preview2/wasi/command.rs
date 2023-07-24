@@ -8,6 +8,7 @@ use crate::{Result, StoreContextMut};
 static WASI_IMPORTS_STR: &str =
     include_str!("../../../../../../resources/transformed/preview2-shim/bundled.js");
 
+const STDIN_IDENT: u32 = 0;
 const STDOUT_IDENT: u32 = 1;
 const STDERR_IDENT: u32 = 2;
 
@@ -17,24 +18,32 @@ pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()
 
     // Overrides
     linker.instance("wasi:io/streams")?.func_wrap(
+        "read",
+        |data: StoreContextMut<T>, (id, max_bytes): (u32, u64)| {
+            if id != STDIN_IDENT {
+                bail!("unexpected read stream id: {id}");
+            }
+
+            let mut bytes = vec![0u8; max_bytes as usize];
+
+            let (bytes_written, stream_ended) = data.ctx_mut().stdin().read(&mut bytes)?;
+
+            bytes.truncate(bytes_written as _);
+
+            Ok((bytes, stream_ended))
+        },
+    )?;
+
+    linker.instance("wasi:io/streams")?.func_wrap(
         "write",
         |data: StoreContextMut<T>, (id, buffer): (u32, Vec<u8>)| {
             let bytes_written = match id {
-                STDOUT_IDENT => data
-                    .ctx_mut()
-                    .stdout()
-                    .write(&buffer)
-                    .expect("write to out"),
+                STDOUT_IDENT => data.ctx_mut().stdout().write(&buffer)?,
 
-                STDERR_IDENT => data
-                    .ctx_mut()
-                    .stderr()
-                    .write(&buffer)
-                    .expect("write to err"),
+                STDERR_IDENT => data.ctx_mut().stderr().write(&buffer)?,
 
-                id => bail!("unexpected stream id: {id}"),
+                id => bail!("unexpected write stream id: {id}"),
             };
-
             Ok(bytes_written)
         },
     )?;

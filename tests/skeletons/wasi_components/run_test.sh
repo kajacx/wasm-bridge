@@ -38,7 +38,7 @@ if [ "$test" = "wasi_components/io_redirect" ]; then
   # run test and capture its output
 
   # run the sys host test
-  cd instance/host_sys && echo PRINT_IN_1 | cargo run > out.txt 2> err.txt && cd ../..
+  cd instance/host_sys && cargo run > out.txt 2> err.txt && cd ../..
   if [ $? -ne 0 ]; then
     cat *.txt
     echo
@@ -74,7 +74,7 @@ if [ "$test" = "wasi_components/io_redirect" ]; then
   fi
 
   # run the js host test
-  cd instance/host_js && echo PRINT_IN_1 | wasm-pack test --node > out.txt 2> err.txt && cd ../..
+  cd instance/host_js && wasm-pack test --node > out.txt 2> err.txt && cd ../..
   if [ $? -ne 0 ]; then
     cat *.txt
     echo

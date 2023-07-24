@@ -19,7 +19,7 @@ pub(crate) fn log_js_value(name: &str, value: &JsValue) {
     let console_log: Function = js_sys::eval("console.log").unwrap().into();
 
     console_log
-        .call2(&JsValue::UNDEFINED, &name.into(), value)
+        .call3(&JsValue::UNDEFINED, &name.into(), &value.js_typeof(), value)
         .unwrap();
 }
 
