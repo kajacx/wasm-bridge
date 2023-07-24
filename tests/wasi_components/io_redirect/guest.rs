@@ -7,7 +7,10 @@ struct GuestImpl;
 
 impl IoRedirect for GuestImpl {
     fn readln_from_stdin() -> Option<String> {
-        None // TODO:
+        std::io::stdin()
+            .lines()
+            .next()
+            .map(|line| line.expect("read line"))
     }
 
     fn writeln_to_stdout(line: String) {

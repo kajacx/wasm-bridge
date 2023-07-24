@@ -91,6 +91,12 @@ async fn inherit(component_bytes: &[u8]) -> Result<()> {
 
     let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await?;
 
+    let result = instance.call_readln_from_stdin(&mut store).await?;
+    assert_eq!(result, Some("PRINT_IN_1".into()));
+
+    let result = instance.call_readln_from_stdin(&mut store).await?;
+    assert_eq!(result, None);
+
     instance.call_writeln_to_stdout(&mut store, "PRINT_OUT_1").await?;
     instance.call_writeln_to_stderr(&mut store, "PRINT_ERR_1").await?;
 
