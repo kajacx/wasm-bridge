@@ -10,7 +10,6 @@ echo Please check that all version references have been updated.
 grep wasm-bridge-macros\ = crates/wasm-bridge/Cargo.toml
 grep wasm-bridge-js\ = crates/wasm-bridge/Cargo.toml
 grep wasm-bridge-macros\ = crates/wasm-bridge-js/Cargo.toml
-grep wasm-bridge-jco\ = crates/wasm-bridge-js/Cargo.toml
 echo
 
 echo Please make sure that the CHANGELOG has today"'"s date
@@ -42,7 +41,6 @@ echo
 
 echo Releasing crates
 cargo publish -p wasm-bridge-macros
-cargo publish -p wasm-bridge-jco
 cargo publish -p wasm-bridge-js
 cargo publish -p wasm-bridge
 echo

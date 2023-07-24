@@ -1,11 +1,12 @@
 # wasm-bridge change log
 
 
-## [0.2.1] YYYY-MM-DD
+## [0.2.1] 2023-07-24
 
 ### Added
 
-- Added first wasi use case example
+- Added first "MVP" wasi support
+- Inherit std/out, redirect std in/out/err in wasi
 
 ### Changed
 
