@@ -17,6 +17,13 @@ impl WasiCtxBuilder {
         Ok(WasiCtx::new(self.stdin, self.stdout, self.stderr))
     }
 
+    pub fn set_stdin(self, in_stream: impl InputStream + 'static) -> Self {
+        Self {
+            stdin: Some(Box::new(in_stream)),
+            ..self
+        }
+    }
+
     pub fn set_stdout(self, out: impl OutputStream + 'static) -> Self {
         Self {
             stdout: Some(Box::new(out)),
