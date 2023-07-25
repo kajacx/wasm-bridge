@@ -14,3 +14,6 @@ pub mod wasi;
 
 pub mod stream;
 pub use stream::*;
+
+mod random;
+pub(crate) use random::*;

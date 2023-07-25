@@ -9,11 +9,6 @@ wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
     world: "random",
     async: true,
-    with: {
-       "wasi:cli-base/stdin": wasi::cli_base::stdin,
-       "wasi:cli-base/stdout": wasi::cli_base::stdout,
-       "wasi:cli-base/stderr": wasi::cli_base::stderr,
-    }
 });
 
 struct State {
@@ -39,6 +34,12 @@ impl WasiView for State {
 // TODO: world imports with wasi are now untested
 
 pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
+    default_random(component_bytes).await?;
+
+    Ok(())
+}
+
+async fn default_random(component_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
     config.wasm_component_model(true);
     config.async_support(true);
@@ -55,14 +56,15 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     wasi::command::add_to_linker(&mut linker)?;
 
     let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await?;
+    let number1 = instance.call_random_number(&mut store).await?;
+    let bytes1 = instance.call_random_bytes(&mut store).await?;
 
-    let result1 = instance.call_random_number(&mut store).await?;
-    let result2 = instance.call_random_number(&mut store).await?;
-    assert_ne!(result1, result2, "Two random u64 should not really be equal");
+    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await?;
+    let number2 = instance.call_random_number(&mut store).await?;
+    let bytes2 = instance.call_random_bytes(&mut store).await?;
 
-    let result1 = instance.call_random_bytes(&mut store).await?;
-    let result2 = instance.call_random_bytes(&mut store).await?;
-    assert_ne!(result1, result2, "32 random bytes should definitely noy be equal");
+    assert_ne!(number1, number2, "Two random u64 should not really be equal");
+    assert_ne!(bytes1, bytes2, "32 random bytes should definitely noy be equal");
 
     Ok(())
 }

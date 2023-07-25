@@ -48,6 +48,22 @@ pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()
         },
     )?;
 
+    linker.instance("wasi:random/random")?.func_wrap(
+        "get-random-bytes",
+        |data: StoreContextMut<T>, (len,): (u64,)| {
+            let random = data.ctx_mut().random();
+            let mut bytes = vec![0u8; len as _];
+            random.fill_bytes(&mut bytes);
+            Ok(bytes)
+        },
+    )?;
+
+    linker
+        .instance("wasi:random/random")?
+        .func_wrap("get-random-u64", |data: StoreContextMut<T>, (): ()| {
+            Ok(data.ctx_mut().random().next_u64())
+        })?;
+
     Ok(())
 }
 

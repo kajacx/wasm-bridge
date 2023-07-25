@@ -11,11 +11,6 @@ wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
     world: "io-redirect",
     async: true,
-    with: {
-       "wasi:cli-base/stdin": wasi::cli_base::stdin,
-       "wasi:cli-base/stdout": wasi::cli_base::stdout,
-       "wasi:cli-base/stderr": wasi::cli_base::stderr,
-    }
 });
 
 struct State {

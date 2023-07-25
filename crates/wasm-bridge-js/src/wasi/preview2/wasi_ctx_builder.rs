@@ -6,6 +6,8 @@ pub struct WasiCtxBuilder {
     stdin: Option<Box<dyn InputStream>>,
     stdout: Option<Box<dyn OutputStream>>,
     stderr: Option<Box<dyn OutputStream>>,
+
+    random: Option<SecureRandom>,
 }
 
 impl WasiCtxBuilder {
@@ -14,7 +16,12 @@ impl WasiCtxBuilder {
     }
 
     pub fn build(self, _table: &mut Table) -> Result<WasiCtx> {
-        Ok(WasiCtx::new(self.stdin, self.stdout, self.stderr))
+        Ok(WasiCtx::new(
+            self.stdin,
+            self.stdout,
+            self.stderr,
+            self.random,
+        ))
     }
 
     pub fn set_stdin(self, in_stream: impl InputStream + 'static) -> Self {

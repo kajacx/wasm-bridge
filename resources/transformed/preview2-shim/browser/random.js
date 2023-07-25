@@ -21,13 +21,13 @@ export const insecureSeed = {
 
 export const random = {
   getRandomBytes(len) {
+    // We don't really care about this impl, it will be overridden anyway
     const bytes = new Uint8Array(Number(len));
-    // TODO: fill with random data
     return bytes;
   },
 
   getRandomU64() {
-    // TODO: return random value instead
+    // We don't really care about this impl, it will be overridden anyway
     return 0n;
   },
 
