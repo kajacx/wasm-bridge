@@ -11,3 +11,4 @@ package = "component:wasi-guest"
 
 [dependencies]
 wit-bindgen = "0.8.0"
+rand = "0.8.5"

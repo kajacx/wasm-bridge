@@ -1,6 +1,0 @@
-package component-test:wasi-protocol
-
-world test-world {
-  import add-one: func(num: s32) -> s32
-  export add-three: func(num: s32) -> s32
-}

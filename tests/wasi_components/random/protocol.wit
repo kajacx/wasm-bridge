@@ -1,0 +1,6 @@
+package component-test:wasi-protocol
+
+world random {
+  export random-number: func() -> u64
+  export random-bytes: func() -> list<u8>
+}
