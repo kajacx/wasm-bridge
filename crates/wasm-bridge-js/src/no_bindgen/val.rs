@@ -2,8 +2,10 @@
 pub enum Val {
     I32(i32),
     I64(i64),
-    F32(f32),
-    F64(f64),
+
+    // raw values, use f32::to_bits to fill it
+    F32(u32),
+    F64(u64),
 }
 
 impl Val {
@@ -12,7 +14,7 @@ impl Val {
             Self::I32(val) => Some(*val),
             // Can be f64, because we can't tell from JS's number type
             // TODO: check for overflows
-            Self::F64(val) => Some(*val as _),
+            Self::F64(val) => Some(f64::from_bits(*val) as _),
             _ => None,
         }
     }
@@ -24,17 +26,17 @@ impl Val {
     }
     pub fn f32(&self) -> Option<f32> {
         match self {
-            Self::F32(val) => Some(*val),
+            Self::F32(val) => Some(f32::from_bits(*val)),
             // Can be f64, because we can't tell from JS's number type
             // TODO: check for overflows
-            Self::F64(val) => Some(*val as _),
+            Self::F64(val) => Some(f64::from_bits(*val) as _),
             _ => None,
         }
     }
 
     pub fn f64(&self) -> Option<f64> {
         match self {
-            Self::F64(val) => Some(*val),
+            Self::F64(val) => Some(f64::from_bits(*val)),
             _ => None,
         }
     }
@@ -54,12 +56,12 @@ impl From<i64> for Val {
 
 impl From<f32> for Val {
     fn from(value: f32) -> Self {
-        Self::F32(value)
+        Self::F32(value.to_bits())
     }
 }
 
 impl From<f64> for Val {
     fn from(value: f64) -> Self {
-        Self::F64(value)
+        Self::F64(value.to_bits())
     }
 }

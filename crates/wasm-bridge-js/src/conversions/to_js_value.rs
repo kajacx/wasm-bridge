@@ -226,8 +226,8 @@ impl ToJsValue for Val {
         match self {
             Val::I32(val) => val.to_js_value(),
             Val::I64(val) => val.to_js_value(),
-            Val::F32(val) => val.to_js_value(),
-            Val::F64(val) => val.to_js_value(),
+            Val::F32(bits) => f32::from_bits(*bits).to_js_value(),
+            Val::F64(bits) => f64::from_bits(*bits).to_js_value(),
         }
     }
 
