@@ -45,7 +45,7 @@ pub fn run_test(bytes: &[u8]) -> Result<()> {
     let instance = linker.instantiate(&mut store, &module)?;
 
     single_value(&mut store, &instance)?;
-    few_values(&mut store, &instance, global_value)?;
+    few_values(&mut store, instance, global_value)?;
     many_values(&mut store)?;
     errors(&mut store)?;
 
@@ -103,7 +103,7 @@ fn single_value(mut store: &mut Store<()>, instance: &Instance) -> Result<()> {
 
 fn few_values(
     mut store: &mut Store<()>,
-    instance: &Instance,
+    instance: Instance,
     global_value: Arc<Mutex<i32>>,
 ) -> Result<()> {
     // Two arguments
@@ -118,6 +118,10 @@ fn few_values(
 
     // No arguments
     let increment_twice = instance.get_typed_func::<(), ()>(&mut store, "increment_twice")?;
+
+    #[allow(dropping_copy_types)]
+    drop(instance); // test that exported fns can "live on their own"
+
     increment_twice.call(&mut store, ())?;
     assert_eq!(*global_value.lock().unwrap(), 7); // Initialized to 5 originally
 
