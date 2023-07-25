@@ -28,6 +28,9 @@ pub use config::*;
 mod context;
 pub use context::*;
 
+mod val;
+pub use val::*;
+
 pub type Error = anyhow::Error;
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 

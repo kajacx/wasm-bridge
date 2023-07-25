@@ -256,6 +256,26 @@ impl FromJsValue for JsValue {
     }
 }
 
+impl FromJsValue for Val {
+    type WasmAbi = JsValue;
+
+    fn from_js_value(value: &JsValue) -> Result<Self> {
+        if let Some(number) = value.as_f64() {
+            // TODO: BIG problem ... this could be I32, F32 or I64, and we don't really know which one ...
+            Ok(Self::F64(number))
+        } else if value.is_bigint() {
+            // TODO: u64 is used, because it's more "robust" ... make i64 robust as well instead?
+            Ok(Val::I64(u64::from_js_value(value)? as _))
+        } else {
+            Err(map_js_error("Unsupported 'Val' value")(value))
+        }
+    }
+
+    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
+        Self::from_js_value(&abi)
+    }
+}
+
 impl<T: FromJsValue> FromJsValue for (T,) {
     type WasmAbi = T::WasmAbi;
 

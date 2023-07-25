@@ -7,6 +7,8 @@ use wasm_bindgen::{
     JsValue,
 };
 
+use crate::Val;
+
 pub trait ToJsValue: Sized {
     type ReturnAbi: ReturnWasmAbi + IntoWasmAbi;
 
@@ -214,6 +216,23 @@ impl ToJsValue for JsValue {
 
     fn into_return_abi(self) -> Result<Self::ReturnAbi, JsValue> {
         Ok(self)
+    }
+}
+
+impl ToJsValue for Val {
+    type ReturnAbi = JsValue;
+
+    fn to_js_value(&self) -> JsValue {
+        match self {
+            Val::I32(val) => val.to_js_value(),
+            Val::I64(val) => val.to_js_value(),
+            Val::F32(val) => val.to_js_value(),
+            Val::F64(val) => val.to_js_value(),
+        }
+    }
+
+    fn into_return_abi(self) -> Result<Self::ReturnAbi, JsValue> {
+        Ok(self.to_js_value())
     }
 }
 
