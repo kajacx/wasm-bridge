@@ -10,6 +10,9 @@ pub use module::*;
 mod store;
 pub use store::*;
 
+mod func;
+pub use func::*;
+
 mod typed_func;
 pub use typed_func::*;
 

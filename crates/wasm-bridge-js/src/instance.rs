@@ -34,19 +34,18 @@ impl Instance {
         })
     }
 
+    pub fn get_func(&self, name: &str) -> Option<Func> {
+        let function = self.get_func_inner(name).ok()?;
+
+        Some(Func::new(function, self._closures.clone()))
+    }
+
     pub fn get_typed_func<Params: ToJsValue, Results: FromJsValue>(
         &self,
         _store: impl AsContextMut,
         name: &str,
     ) -> Result<TypedFunc<Params, Results>, Error> {
-        let function = Reflect::get(&self.exports, &name.into())
-            .map_err(map_js_error("Get exported fn with reflect"))?;
-
-        if !function.is_function() {
-            bail!("Exported function with name '{name}' not found");
-        }
-
-        let function: Function = function.into();
+        let function = self.get_func_inner(name)?;
 
         if function.length() != Params::number_of_args() {
             bail!(
@@ -57,5 +56,16 @@ impl Instance {
         }
 
         Ok(TypedFunc::new(function, self._closures.clone()))
+    }
+
+    fn get_func_inner(&self, name: &str) -> Result<Function> {
+        let function = Reflect::get(&self.exports, &name.into())
+            .map_err(map_js_error("Get exported fn with reflect"))?;
+
+        if !function.is_function() {
+            bail!("Exported function with name '{name}' not found");
+        }
+
+        Ok(function.into())
     }
 }
