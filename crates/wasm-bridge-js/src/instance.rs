@@ -34,7 +34,7 @@ impl Instance {
         })
     }
 
-    pub fn get_func(&self, name: &str) -> Option<Func> {
+    pub fn get_func(&self, _store: impl AsContextMut, name: &str) -> Option<Func> {
         let function = self.get_func_inner(name).ok()?;
 
         Some(Func::new(function, self._closures.clone()))

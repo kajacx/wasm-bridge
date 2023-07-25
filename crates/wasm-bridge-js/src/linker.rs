@@ -1,5 +1,7 @@
+use std::rc::Rc;
+
 use js_sys::{Object, Reflect};
-use wasm_bindgen::JsValue;
+use wasm_bindgen::{prelude::*, JsValue};
 
 use crate::*;
 
@@ -28,6 +30,51 @@ impl<T> Linker<T> {
         }
 
         Instance::new_with_imports(module, &imports.into(), drop_handles)
+    }
+
+    pub fn func_new<F>(
+        &mut self,
+        module: &str,
+        name: &str,
+        _type: FuncType,
+        func: F,
+    ) -> Result<&mut Self>
+    where
+        F: Fn(Caller<T>, &[Val], &mut [Val]) -> Result<()> + 'static,
+        T: 'static,
+    {
+        let func_rc = Rc::new(func);
+        let creator = move |handle: DataHandle<T>| {
+            let caller = Caller::new(handle);
+            let func_clone = func_rc.clone();
+
+            let closure =
+            // TODO: add multiple arguments support
+                // Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |js_args: Array| {
+                //     let mut args = Vec::with_capacity(js_args.length() as _);
+                //     for index in 0..args.capacity() {
+                //         let js_val = Reflect::get_u32(&js_args, index as _)?;
+                //         // .map_err(map_js_error("get args at index import"))?;
+                //         args.push(Val::from_js_value(&js_val).expect("TODO: user error"));
+                //     }
+                Closure::<dyn Fn(JsValue) -> Result<JsValue, JsValue>>::new(move |js_args: JsValue| {
+                    let  args = [Val::from_js_value(&js_args).unwrap()];
+
+                    // TODO: support different amounts of return values? HOW????
+                    let mut rets = vec![Val::I32(0)];
+
+                    func_clone(caller.clone(), &args, &mut rets).expect("TODO: user error");
+
+                    Ok(rets[0].to_js_value())
+                });
+
+            DropHandler::from_closure(closure)
+        };
+
+        self.fns
+            .push(PreparedFn::new(module, name, Box::new(creator)));
+
+        Ok(self)
     }
 
     pub fn func_wrap<Params, Results, F>(

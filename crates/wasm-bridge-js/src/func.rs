@@ -19,7 +19,7 @@ impl Func {
         }
     }
 
-    pub fn call(&self, args: &[Val], rets: &mut [Val]) -> Result<()> {
+    pub fn call(&self, _store: impl AsContextMut, args: &[Val], rets: &mut [Val]) -> Result<()> {
         if self.function.length() != args.len() as u32 {
             bail!(
                 "Exported function takes {} arguments, but {} arguments were provided instead",
@@ -29,8 +29,8 @@ impl Func {
         }
 
         let js_args = Array::new_with_length(args.len() as _);
-        for index in 0..args.len() {
-            Reflect::set_u32(&js_args, index as _, &args[index].to_js_value())
+        for (index, item) in args.iter().enumerate() {
+            Reflect::set_u32(&js_args, index as _, &item.to_js_value())
                 .map_err(map_js_error("set args at index"))?;
         }
 
@@ -42,11 +42,7 @@ impl Func {
 
         match rets.len() {
             0 => {
-                let _: () = <()>::from_js_value(&js_rets)?;
-                if rets.len() != 0 {
-                    // TODO: will clippy catch this?
-                    bail!("Exported function did not return any results, but {} result slots were provided", rets.len());
-                }
+                <()>::from_js_value(&js_rets)?;
             }
             1 => {
                 rets[0] = Val::from_js_value(&js_rets)?;
@@ -66,11 +62,11 @@ impl Func {
                     );
                 }
 
-                for index in 0..n {
+                for (index, ret) in rets.iter_mut().enumerate() {
                     let js_val = Reflect::get_u32(&js_array, index as _)
                         .map_err(map_js_error("set rets at index"))?;
 
-                    rets[index] = Val::from_js_value(&js_val)?;
+                    *ret = Val::from_js_value(&js_val)?;
                 }
             }
         }
