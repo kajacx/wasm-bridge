@@ -1,3 +1,5 @@
+use rand_core::RngCore;
+
 use super::*;
 use crate::Result;
 
@@ -66,5 +68,22 @@ impl WasiCtxBuilder {
 
     pub fn inherit_stdio(self) -> Self {
         self.inherit_stdin().inherit_stdout().inherit_stderr()
+    }
+
+    pub fn set_secure_random(self) -> Self {
+        Self {
+            random: None, // Will be filled later
+            ..self
+        }
+    }
+
+    pub fn set_secure_random_to_custom_generator(
+        self,
+        random: impl RngCore + Send + Sync + 'static,
+    ) -> Self {
+        Self {
+            random: Some(Box::new(random)),
+            ..self
+        }
     }
 }
