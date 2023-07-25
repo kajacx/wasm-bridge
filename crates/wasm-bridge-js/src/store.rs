@@ -6,7 +6,7 @@ use std::{
 
 use crate::*;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct Store<T> {
     engine: Engine,
     data: DataHandle<T>,
@@ -17,6 +17,13 @@ impl<T> Store<T> {
         Self {
             engine: engine.clone(),
             data: Rc::new(RefCell::new(data)),
+        }
+    }
+
+    pub(crate) fn from_handle(handle: DataHandle<T>) -> Self {
+        Self {
+            engine: Engine::default(), // Engine is unused, so this is file for now
+            data: handle,
         }
     }
 
@@ -42,3 +49,12 @@ pub(crate) type DataHandle<T> = Rc<RefCell<T>>;
 pub type StoreContext<'a, T> = &'a T;
 
 pub type StoreContextMut<'a, T> = &'a mut T;
+
+impl<T> Clone for Store<T> {
+    fn clone(&self) -> Self {
+        Self {
+            data: self.data.clone(),
+            engine: self.engine.clone(),
+        }
+    }
+}

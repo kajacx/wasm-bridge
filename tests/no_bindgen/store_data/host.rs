@@ -18,11 +18,8 @@ pub fn run_test(bytes: &[u8]) -> Result<()> {
     linker.func_wrap(
         "imported_fns",
         "add_one_i32",
-        |mut caller: Caller<Data>, val: i32| {
-            // mut in unneeded on sys, since data is a normal reference there
-            #[allow(unused_mut)]
-            let mut data = caller.data_mut();
-            data.times_called += 1;
+        |caller: Caller<Data>, val: i32| {
+            increment(caller);
             val.wrapping_add(1)
         },
     )?;
@@ -47,4 +44,12 @@ pub fn run_test(bytes: &[u8]) -> Result<()> {
     assert_eq!(store.data().times_called, 4);
 
     Ok(())
+}
+
+// mut in unneeded on sys, since data is a normal reference there
+#[allow(unused_mut)]
+fn increment(mut context: impl AsContextMut<Data = Data>) {
+    let mut store = context.as_context_mut();
+    let mut data = store.data_mut();
+    data.times_called += 1;
 }
