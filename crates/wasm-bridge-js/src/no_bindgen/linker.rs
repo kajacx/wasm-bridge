@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use js_sys::{Object, Reflect};
+use js_sys::{Array, Function, Object, Reflect};
 use wasm_bindgen::{prelude::*, JsValue};
 
 use crate::*;
@@ -49,26 +49,29 @@ impl<T> Linker<T> {
             let func_clone = func_rc.clone();
 
             let closure =
-            // TODO: add multiple arguments support
-                // Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |js_args: Array| {
-                //     let mut args = Vec::with_capacity(js_args.length() as _);
-                //     for index in 0..args.capacity() {
-                //         let js_val = Reflect::get_u32(&js_args, index as _)?;
-                //         // .map_err(map_js_error("get args at index import"))?;
-                //         args.push(Val::from_js_value(&js_val).expect("TODO: user error"));
-                //     }
-                Closure::<dyn Fn(JsValue) -> Result<JsValue, JsValue>>::new(move |js_args: JsValue| {
-                    let  args = [Val::from_js_value(&js_args).unwrap()];
+                Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |js_args: Array| {
+                    let mut args = Vec::with_capacity(js_args.length() as _);
+                    for index in 0..args.capacity() {
+                        let js_val = Reflect::get_u32(&js_args, index as _)?;
+                        args.push(Val::from_js_value(&js_val).map_err::<JsValue, _>(|e| {
+                            format!("Cannot convert JsValue to Val: {e:}").into()
+                        })?);
+                    }
 
                     // TODO: support different amounts of return values? HOW????
                     let mut rets = vec![Val::I32(0)];
 
-                    func_clone(caller.clone(), &args, &mut rets).expect("TODO: user error");
+                    func_clone(caller.clone(), &args, &mut rets).map_err::<JsValue, _>(|e| {
+                        format!("Error in imported function: {e:?}").into()
+                    })?;
 
                     Ok(rets[0].to_js_value())
                 });
 
-            DropHandler::from_closure(closure)
+            let (js_func, handler) = DropHandler::from_closure(closure);
+            let js_func = transform_dynamic_closure_arguments(js_func);
+
+            (js_func, handler)
         };
 
         self.fns
@@ -149,4 +152,13 @@ impl<T> PreparedFn<T> {
             new_module
         }
     }
+}
+
+fn transform_dynamic_closure_arguments(closure: JsValue) -> JsValue {
+    let transformer: Function = js_sys::eval(r#"(func) => (...args) => func(args)"#)
+        .unwrap()
+        .into();
+    debug_assert!(transformer.is_function(), "transformer is a function");
+
+    transformer.call1(&JsValue::UNDEFINED, &closure).unwrap()
 }
