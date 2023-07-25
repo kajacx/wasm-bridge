@@ -1,26 +1,14 @@
 mod engine;
 pub use engine::*;
 
-mod instance;
-pub use instance::*;
-
-mod module;
-pub use module::*;
-
 mod store;
 pub use store::*;
 
-mod func;
-pub use func::*;
-
-mod typed_func;
-pub use typed_func::*;
+mod no_bindgen;
+pub use no_bindgen::*;
 
 mod conversions;
 pub use conversions::*;
-
-mod linker;
-pub use linker::*;
 
 mod caller;
 pub use caller::*;
@@ -30,12 +18,6 @@ pub use config::*;
 
 mod context;
 pub use context::*;
-
-mod val;
-pub use val::*;
-
-mod types;
-pub use types::*;
 
 pub type Error = anyhow::Error;
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
