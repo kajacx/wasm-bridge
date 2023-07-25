@@ -28,11 +28,7 @@ impl Func {
             );
         }
 
-        let js_args = Array::new_with_length(args.len() as _);
-        for (index, item) in args.iter().enumerate() {
-            Reflect::set_u32(&js_args, index as _, &item.to_js_value())
-                .map_err(map_js_error("set args at index"))?;
-        }
+        let js_args: Array = args.iter().map(Val::to_js_value).collect();
 
         let js_rets = self
             .function

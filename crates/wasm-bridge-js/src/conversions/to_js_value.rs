@@ -274,10 +274,7 @@ macro_rules! to_js_value_many {
             }
 
             fn to_function_args(&self) -> Array {
-                // TODO: test is "ofN" is faster, and by how much
-                let result = Array::new_with_length($count);
-                $( Reflect::set_u32(&result, $index, &self.$index.to_js_value()).expect("result is array"); )*
-                result
+                [$( &self.$index.to_js_value(), )*].iter().collect()
             }
         }
     };
