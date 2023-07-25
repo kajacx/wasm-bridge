@@ -4,6 +4,7 @@ use js_sys::{Function, Object, Reflect, WebAssembly};
 use wasm_bindgen::JsValue;
 
 pub struct Instance {
+    #[allow(unused)] // TODO: maybe this will be needed for memory access, otherwise remove
     instance: WebAssembly::Instance,
     exports: JsValue,
     _closures: Vec<DropHandler>,
@@ -53,6 +54,6 @@ impl Instance {
             );
         }
 
-        Ok(TypedFunc::new(&self.instance, function))
+        Ok(TypedFunc::new(function))
     }
 }
