@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{helpers::map_js_error, *};
 use anyhow::bail;
 use js_sys::{Function, Object, Reflect, WebAssembly};
@@ -7,7 +9,7 @@ pub struct Instance {
     #[allow(unused)] // TODO: maybe this will be needed for memory access, otherwise remove
     instance: WebAssembly::Instance,
     exports: JsValue,
-    _closures: Vec<DropHandler>,
+    _closures: Rc<Vec<DropHandler>>, // TODO: use Rc<Vec<..>> or Rc<[..]> ?
 }
 
 impl Instance {
@@ -28,7 +30,7 @@ impl Instance {
         Ok(Self {
             instance,
             exports,
-            _closures: closures,
+            _closures: Rc::new(closures),
         })
     }
 
@@ -54,6 +56,6 @@ impl Instance {
             );
         }
 
-        Ok(TypedFunc::new(function))
+        Ok(TypedFunc::new(function, self._closures.clone()))
     }
 }

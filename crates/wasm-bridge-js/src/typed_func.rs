@@ -3,19 +3,21 @@ use wasm_bindgen::JsValue;
 
 use crate::*;
 
-use std::marker::PhantomData;
+use std::{marker::PhantomData, rc::Rc};
 
 #[derive(Clone, Debug)]
 pub struct TypedFunc<Params, Results> {
     _phantom: PhantomData<fn(params: Params) -> Results>,
     function: Function,
+    _closures: Rc<Vec<DropHandler>>,
 }
 
 impl<Params: ToJsValue, Results: FromJsValue> TypedFunc<Params, Results> {
-    pub(crate) fn new(function: Function) -> Self {
+    pub(crate) fn new(function: Function, closures: Rc<Vec<DropHandler>>) -> Self {
         Self {
             _phantom: PhantomData,
             function,
+            _closures: closures,
         }
     }
 
