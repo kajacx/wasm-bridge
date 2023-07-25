@@ -113,7 +113,7 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
     let err_stream = OutStream{ data: err_bytes.clone(), max: 3 };
 
     let in_bytes = "PRINT_IN_2".to_string().into_bytes();
-    let in_stream = InStream { data: in_bytes, offset: 0 };
+    let in_stream = InStream { data: in_bytes, offset: 0, max: 3 };
 
     let mut table = Table::new();
     let wasi = WasiCtxBuilder::new()
@@ -178,6 +178,7 @@ impl OutputStream for OutStream {
 struct InStream {
     data: Vec<u8>,
     offset: usize,
+    max: usize,
 }
 
 #[wasm_bridge::async_trait]
@@ -191,7 +192,7 @@ impl InputStream for InStream {
     }
 
     async fn read(&mut self, buf: &mut [u8]) -> Result<(u64, bool)> {
-        let len = buf.len().min(self.data.len() - self.offset);
+        let len = buf.len().min(self.data.len() - self.offset).min(self.max);
         let from_slice = &self.data[self.offset..(self.offset + len)];
 
         (&mut buf[..len]).copy_from_slice(from_slice);
