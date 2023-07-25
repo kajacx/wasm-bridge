@@ -13,9 +13,14 @@ cp -r skeletons/no_bindgen/host_js instance
 
 # copy the guest code
 cp $test/guest.rs instance/guest/src/lib.rs
+if [ $? -ne 0 ]; then
+  echo "Non-existing test: $test"
+  exit 1
+fi
 
 # build the guest
 cd instance/guest && cargo rustc --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && cd ../..
+cd instance/guest && cargo rustc --release --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && cd ../..
 if [ $? -ne 0 ]; then
   echo
   echo "Oh no, there is an error in the $test guest."

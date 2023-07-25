@@ -13,6 +13,10 @@ cp -r skeletons/wit_components/host_js instance
 
 # copy the protocol
 cp $test/protocol.wit instance/protocol.wit
+if [ $? -ne 0 ]; then
+  echo "Non-existing test: $test"
+  exit 1
+fi
 
 # copy the guest code
 cp $test/guest.rs instance/guest/src/lib.rs
