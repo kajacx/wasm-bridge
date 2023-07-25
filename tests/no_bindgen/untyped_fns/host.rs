@@ -35,10 +35,13 @@ fn single_value() -> Result<()> {
         "add_one_i32",
         FuncType::new([ValType::I32], [ValType::I32]),
         |_: Caller<()>, args: &[Val], rets: &mut [Val]| {
-            Ok(match args[0] {
-                Val::I32(val) => rets[0] = Val::I32(val + 1),
-                _ => unreachable!(),
-            })
+            // TODO: cannot use this match, it will be Val::F64
+            // Ok(match args[0] {
+            //     Val::I32(val) => rets[0] = Val::I32(val + 1),
+            //     _ => unreachable!(),
+            // })
+            rets[0] = Val::I32(args[0].i32().unwrap() + 1);
+            Ok(())
         },
     )?;
     let instance = linker.instantiate(&mut store, &module)?;
