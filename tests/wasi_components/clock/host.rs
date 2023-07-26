@@ -34,6 +34,7 @@ impl WasiView for State {
 
 pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     no_config(component_bytes).await?;
+    custom_clock(component_bytes).await?;
 
     Ok(())
 }
@@ -66,6 +67,34 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     Ok(())
 }
 
+async fn custom_clock(component_bytes: &[u8]) -> Result<()> {
+    let mut config = Config::new();
+    config.wasm_component_model(true);
+    config.async_support(true);
+
+    let mut table = Table::new();
+    let wasi = WasiCtxBuilder::new().set_wall_clock(FiveMinutesAfterEpoch).build(&mut table)?;
+
+    let engine = Engine::new(&config)?;
+    let mut store = Store::new(&engine, State { table, wasi });
+
+    let component = Component::new(&store.engine(), &component_bytes)?;
+
+    let mut linker = Linker::new(store.engine());
+    wasi::command::add_to_linker(&mut linker)?;
+
+    let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker).await?;
+
+    let seconds_real = 5 * 60; // 5 minutes
+    let seconds_guest = instance.call_seconds_since_epoch(&mut store).await?;
+    assert!(
+        seconds_guest < seconds_real + 10 && seconds_guest > seconds_real - 10,
+        "Guest should return time withing ten seconds"
+    );
+
+    Ok(())
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 fn seconds_since_epoch() -> u64 {
     let now = std::time::SystemTime::now();
@@ -79,4 +108,16 @@ fn seconds_since_epoch() -> u64 {
 fn seconds_since_epoch() -> u64 {
     let value = wasm_bridge::js_sys::eval("Math.round(Date.now() / 1000)").unwrap();
     value.as_f64().unwrap() as _
+}
+
+struct FiveMinutesAfterEpoch;
+
+impl HostWallClock for FiveMinutesAfterEpoch {
+    fn now(&self) -> std::time::Duration {
+        std::time::Duration::from_secs(5 * 60)
+    }
+
+    fn resolution(&self) -> std::time::Duration {
+        std::time::Duration::from_nanos(1)
+    }
 }
