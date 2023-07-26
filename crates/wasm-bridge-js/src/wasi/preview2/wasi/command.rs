@@ -2,7 +2,7 @@ use anyhow::bail;
 use js_sys::Object;
 
 use crate::component::Linker;
-use crate::wasi::preview2::WasiView;
+use crate::wasi::preview2::{clocks, WasiView};
 use crate::{Result, StoreContextMut};
 
 static WASI_IMPORTS_STR: &str =
@@ -63,6 +63,8 @@ pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()
         .func_wrap("get-random-u64", |data: StoreContextMut<T>, (): ()| {
             Ok(data.ctx_mut().random().next_u64())
         })?;
+
+    clocks::add_to_linker(linker)?;
 
     Ok(())
 }

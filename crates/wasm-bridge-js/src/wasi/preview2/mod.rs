@@ -15,5 +15,8 @@ pub mod wasi;
 pub mod stream;
 pub use stream::*;
 
+pub mod clocks;
+pub use clocks::*;
+
 mod random;
 pub(crate) use random::*;
