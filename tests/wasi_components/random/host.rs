@@ -31,8 +31,6 @@ impl WasiView for State {
     }
 }
 
-// TODO: world imports with wasi are now untested
-
 pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     default_random(component_bytes).await?;
     custom_random(component_bytes).await?;
