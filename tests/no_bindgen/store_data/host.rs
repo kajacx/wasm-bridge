@@ -43,6 +43,22 @@ pub fn run_test(bytes: &[u8]) -> Result<()> {
 
     assert_eq!(store.data().times_called, 4);
 
+    // Test memory api
+    let memory = instance.get_memory(&mut store, "memory").unwrap();
+    let mut bytes: [u8; 3] = [5, 6, 7];
+
+    let address = instance
+        .get_typed_func::<u32, u32>(&mut store, "allocate_bytes")?
+        .call(&mut store, bytes.len() as _)?;
+
+    memory.write(&mut store, address as usize, &bytes)?;
+    instance
+        .get_typed_func::<(u32, u32), ()>(&mut store, "increment_bytes_at")?
+        .call(&mut store, (address, bytes.len() as _))?;
+    memory.read(&mut store, address as usize, &mut bytes)?;
+
+    assert_eq!(bytes, [6, 7, 8]);
+
     Ok(())
 }
 
