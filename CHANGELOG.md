@@ -1,6 +1,19 @@
 # wasm-bridge change log
 
 
+## [0.2.2] YYYY-MM-DD
+
+### Added
+
+- Wasi default and custom random generators
+- Memory view api
+- Untyped functions with the `Val` type
+
+### Changes
+
+- Removed lifetime from `TypedFunc`
+- `Caller` now implements `AsContext[Mut]`
+
 ## [0.2.1] 2023-07-24
 
 ### Added
