@@ -1,5 +1,5 @@
 [package]
-name = "wit-components-host-js"
+name = "wasi-components-host-js"
 version = "0.1.0"
 edition = "2021"
 
