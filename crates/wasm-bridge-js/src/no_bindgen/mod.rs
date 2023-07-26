@@ -13,6 +13,9 @@ pub use func::*;
 mod typed_func;
 pub use typed_func::*;
 
+mod memory;
+pub use memory::*;
+
 mod val;
 pub use val::*;
 
