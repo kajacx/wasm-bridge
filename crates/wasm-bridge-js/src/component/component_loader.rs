@@ -1,60 +1,58 @@
+use anyhow::{bail, Context};
 use js_component_bindgen::{transpile, TranspileOpts};
+use js_sys::Function;
 
-use super::*;
-use crate::Result;
+use crate::{helpers::map_js_error, Result};
+
+pub(crate) struct ComponentFiles {
+    pub instantiate: Function,
+    pub wasm_cores: Vec<(String, Vec<u8>)>,
+}
 
 #[derive(Debug, Clone, Default)]
-pub struct ComponentLoader {}
+pub(crate) struct ComponentLoader {}
 
 impl ComponentLoader {
-    pub fn new() -> Self {
-        Self {}
-    }
-
-    pub fn compile_component(self, bytes: &[u8]) -> Result<Component> {
+    pub fn generate_files(bytes: &[u8]) -> Result<ComponentFiles> {
         let opts = TranspileOpts {
             instantiation: true,
             ..Default::default()
         };
 
-        let result = transpile(bytes, opts)?;
-        let mut files = result.files;
+        let transpiled = transpile(bytes, opts)?;
+        let files = transpiled.files;
 
-        for (name, bytes) in files.iter_mut() {
-            if name.ends_with(".js") {
-                *name = "sync_component.js".into();
-                *bytes = modify_js_bytes(bytes)?;
+        let mut wasm_cores = Vec::<(String, Vec<u8>)>::new();
+        let mut instantiate = Option::<Function>::None;
+
+        for (name, bytes) in files.into_iter() {
+            if name.ends_with(".wasm") {
+                wasm_cores.push((name, bytes));
+            } else if name.ends_with(".js") {
+                // TODO: test that instantiate is not already Some?
+                instantiate = Some(load_instantiate_fn(&bytes)?);
             }
         }
 
-        Component::from_files(files)
-    }
+        let instantiate = instantiate.context("Missing component.js file")?;
 
-    // TODO: must refactor this ...
-    pub async fn compile_component_async(self, bytes: &[u8]) -> Result<Component> {
-        let opts = TranspileOpts {
-            instantiation: true,
-            ..Default::default()
-        };
-
-        let result = transpile(bytes, opts)?;
-        let mut files = result.files;
-
-        for (name, bytes) in files.iter_mut() {
-            if name.ends_with(".js") {
-                *name = "sync_component.js".into();
-                *bytes = modify_js_bytes(bytes)?;
-            }
-        }
-
-        Component::from_files_async(files).await
+        Ok(ComponentFiles {
+            instantiate,
+            wasm_cores,
+        })
     }
 }
 
-fn modify_js_bytes(bytes: &[u8]) -> Result<Vec<u8>> {
+fn load_instantiate_fn(bytes: &[u8]) -> Result<Function> {
     let text = std::str::from_utf8(bytes)?;
     let text = modify_js(text);
-    Ok(text.into())
+
+    let result = js_sys::eval(&text).map_err(map_js_error("eval modified component.js file"))?;
+    if !result.is_function() {
+        bail!("instantiate should be a function");
+    }
+
+    Ok(result.into())
 }
 
 fn modify_js(text: &str) -> String {
