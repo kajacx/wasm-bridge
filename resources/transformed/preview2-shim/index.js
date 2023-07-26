@@ -7,7 +7,15 @@ export function getWasiImports() {
 
   for (let package_name in exports) {
     for (let export_name in exports[package_name]) {
-      wasiExports[`wasi:${package_name}/${export_name}`] =
+      let export_name_tr = export_name;
+      if (export_name == "monotonicClock") {
+        export_name_tr = "monotonic-clock";
+      }
+      if (export_name == "wallClock") {
+        export_name_tr = "wall-clock";
+      }
+
+      wasiExports[`wasi:${package_name}/${export_name_tr}`] =
         exports[package_name][export_name];
     }
   }
