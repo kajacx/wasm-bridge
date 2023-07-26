@@ -1,0 +1,5 @@
+package component-test:wasi-protocol
+
+world clock {
+  export seconds-since-epoch: func() -> u64
+}
