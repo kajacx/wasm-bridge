@@ -29,6 +29,26 @@ impl ComponentLoader {
 
         Component::from_files(files)
     }
+
+    // TODO: must refactor this ...
+    pub async fn compile_component_async(self, bytes: &[u8]) -> Result<Component> {
+        let opts = TranspileOpts {
+            instantiation: true,
+            ..Default::default()
+        };
+
+        let result = transpile(bytes, opts)?;
+        let mut files = result.files;
+
+        for (name, bytes) in files.iter_mut() {
+            if name.ends_with(".js") {
+                *name = "sync_component.js".into();
+                *bytes = modify_js_bytes(bytes)?;
+            }
+        }
+
+        Component::from_files_async(files).await
+    }
 }
 
 fn modify_js_bytes(bytes: &[u8]) -> Result<Vec<u8>> {
