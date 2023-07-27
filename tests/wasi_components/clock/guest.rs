@@ -13,6 +13,19 @@ impl Clock for GuestImpl {
             .unwrap();
         interval.as_secs()
     }
+
+    fn nanoseconds_bench() -> u64 {
+        let now = std::time::Instant::now();
+
+        // some random computation
+        let mut result = 0;
+        for i in 0..1_000_000 {
+            result += i % 4;
+        }
+
+        let elapsed = now.elapsed().as_nanos() as u64;
+        elapsed + result * 0
+    }
 }
 
 export_clock!(GuestImpl);

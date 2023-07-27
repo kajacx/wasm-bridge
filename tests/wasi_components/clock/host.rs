@@ -1,3 +1,5 @@
+use std::sync::Mutex;
+
 use wasm_bridge::{
     component::{Component, Linker},
     Config, Engine, Result, Store,
@@ -64,6 +66,12 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
         "Guest should return time withing one minute"
     );
 
+    let bench = instance.call_nanoseconds_bench(&mut store).await?;
+    assert!(
+        bench > 1_000 && bench < 10_000_000_000,
+        "bench should take between 1 microsecond and 10 seconds"
+    );
+
     Ok(())
 }
 
@@ -73,7 +81,10 @@ async fn custom_clock(component_bytes: &[u8]) -> Result<()> {
     config.async_support(true);
 
     let mut table = Table::new();
-    let wasi = WasiCtxBuilder::new().set_wall_clock(FiveMinutesAfterEpoch).build(&mut table)?;
+    let wasi = WasiCtxBuilder::new()
+        .set_wall_clock(FiveMinutesAfterEpoch)
+        .set_monotonic_clock(FiveSecondsBetweenCalls(Mutex::new(0)))
+        .build(&mut table)?;
 
     let engine = Engine::new(&config)?;
     let mut store = Store::new(&engine, State { table, wasi });
@@ -90,6 +101,12 @@ async fn custom_clock(component_bytes: &[u8]) -> Result<()> {
     assert!(
         seconds_guest < seconds_real + 10 && seconds_guest > seconds_real - 10,
         "Guest should return time withing ten seconds"
+    );
+
+    let bench = instance.call_nanoseconds_bench(&mut store).await?;
+    assert!(
+        bench == 5_000_000_000,
+        "bench should think it took exactly 5 seconds"
     );
 
     Ok(())
@@ -119,5 +136,19 @@ impl HostWallClock for FiveMinutesAfterEpoch {
 
     fn resolution(&self) -> std::time::Duration {
         std::time::Duration::from_nanos(1)
+    }
+}
+
+struct FiveSecondsBetweenCalls(Mutex<u64>);
+
+impl HostMonotonicClock for FiveSecondsBetweenCalls {
+    fn now(&self) -> u64 {
+        let mut lock = self.0.try_lock().unwrap();
+        *lock = *lock + 5_000_000_000;
+        *lock
+    }
+
+    fn resolution(&self) -> u64 {
+        1
     }
 }
