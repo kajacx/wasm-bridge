@@ -43,7 +43,8 @@ pub async fn run_test(bytes: &[u8]) -> Result<()> {
         *lock = *lock + 1;
     })?;
 
-    let instance = linker.instantiate(&mut store, &module)?;
+    // Test "async" instantiate
+    let instance = instantiate_async(&mut store, &linker, &module).await?;
 
     single_value(&mut store, &instance)?;
     few_values(&mut store, instance, global_value)?;
