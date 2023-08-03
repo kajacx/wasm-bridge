@@ -32,7 +32,7 @@ jobs:
         run: cargo install wasm-pack
 
       - name: Install cargo component
-        run: cargo install --git https://github.com/bytecodealliance/cargo-component
+        run: cargo install --git https://github.com/bytecodealliance/cargo-component cargo-component
 
       - uses: actions/checkout@v3
 
