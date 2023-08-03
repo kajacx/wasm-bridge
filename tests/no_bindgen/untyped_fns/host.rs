@@ -1,6 +1,6 @@
 use wasm_bridge::*;
 
-pub fn run_test(bytes: &[u8]) -> Result<()> {
+pub async fn run_test(bytes: &[u8]) -> Result<()> {
     single_value(bytes)?;
     multiple_values()?;
 

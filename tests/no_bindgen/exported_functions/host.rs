@@ -1,6 +1,6 @@
 use wasm_bridge::*;
 
-pub fn run_test(bytes: &[u8]) -> Result<()> {
+pub async fn run_test(bytes: &[u8]) -> Result<()> {
     let mut store = Store::<()>::default();
     let module = Module::new(store.engine(), bytes)?;
     let instance = Instance::new(&mut store, &module, &[])?;

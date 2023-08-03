@@ -1,10 +1,11 @@
 use std::sync::{Arc, Mutex};
 use wasm_bridge::*;
 
-pub fn run_test(bytes: &[u8]) -> Result<()> {
+pub async fn run_test(bytes: &[u8]) -> Result<()> {
     let mut store = Store::<()>::default();
 
-    let module = Module::new(store.engine(), bytes)?;
+    // Try new_module_async with module bytes
+    let module = new_module_async(store.engine(), bytes).await?;
 
     let mut linker = Linker::new(store.engine());
 
@@ -46,7 +47,7 @@ pub fn run_test(bytes: &[u8]) -> Result<()> {
 
     single_value(&mut store, &instance)?;
     few_values(&mut store, instance, global_value)?;
-    many_values(&mut store)?;
+    many_values(&mut store).await?;
     errors(&mut store)?;
 
     Ok(())
@@ -128,7 +129,7 @@ fn few_values(
     Ok(())
 }
 
-fn many_values(mut store: &mut Store<()>) -> Result<()> {
+async fn many_values(mut store: &mut Store<()>) -> Result<()> {
     let wat = r#"(module
         (type $t0 (func (param i32 i64 i32 i64 f32 f64) (result i32 i64 i32 i64 f32 f64)))
         (import "imported_fns" "add_import" (func $add_import (type $t0)))
@@ -148,7 +149,8 @@ fn many_values(mut store: &mut Store<()>) -> Result<()> {
     )
     "#;
 
-    let module = Module::new(store.engine(), wat.as_bytes())?;
+    // Try new_module_async with module wat
+    let module = new_module_async(store.engine(), wat.as_bytes()).await?;
 
     let mut linker = Linker::new(store.engine());
     linker.func_wrap(

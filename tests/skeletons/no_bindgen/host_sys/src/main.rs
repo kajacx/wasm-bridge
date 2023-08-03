@@ -3,6 +3,7 @@ const GUEST_BYTES: &'static [u8] =
 
 mod host;
 
-fn main() {
-    host::run_test(GUEST_BYTES).expect("host_sys test should pass")
+#[tokio::main(flavor = "current_thread")]
+async fn main() {
+    host::run_test(GUEST_BYTES).await.expect("host_sys test should pass")
 }

@@ -4,7 +4,7 @@ struct Data {
     times_called: u32,
 }
 
-pub fn run_test(bytes: &[u8]) -> Result<()> {
+pub async fn run_test(bytes: &[u8]) -> Result<()> {
     let data = Data { times_called: 0 };
 
     let engine = Engine::default();
