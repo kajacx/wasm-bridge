@@ -1,5 +1,9 @@
 pub use wasmtime::*;
 
+pub async fn new_module_async(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Module> {
+    Module::new(engine, bytes)
+}
+
 #[cfg(feature = "component-model")]
 pub mod component {
     pub use wasmtime::component::*;
