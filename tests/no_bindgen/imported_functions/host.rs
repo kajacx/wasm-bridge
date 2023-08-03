@@ -1,7 +1,21 @@
 use std::sync::{Arc, Mutex};
 use wasm_bridge::*;
 
+#[cfg(target_arch = "wasm32")]
+fn disable_sync_wasm_functions() {
+    // Disable the synchronous variants of WebAssembly.compile and WebAssembly.instantiate,
+    // so that this test properly checks that we are actually using the asynchronous ones.
+    wasm_bridge::js_sys::eval("WebAssembly.Module = 'Disabled'; WebAssembly.Instance = 'Disabled';").unwrap();
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn disable_sync_wasm_functions() {
+    // Nothing to do on sys
+}
+
 pub async fn run_test(bytes: &[u8]) -> Result<()> {
+    disable_sync_wasm_functions();
+
     let mut store = Store::<()>::default();
 
     // Try new_module_async with module bytes
@@ -49,7 +63,7 @@ pub async fn run_test(bytes: &[u8]) -> Result<()> {
     single_value(&mut store, &instance)?;
     few_values(&mut store, instance, global_value)?;
     many_values(&mut store).await?;
-    errors(&mut store)?;
+    errors(&mut store).await?;
 
     Ok(())
 }
@@ -161,7 +175,7 @@ async fn many_values(mut store: &mut Store<()>) -> Result<()> {
             (a + 1, b + 1, c + 1, d + 1, e + 1.0, f + 1.0)
         },
     )?;
-    let instance = linker.instantiate(&mut store, &module)?;
+    let instance = instantiate_async(&mut store, &linker, &module).await?;
 
     let add = instance
         .get_typed_func::<(i32, i64, u32, u64, f32, f64), (i32, i64, u32, u64, f32, f64)>(
@@ -173,7 +187,7 @@ async fn many_values(mut store: &mut Store<()>) -> Result<()> {
     Ok(())
 }
 
-fn errors(mut store: &mut Store<()>) -> Result<()> {
+async fn errors(mut store: &mut Store<()>) -> Result<()> {
     let wat = r#"(module
         (type $t0 (func))
         (import "imported_fns" "panics_import" (func $panics_import (type $t0)))
@@ -182,23 +196,21 @@ fn errors(mut store: &mut Store<()>) -> Result<()> {
         )
     )"#;
 
-    let module = Module::new(store.engine(), wat.as_bytes())?;
+    let module = new_module_async(store.engine(), wat.as_bytes()).await?;
 
-    Instance::new(&mut store, &module, &[])
+    new_instance_async(&mut store, &module, &[]).await
         .map(|_| ())
         .expect_err("no imported functions");
 
     let mut linker = Linker::new(store.engine());
     linker.func_wrap("wrong_module", "panics_import", |_: Caller<()>| {})?;
-    linker
-        .instantiate(&mut store, &module)
+    instantiate_async(&mut store, &linker, &module).await
         .map(|_| ())
         .expect_err("wrong module name");
 
     let mut linker = Linker::new(store.engine());
     linker.func_wrap("imported_fns", "wrong_fn", |_: Caller<()>| {})?;
-    linker
-        .instantiate(&mut store, &module)
+    instantiate_async(&mut store, &linker, &module).await
         .map(|_| ())
         .expect_err("wrong function name");
 
