@@ -4,6 +4,14 @@ pub async fn new_module_async(engine: &Engine, bytes: impl AsRef<[u8]>) -> Resul
     Module::new(engine, bytes)
 }
 
+pub async fn new_instance_async(
+    store: impl AsContextMut,
+    module: &Module,
+    imports: &[Extern],
+) -> Result<Instance> {
+    Instance::new(store, module, imports)
+}
+
 pub async fn instantiate_async<T>(
     store: impl AsContextMut<Data = T>,
     linker: &Linker<T>,

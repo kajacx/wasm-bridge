@@ -15,9 +15,18 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub fn new(_store: impl AsContextMut, module: &Module, _: impl AsRef<[()]>) -> Result<Self> {
+    pub fn new(_store: impl AsContextMut, module: &Module, _imports: &[()]) -> Result<Self> {
         let imports = Object::new();
         Self::new_with_imports(module, &imports, vec![])
+    }
+
+    pub async fn new_async(
+        _store: impl AsContextMut,
+        module: &Module,
+        _imports: &[()],
+    ) -> Result<Self> {
+        let imports = Object::new();
+        Self::new_with_imports_async(module, &imports, vec![]).await
     }
 
     pub(crate) fn new_with_imports(
@@ -126,4 +135,12 @@ fn process_exports(js_exports: JsValue) -> Result<HashMap<String, JsValue>> {
         exports.insert(name, export);
     }
     Ok(exports)
+}
+
+pub async fn new_instance_async(
+    store: impl AsContextMut,
+    module: &Module,
+    imports: &[()],
+) -> Result<Instance> {
+    Instance::new_async(store, module, imports).await
 }
