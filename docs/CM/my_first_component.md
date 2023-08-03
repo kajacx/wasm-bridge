@@ -81,10 +81,10 @@ export_calculator!(MyCalculator);
 
 ## Create the runtime
 
-1. Create a new Rust crate with `wasm-bridge` as a dependency with the `component-model` feature. Use version at least `0.2.0`. Example:
+1. Create a new Rust crate with `wasm-bridge` as a dependency with the `component-model` feature. Use version at least `0.2.2`. Example:
 ```toml
 [dependencies]
-wasm-bridge = { version = "0.2.0", features = ["component-model"] }
+wasm-bridge = { version = "0.2.2", features = ["component-model"] }
 ```
 
 2. Generate the host bindings with the `bindgen` macro, like this:
@@ -95,27 +95,48 @@ wasm_bridge::component::bindgen!({
 });
 ```
 
-3. Create a `Component` from the component bytes.
-
+3. Prepare the store with component model enabled in the config:
 ```rust
-let component_bytes: &[u8] = /* read the file bytes */;
-
 let mut config = Config::new();
 config.wasm_component_model(true);
 
 let engine = Engine::new(&config)?;
 let mut store = Store::new(&engine, ());
 
+```
+
+4. Load the component from bytes synchronously (not recommended):
+```rust
+let component_bytes: &[u8] = /* read the file bytes */;
+
 let component = Component::new(&store.engine(), &component_bytes)?;
 ```
 
-4. Instantiate the component with a linker, like this:
+This can work, but browsers can throw "cannot compile large WASM modules on the main thread".
+
+To avoid this, use the async component new function instead.
+
+4. Load the component from bytes asynchronously:
+```rust
+use wasm_bridge::component::new_component_async;
+
+let component_bytes: &[u8] = /* read the file bytes */;
+
+let component = new_component_async(&store.engine(), &component_bytes).await?;
+```
+
+This adds the "hassle" of managing the asynchronous code, but is more robust and it won't "block"
+the JS thread for as long.
+
+The function is added on the desktop target as well, so you can safely using without worrying about target arch.
+
+5. Instantiate the component with a linker, like this:
 ```rust
 let linker = Linker::new(store.engine());
 let (calculator, _) = Calculator::instantiate(&mut store, &component, &linker)?;
 ```
 
-5. Call the exported function on the component instance:
+6. Call the exported function on the component instance:
 ```rust
 let result = calculator.call_add_three(&mut store, 5)?;
 assert_eq!(result, 8);

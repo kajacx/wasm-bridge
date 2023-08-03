@@ -1,10 +1,11 @@
 # wasm-bridge change log
 
 
-## [0.2.2] YYYY-MM-DD
+## [0.2.2] 2023-08-03
 
 ### Added
 
+- `new_component_async` function
 - Wasi default and custom random generators
 - Memory view api
 - Untyped functions with the `Val` type
