@@ -19,17 +19,8 @@ impl<T> Linker<T> {
         store: impl AsContextMut<Data = T>,
         module: &Module,
     ) -> Result<Instance, Error> {
-        let store = store.as_context();
-
-        let imports: JsValue = Object::new().into();
-        let mut drop_handles = vec![];
-
-        for func in self.fns.iter() {
-            let drop_handle = func.add_to_imports(&imports, store.data_handle());
-            drop_handles.push(drop_handle);
-        }
-
-        Instance::new_with_imports(module, &imports.into(), drop_handles)
+        let (imports, drop_handles) = self.collect_imports(store);
+        Instance::new_with_imports(module, &imports, drop_handles)
     }
 
     pub async fn instantiate_async(
@@ -37,9 +28,14 @@ impl<T> Linker<T> {
         store: impl AsContextMut<Data = T>,
         module: &Module,
     ) -> Result<Instance> {
+        let (imports, drop_handles) = self.collect_imports(store);
+        Instance::new_with_imports_async(module, &imports, drop_handles).await
+    }
+
+    fn collect_imports(&self, store: impl AsContextMut<Data = T>) -> (Object, Vec<DropHandler>) {
         let store = store.as_context();
 
-        let imports: JsValue = Object::new().into();
+        let imports = Object::new();
         let mut drop_handles = vec![];
 
         for func in self.fns.iter() {
@@ -47,7 +43,7 @@ impl<T> Linker<T> {
             drop_handles.push(drop_handle);
         }
 
-        Instance::new_with_imports_async(module, &imports.into(), drop_handles).await
+        (imports, drop_handles)
     }
 
     pub fn func_new<F>(

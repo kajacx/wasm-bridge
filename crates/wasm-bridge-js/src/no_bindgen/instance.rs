@@ -37,13 +37,7 @@ impl Instance {
         let instance = WebAssembly::Instance::new(&module.module, imports)
             .map_err(map_js_error("Instantiate WebAssembly module"))?;
 
-        let exports = Reflect::get(instance.as_ref(), &"exports".into())
-            .map_err(map_js_error("Get instance's exports"))?;
-
-        Ok(Self {
-            exports: process_exports(exports)?,
-            closures: Rc::new(closures),
-        })
+        Self::from_js_object(instance.into(), closures)
     }
 
     pub(crate) async fn new_with_imports_async(
@@ -57,6 +51,10 @@ impl Instance {
             .await
             .map_err(map_js_error("Instantiate WebAssembly module"))?;
 
+        Self::from_js_object(instance, closures)
+    }
+
+    fn from_js_object(instance: JsValue, closures: Vec<DropHandler>) -> Result<Self> {
         let exports = Reflect::get(&instance, &"exports".into())
             .map_err(map_js_error("Get instance's exports"))?;
 
