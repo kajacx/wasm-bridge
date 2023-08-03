@@ -113,6 +113,6 @@ impl Component {
     }
 }
 
-pub async fn component_new_async(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Component> {
+pub async fn new_component_async(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Component> {
     Component::new_async(engine, bytes).await
 }

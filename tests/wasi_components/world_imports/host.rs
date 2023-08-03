@@ -1,5 +1,5 @@
 use wasm_bridge::{
-    component::{Linker, component_new_async},
+    component::{Linker, new_component_async},
     Config, Engine, Result, Store,
 };
 
@@ -49,7 +49,7 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     let engine = Engine::new(&config)?;
     let mut store = Store::new(&engine, State { table, wasi });
 
-    let component = component_new_async(&store.engine(), &component_bytes).await?;
+    let component = new_component_async(&store.engine(), &component_bytes).await?;
 
     let mut linker = Linker::new(store.engine());
     wasi::command::add_to_linker(&mut linker)?;

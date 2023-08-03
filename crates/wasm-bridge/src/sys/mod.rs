@@ -15,7 +15,7 @@ pub mod component {
     /// This is just `Component::new()` on sys,
     /// but on js, this will compile WASM cores asynchronously,
     /// which is better.
-    pub async fn component_new_async(
+    pub async fn new_component_async(
         engine: &wasmtime::Engine,
         bytes: impl AsRef<[u8]>,
     ) -> wasmtime::Result<Component> {
