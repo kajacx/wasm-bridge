@@ -32,6 +32,24 @@ impl<T> Linker<T> {
         Instance::new_with_imports(module, &imports.into(), drop_handles)
     }
 
+    pub async fn instantiate_async(
+        &self,
+        store: impl AsContextMut<Data = T>,
+        module: &Module,
+    ) -> Result<Instance> {
+        let store = store.as_context();
+
+        let imports: JsValue = Object::new().into();
+        let mut drop_handles = vec![];
+
+        for func in self.fns.iter() {
+            let drop_handle = func.add_to_imports(&imports, store.data_handle());
+            drop_handles.push(drop_handle);
+        }
+
+        Instance::new_with_imports_async(module, &imports.into(), drop_handles).await
+    }
+
     pub fn func_new<F>(
         &mut self,
         module: &str,
@@ -85,7 +103,7 @@ impl<T> Linker<T> {
         module: &str,
         name: &str,
         func: F,
-    ) -> Result<&mut Self, Error>
+    ) -> Result<&mut Self>
     where
         F: IntoMakeClosure<T, Params, Results> + 'static,
     {
@@ -161,4 +179,12 @@ fn transform_dynamic_closure_arguments(closure: JsValue) -> JsValue {
     debug_assert!(transformer.is_function(), "transformer is a function");
 
     transformer.call1(&JsValue::UNDEFINED, &closure).unwrap()
+}
+
+pub async fn instantiate_async<T>(
+    store: impl AsContextMut<Data = T>,
+    linker: &Linker<T>,
+    module: &Module,
+) -> Result<Instance> {
+    linker.instantiate_async(store, module).await
 }

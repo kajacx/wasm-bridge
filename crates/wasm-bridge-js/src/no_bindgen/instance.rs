@@ -7,10 +7,11 @@ use js_sys::{
     WebAssembly::{self},
 };
 use wasm_bindgen::JsValue;
+use wasm_bindgen_futures::JsFuture;
 
 pub struct Instance {
     exports: HashMap<String, JsValue>,
-    _closures: Rc<Vec<DropHandler>>, // TODO: use Rc<Vec<..>> or Rc<[..]> ?
+    closures: Rc<Vec<DropHandler>>, // TODO: use Rc<Vec<..>> or Rc<[..]> ?
 }
 
 impl Instance {
@@ -32,7 +33,27 @@ impl Instance {
 
         Ok(Self {
             exports: process_exports(exports)?,
-            _closures: Rc::new(closures),
+            closures: Rc::new(closures),
+        })
+    }
+
+    pub(crate) async fn new_with_imports_async(
+        module: &Module,
+        imports: &Object,
+        closures: Vec<DropHandler>,
+    ) -> Result<Self> {
+        let promise = WebAssembly::instantiate_module(&module.module, imports);
+
+        let instance = JsFuture::from(promise)
+            .await
+            .map_err(map_js_error("Instantiate WebAssembly module"))?;
+
+        let exports = Reflect::get(&instance, &"exports".into())
+            .map_err(map_js_error("Get instance's exports"))?;
+
+        Ok(Self {
+            exports: process_exports(exports)?,
+            closures: Rc::new(closures), // TODO: do we need to keep this?
         })
     }
 
@@ -49,14 +70,14 @@ impl Instance {
     pub fn get_func(&self, _store: impl AsContextMut, name: &str) -> Option<Func> {
         let function = self.get_func_inner(name).ok()?;
 
-        Some(Func::new(function, self._closures.clone()))
+        Some(Func::new(function, self.closures.clone()))
     }
 
     pub fn get_typed_func<Params: ToJsValue, Results: FromJsValue>(
         &self,
         _store: impl AsContextMut,
         name: &str,
-    ) -> Result<TypedFunc<Params, Results>, Error> {
+    ) -> Result<TypedFunc<Params, Results>> {
         let function = self.get_func_inner(name)?;
 
         if function.length() != Params::number_of_args() {
@@ -67,7 +88,7 @@ impl Instance {
             );
         }
 
-        Ok(TypedFunc::new(function, self._closures.clone()))
+        Ok(TypedFunc::new(function, self.closures.clone()))
     }
 
     fn get_func_inner(&self, name: &str) -> Result<Function> {
