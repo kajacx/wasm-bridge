@@ -4,7 +4,7 @@ use wasm_bindgen::{convert::FromWasmAbi, prelude::Closure, JsValue};
 
 use crate::*;
 
-pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>) -> (JsValue, DropHandler)>;
+pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>) -> (JsValue, DropHandle)>;
 
 pub trait IntoMakeClosure<T, Params, Results> {
     fn into_make_closure(self) -> MakeClosure<T>;
@@ -27,7 +27,7 @@ where
                 self_clone(caller.clone()).into_return_abi()
             });
 
-            DropHandler::from_closure(closure)
+            DropHandle::from_closure(closure)
         };
 
         Box::new(make_closure)
@@ -53,7 +53,7 @@ macro_rules! into_make_closure_single {
                         move |arg: $ty| self_clone(caller.clone(), arg).into_return_abi(),
                     );
 
-                    DropHandler::from_closure(closure)
+                    DropHandle::from_closure(closure)
                 };
 
                 Box::new(make_closure)
@@ -90,7 +90,7 @@ macro_rules! into_make_closure_many {
                             self_clone(caller.clone(), $($param),*).into_return_abi()
                         });
 
-                    DropHandler::from_closure(closure)
+                    DropHandle::from_closure(closure)
                 };
 
                 Box::new(make_closure)

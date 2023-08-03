@@ -2,16 +2,16 @@ use std::rc::Rc;
 
 use js_sys::Function;
 
-use crate::DropHandler;
+use crate::DropHandle;
 
 #[derive(Debug, Clone)]
 pub struct Func {
     pub(crate) function: Function,
-    _closures: Rc<[DropHandler]>,
+    _closures: Rc<[DropHandle]>,
 }
 
 impl Func {
-    pub(crate) fn new(function: Function, closures: Rc<[DropHandler]>) -> Self {
+    pub(crate) fn new(function: Function, closures: Rc<[DropHandle]>) -> Self {
         Self {
             function,
             _closures: closures,

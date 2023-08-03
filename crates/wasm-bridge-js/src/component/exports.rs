@@ -5,7 +5,7 @@ use heck::ToLowerCamelCase;
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
-use crate::{helpers::map_js_error, DropHandler, Result};
+use crate::{helpers::map_js_error, DropHandle, Result};
 
 use super::*;
 
@@ -29,7 +29,7 @@ pub struct ExportsRoot {
 }
 
 impl ExportsRoot {
-    pub(crate) fn new(exports: JsValue, closures: &Rc<[DropHandler]>) -> Result<Self> {
+    pub(crate) fn new(exports: JsValue, closures: &Rc<[DropHandle]>) -> Result<Self> {
         let names = Object::get_own_property_names(&exports.clone().into());
         let mut exported_fns = HashMap::<String, Func>::new();
         let mut exported_objects = HashMap::<String, ExportsRoot>::new();

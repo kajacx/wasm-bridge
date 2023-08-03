@@ -3,9 +3,9 @@ use std::rc::Rc;
 
 use wasm_bindgen::{prelude::*, JsValue};
 
-use crate::{DataHandle, DropHandler, FromJsValue, Result, StoreContextMut, ToJsValue};
+use crate::{DataHandle, DropHandle, FromJsValue, Result, StoreContextMut, ToJsValue};
 
-pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>) -> (JsValue, DropHandler)>;
+pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>) -> (JsValue, DropHandle)>;
 
 pub trait IntoMakeClosure<T, Params, Results> {
     fn into_make_closure(self) -> MakeClosure<T>;
@@ -34,7 +34,7 @@ macro_rules! make_closure {
                             ).map_err(|err| format!("host imported fn returned error: {err:?}"))?.into_return_abi()
                         });
 
-                    DropHandler::from_closure(closure)
+                    DropHandle::from_closure(closure)
                 };
 
                 Box::new(make_closure)
@@ -63,7 +63,7 @@ macro_rules! make_closure {
         //                     ).map_err(|err| format!("host imported fn returned error: {err:?}"))?.into_return_abi()
         //                 });
 
-        //             DropHandler::from_closure(closure)
+        //             DropHandle::from_closure(closure)
         //         };
 
         //         Box::new(make_closure)

@@ -1,15 +1,15 @@
 use std::{marker::PhantomData, rc::Rc};
 
 use super::*;
-use crate::{AsContextMut, DropHandler, Result};
+use crate::{AsContextMut, DropHandle, Result};
 
 pub struct Instance {
     exports: Exports,
-    _closures: Rc<[DropHandler]>,
+    _closures: Rc<[DropHandle]>,
 }
 
 impl Instance {
-    pub(crate) fn new(exports: ExportsRoot, closures: Rc<[DropHandler]>) -> Self {
+    pub(crate) fn new(exports: ExportsRoot, closures: Rc<[DropHandle]>) -> Self {
         Self {
             exports: Exports::new(exports),
             _closures: closures,

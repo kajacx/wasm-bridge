@@ -4,7 +4,7 @@ use js_sys::{Function, WebAssembly};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 
-use crate::{helpers::map_js_error, AsContextMut, DropHandler, Engine, Result, ToJsValue};
+use crate::{helpers::map_js_error, AsContextMut, DropHandle, Engine, Result, ToJsValue};
 
 use super::*;
 
@@ -12,7 +12,7 @@ pub struct Component {
     instantiate: Function,
     compile_core: JsValue,
     instantiate_core: JsValue,
-    _drop_handles: [DropHandler; 2],
+    _drop_handles: [DropHandle; 2],
 }
 
 impl Component {
@@ -48,7 +48,7 @@ impl Component {
         &self,
         _store: impl AsContextMut,
         import_object: &JsValue,
-        closures: Rc<[DropHandler]>,
+        closures: Rc<[DropHandle]>,
     ) -> Result<Instance> {
         let exports = self
             .instantiate
@@ -66,7 +66,7 @@ impl Component {
         ))
     }
 
-    fn make_compile_core(wasm_cores: Vec<(String, Vec<u8>)>) -> (JsValue, DropHandler) {
+    fn make_compile_core(wasm_cores: Vec<(String, Vec<u8>)>) -> (JsValue, DropHandle) {
         let mut wasm_modules = HashMap::<String, WebAssembly::Module>::new();
         for (name, bytes) in wasm_cores.into_iter() {
             wasm_modules.insert(
@@ -79,10 +79,10 @@ impl Component {
             wasm_modules.get(&name).expect("TODO: user error").clone()
         });
 
-        DropHandler::from_closure(closure)
+        DropHandle::from_closure(closure)
     }
 
-    async fn make_compile_core_async(wasm_cores: Vec<(String, Vec<u8>)>) -> (JsValue, DropHandler) {
+    async fn make_compile_core_async(wasm_cores: Vec<(String, Vec<u8>)>) -> (JsValue, DropHandle) {
         let mut wasm_modules = HashMap::<String, WebAssembly::Module>::new();
 
         // TODO: wait for all futures at once instead
@@ -98,10 +98,10 @@ impl Component {
             wasm_modules.get(&name).expect("TODO: user error").clone()
         });
 
-        DropHandler::from_closure(closure)
+        DropHandle::from_closure(closure)
     }
 
-    fn make_instantiate_core() -> (JsValue, DropHandler) {
+    fn make_instantiate_core() -> (JsValue, DropHandle) {
         let closure = Closure::<dyn Fn(WebAssembly::Module, JsValue) -> WebAssembly::Instance>::new(
             |module: WebAssembly::Module, imports: JsValue| {
                 // TODO: this should be a user error?
@@ -109,7 +109,7 @@ impl Component {
             },
         );
 
-        DropHandler::from_closure(closure)
+        DropHandle::from_closure(closure)
     }
 }
 

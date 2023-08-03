@@ -4,7 +4,7 @@ use heck::ToLowerCamelCase;
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
-use crate::{AsContextMut, DataHandle, DropHandler, Engine, Result};
+use crate::{AsContextMut, DataHandle, DropHandle, Engine, Result};
 
 use super::*;
 
@@ -38,17 +38,17 @@ impl<T> Linker<T> {
         let data_handle = store.as_context_mut().data_handle();
 
         for function in self.fns.iter() {
-            let drop_handler = function.add_to_imports(&import_object, data_handle.clone());
-            closures.push(drop_handler);
+            let drop_handle = function.add_to_imports(&import_object, data_handle.clone());
+            closures.push(drop_handle);
         }
 
         for (instance_name, instance_linker) in self.instances.iter() {
             let instance_obj = Object::new();
 
             for function in instance_linker.fns.iter() {
-                let drop_handler =
+                let drop_handle =
                     function.add_to_instance_imports(&instance_obj, data_handle.clone());
-                closures.push(drop_handler);
+                closures.push(drop_handle);
             }
 
             Reflect::set(&import_object, &instance_name.into(), &instance_obj).unwrap();
@@ -120,7 +120,7 @@ impl<T> PreparedFn<T> {
     }
 
     #[must_use]
-    fn add_to_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandler {
+    fn add_to_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandle {
         let (js_val, handler) = (self.creator)(handle);
 
         let object: JsValue = Object::new().into();
@@ -132,7 +132,7 @@ impl<T> PreparedFn<T> {
     }
 
     #[must_use]
-    fn add_to_instance_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandler {
+    fn add_to_instance_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandle {
         let (js_val, handler) = (self.creator)(handle);
 
         Reflect::set(imports, &self.name.to_lower_camel_case().into(), &js_val)

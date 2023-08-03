@@ -32,7 +32,7 @@ impl<T> Linker<T> {
         Instance::new_with_imports_async(module, &imports, drop_handles).await
     }
 
-    fn collect_imports(&self, store: impl AsContextMut<Data = T>) -> (Object, Vec<DropHandler>) {
+    fn collect_imports(&self, store: impl AsContextMut<Data = T>) -> (Object, Vec<DropHandle>) {
         let store = store.as_context();
 
         let imports = Object::new();
@@ -82,7 +82,7 @@ impl<T> Linker<T> {
                     Ok(rets[0].to_js_value())
                 });
 
-            let (js_func, handler) = DropHandler::from_closure(closure);
+            let (js_func, handler) = DropHandle::from_closure(closure);
             let js_func = transform_dynamic_closure_arguments(js_func);
 
             (js_func, handler)
@@ -112,9 +112,9 @@ impl<T> Linker<T> {
 }
 
 #[derive(Debug)]
-pub struct DropHandler(Box<dyn std::fmt::Debug>);
+pub struct DropHandle(Box<dyn std::fmt::Debug>);
 
-impl DropHandler {
+impl DropHandle {
     pub(crate) fn new<T: std::fmt::Debug + 'static>(value: T) -> Self {
         Self(Box::new(value))
     }
@@ -144,7 +144,7 @@ impl<T> PreparedFn<T> {
     }
 
     #[must_use]
-    fn add_to_imports(&self, imports: &JsValue, handle: &DataHandle<T>) -> DropHandler {
+    fn add_to_imports(&self, imports: &JsValue, handle: &DataHandle<T>) -> DropHandle {
         let module = Self::module(imports, &self.module);
 
         let (js_val, handler) = (self.creator)(handle.clone());

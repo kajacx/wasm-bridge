@@ -9,11 +9,11 @@ use std::{marker::PhantomData, rc::Rc};
 pub struct TypedFunc<Params, Results> {
     _phantom: PhantomData<fn(params: Params) -> Results>,
     function: Function,
-    _closures: Rc<Vec<DropHandler>>,
+    _closures: Rc<Vec<DropHandle>>,
 }
 
 impl<Params: ToJsValue, Results: FromJsValue> TypedFunc<Params, Results> {
-    pub(crate) fn new(function: Function, closures: Rc<Vec<DropHandler>>) -> Self {
+    pub(crate) fn new(function: Function, closures: Rc<Vec<DropHandle>>) -> Self {
         Self {
             _phantom: PhantomData,
             function,

@@ -8,11 +8,11 @@ use crate::{helpers::map_js_error, *};
 
 pub struct Func {
     function: Function,
-    _closures: Rc<Vec<DropHandler>>,
+    _closures: Rc<Vec<DropHandle>>,
 }
 
 impl Func {
-    pub(crate) fn new(function: Function, closures: Rc<Vec<DropHandler>>) -> Self {
+    pub(crate) fn new(function: Function, closures: Rc<Vec<DropHandle>>) -> Self {
         Self {
             function,
             _closures: closures,

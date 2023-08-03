@@ -11,7 +11,7 @@ use wasm_bindgen_futures::JsFuture;
 
 pub struct Instance {
     exports: HashMap<String, JsValue>,
-    closures: Rc<Vec<DropHandler>>, // TODO: use Rc<Vec<..>> or Rc<[..]> ?
+    closures: Rc<Vec<DropHandle>>, // TODO: use Rc<Vec<..>> or Rc<[..]> ?
 }
 
 impl Instance {
@@ -32,7 +32,7 @@ impl Instance {
     pub(crate) fn new_with_imports(
         module: &Module,
         imports: &Object,
-        closures: Vec<DropHandler>,
+        closures: Vec<DropHandle>,
     ) -> Result<Self> {
         let instance = WebAssembly::Instance::new(&module.module, imports)
             .map_err(map_js_error("Instantiate WebAssembly module"))?;
@@ -43,7 +43,7 @@ impl Instance {
     pub(crate) async fn new_with_imports_async(
         module: &Module,
         imports: &Object,
-        closures: Vec<DropHandler>,
+        closures: Vec<DropHandle>,
     ) -> Result<Self> {
         let promise = WebAssembly::instantiate_module(&module.module, imports);
 
@@ -54,7 +54,7 @@ impl Instance {
         Self::from_js_object(instance, closures)
     }
 
-    fn from_js_object(instance: JsValue, closures: Vec<DropHandler>) -> Result<Self> {
+    fn from_js_object(instance: JsValue, closures: Vec<DropHandle>) -> Result<Self> {
         let exports = Reflect::get(&instance, &"exports".into())
             .map_err(map_js_error("Get instance's exports"))?;
 
