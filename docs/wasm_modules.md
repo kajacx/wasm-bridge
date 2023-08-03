@@ -46,3 +46,31 @@ fn add_three(number: i32) -> Result<i32> {
 Alternatively, watch the [video tutorial](https://youtu.be/CqpZjouAOvg):
 
 [![Youtube video](https://img.youtube.com/vi/CqpZjouAOvg/0.jpg)](https://youtu.be/CqpZjouAOvg)
+
+## Sync vs async methods
+
+When running on the web, compiling and instantiation WASM modules syncly can result in an error.
+
+Wasm-bridge provides async variants, which are safer to use and don't block the JS "thread" the code runs on.
+
+These are, however, slightly different from the "normal" async functions that wasmtime provides, as described in this table:
+
+| Function | signature | feature | Desktop runtime | Web runtime |
+| --- | --- | --- | --- | --- |
+| `Module::new` | sync | *none* | Calls wasmtime's `Module::new` | Calls the sync `new WebAssembly.Module()` constructor ❌ |
+| `wasm_bridge::new_module_async` | async | *none* | Calls wasmtime's `Module::new` | Calls the async `WebAssembly.compile()` function ✅ |
+| --- | --- | --- | --- | --- |
+| `Instance::new` | sync | *none* | Calls wasmtime's `Instance::new` | Calls the sync `new WebAssembly.Instance()` constructor ❌ |
+| `Instance::new_async` | async | `async` | Calls wasmtime's `Instance::new_async` | Calls the async `new WebAssembly.instantiate()` function ✅ |
+| `wasm_bridge::new_instance_async` | async | *none* | Calls wasmtime's `Instance::new` | Calls the async `new WebAssembly.instantiate()` function ✅ |
+| --- | --- | --- | --- | --- |
+| `linker.instantiate` | sync | *none* | Calls wasmtime's `linker.instantiate` | Calls the sync `new WebAssembly.Instance()` constructor ❌ |
+| `linker.instantiate_async` | async | `async` | Calls wasmtime's `linker.instantiate_async` | Calls the async `new WebAssembly.instantiate()` function ✅ |
+| `wasm_bridge::instantiate_async` | async | *none* | Calls wasmtime's `linker.instantiate` | Calls the async `new WebAssembly.instantiate()` function ✅ |
+| --- | --- | --- | --- | --- |
+| `Component::new` | sync | *none* | Calls wasmtime's `Component::new` | Calls the sync `new WebAssembly.Module()` constructor ❌ |
+| `wasm_bridge::component::new_component_async` | async | *none* | Calls wasmtime's `Component::new` | Calls the async `WebAssembly.compile()` function ✅ |
+
+The advantage of the "custom" wasm-bridge methods is that they work even without the `async` feature flag.
+
+The component functions require the `component-model` feature, but that would not fit into the table.
