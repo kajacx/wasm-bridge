@@ -11,7 +11,7 @@ wasm_bridge::component::bindgen!({
 struct Host;
 impl RecordsImports for Host {
     fn create_player(&mut self, name: String, inventory: Vec<u32>) -> Result<Player> {
-        todo!()
+        Ok(Player { name, inventory })
     }
 }
 
