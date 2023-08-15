@@ -17,7 +17,7 @@ pub fn from_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
         let tokens = quote!(
             let js_field = wasm_bridge::js_sys::Reflect::get(value, &#field_name_converted.into())
                 .map_err(wasm_bridge::helpers::map_js_error("Get struct field"))?;
-            let #field_name = #field_type::from_js_value(&js_field)?;
+            let #field_name = <#field_type>::from_js_value(&js_field)?;
         );
         impl_block.append_all(tokens);
 
