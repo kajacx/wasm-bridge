@@ -141,9 +141,9 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
 
     let mut table = Table::new();
     let wasi = WasiCtxBuilder::new()
-        .set_stdin(in_stream)
-        .set_stdout(out_stream)
-        .set_stderr(err_stream)
+        .stdin(in_stream, IsATTY::No)
+        .stdout(out_stream, IsATTY::No)
+        .stderr(err_stream, IsATTY::No)
         .build(&mut table)?;
 
     let engine = Engine::new(&config)?;

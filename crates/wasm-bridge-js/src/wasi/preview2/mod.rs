@@ -1,6 +1,6 @@
 mod streams;
 mod wasi_ctx_builder;
-pub use wasi_ctx_builder::WasiCtxBuilder;
+pub use wasi_ctx_builder::{IsATTY, WasiCtxBuilder};
 
 mod wasi_ctx;
 pub use wasi_ctx::WasiCtx;
