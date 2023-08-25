@@ -9,17 +9,5 @@
         "qf": {
             "compiler": "cargo"
         }
-    },
-    "test-io": {
-        "cmd": [
-            "./examples/wasi_components/run_examples.sh",
-            "io_redirect"
-        ],
-        "components": {
-            "qf": {
-                "compiler": "cargo"
-            }
-        },
-        "cwd": "./examples/wasi_components/"
     }
 }
