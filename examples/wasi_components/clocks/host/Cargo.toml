@@ -1,0 +1,10 @@
+[package]
+name = "example-clocks-host"
+edition = "2021"
+version = "0.0.0"
+
+[dependencies]
+wasm-bridge = { path = "../../../../crates/wasm-bridge/",  features = ["component-model", "wasi"]}
+rand_core = { version = "0.6.4" }
+tokio = { version = "1.29.1", features = ["macros", "rt"] }
+
