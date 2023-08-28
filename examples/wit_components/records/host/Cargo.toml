@@ -1,0 +1,8 @@
+[package]
+name = "example-records-host"
+edition = "2021"
+version = "0.0.0"
+
+[dependencies]
+wasm-bridge = { path = "../../../../crates/wasm-bridge/",  features = ["component-model"]}
+

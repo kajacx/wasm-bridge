@@ -1,0 +1,13 @@
+[package]
+name = "example-records-guest"
+edition = "2021"
+version = "0.0.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[package.metadata.component]
+package = "component:wit-guest"
+
+[dependencies]
+wit-bindgen = "0.8.0"
