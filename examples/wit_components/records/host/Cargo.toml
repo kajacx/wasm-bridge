@@ -1,6 +1,6 @@
 [package]
 name = "example-records-host"
-edition = "2021"
+edition.workspace = true
 version = "0.0.0"
 
 [dependencies]

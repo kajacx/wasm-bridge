@@ -17,8 +17,6 @@ for example in $EXAMPLES; do
     fi
 
     echo "-> Running $example"
-    cargo component build --target wasm32-wasi -p example-$example-guest
+    cargo component build -p example-$example-guest
     cargo run -p example-$example-host
 done
-
-echo "Done building"

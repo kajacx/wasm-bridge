@@ -20,5 +20,3 @@ for example in $EXAMPLES; do
     cargo component build --target wasm32-unknown-unknown -p example-$example-guest
     cargo run -p example-$example-host
 done
-
-echo "Done building"
