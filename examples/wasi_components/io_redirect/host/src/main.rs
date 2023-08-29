@@ -1,6 +1,8 @@
+use bytes::{Buf, Bytes};
 use wasm_bridge::{
+    async_trait,
     component::{Component, Linker},
-    Config, Engine, Result, Store,
+    wasi, Config, Engine, Result, Store,
 };
 
 use wasm_bridge::wasi::preview2::*;
@@ -58,7 +60,7 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes)?;
 
     let mut linker = Linker::new(store.engine());
-    wasi::command::add_to_linker(&mut linker)?;
+    wasi::preview2::command::add_to_linker(&mut linker)?;
 
     let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await?;
 
@@ -144,7 +146,7 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes)?;
 
     let mut linker = Linker::new(store.engine());
-    wasi::command::add_to_linker(&mut linker)?;
+    wasi::preview2::command::add_to_linker(&mut linker)?;
 
     let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await?;
 
@@ -182,6 +184,7 @@ struct OutStream {
     max: usize,
 }
 
+#[cfg(target_arch = "wasm32")]
 #[wasm_bridge::async_trait]
 impl OutputStream for OutStream {
     fn as_any(&self) -> &dyn std::any::Any {
@@ -199,12 +202,27 @@ impl OutputStream for OutStream {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+#[async_trait::async_trait]
+impl HostOutputStream for OutStream {
+    fn write(&mut self, bytes: Bytes) -> Result<(usize, StreamState), wasm_bridge::Error> {
+        let amount = bytes.len().min(self.max);
+        self.data.try_lock().unwrap().extend(&bytes[..amount]);
+        Ok((amount, StreamState::Open))
+    }
+
+    async fn ready(&mut self) -> Result<(), wasm_bridge::Error> {
+        Ok(())
+    }
+}
+
 struct InStream {
     data: Vec<u8>,
     offset: usize,
     max: usize,
 }
 
+#[cfg(target_arch = "wasm32")]
 #[wasm_bridge::async_trait]
 impl InputStream for InStream {
     fn as_any(&self) -> &dyn std::any::Any {
@@ -227,5 +245,30 @@ impl InputStream for InStream {
 
     async fn num_ready_bytes(&self) -> Result<u64> {
         Ok((self.data.len() - self.offset) as _)
+    }
+}
+#[cfg(not(target_arch = "wasm32"))]
+#[async_trait::async_trait]
+impl HostInputStream for InStream {
+    fn read(&mut self, size: usize) -> Result<(Bytes, StreamState), wasm_bridge::Error> {
+        let len = size.min(self.data.len() - self.offset).min(self.max);
+
+        let from_slice = &self.data[self.offset..(self.offset + len)];
+
+        let buf = Bytes::from(from_slice);
+        self.offset += len;
+
+        Ok((
+            buf,
+            if self.data.len() == self.offset {
+                StreamState::Closed
+            } else {
+                StreamState::Open
+            },
+        ))
+    }
+
+    async fn ready(&mut self) -> Result<(), wasm_bridge::Error> {
+        Ok(())
     }
 }
