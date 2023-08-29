@@ -2,12 +2,10 @@ use std::sync::Mutex;
 
 use wasm_bridge::{
     component::{Component, Linker},
-    wasi::preview2::{
-        command::{self, wasi},
-        HostMonotonicClock, HostWallClock, Table, WasiCtx, WasiCtxBuilder, WasiView,
-    },
     Config, Engine, Result, Store,
 };
+
+use wasm_bridge::wasi::preview2::*;
 
 wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
@@ -35,13 +33,9 @@ impl WasiView for State {
     }
 }
 
-const GUEST_BYTES: &[u8] =
-    include_bytes!("../../../../../target/wasm32-wasi/debug/example_clocks_guest.wasm");
-
-#[tokio::main]
-pub async fn main() -> Result<()> {
-    no_config(GUEST_BYTES).await?;
-    custom_clock(GUEST_BYTES).await?;
+pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
+    no_config(component_bytes).await?;
+    custom_clock(component_bytes).await?;
 
     Ok(())
 }
@@ -57,10 +51,10 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     let engine = Engine::new(&config)?;
     let mut store = Store::new(&engine, State { table, wasi });
 
-    let component = Component::new(store.engine(), component_bytes)?;
+    let component = Component::new(&store.engine(), &component_bytes)?;
 
     let mut linker = Linker::new(store.engine());
-    command::add_to_linker(&mut linker)?;
+    wasi::command::add_to_linker(&mut linker)?;
 
     let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker).await?;
 
@@ -97,7 +91,7 @@ async fn custom_clock(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes)?;
 
     let mut linker = Linker::new(store.engine());
-    command::add_to_linker(&mut linker)?;
+    wasi::command::add_to_linker(&mut linker)?;
 
     let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker).await?;
 
