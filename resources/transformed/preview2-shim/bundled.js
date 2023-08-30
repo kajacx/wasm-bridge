@@ -13,7 +13,7 @@
     wallClock: () => wallClock
   });
   function _hrtimeBigint() {
-    return BigInt(Math.floor(performance.now() * 1e9));
+    return BigInt(Math.floor(performance.now() * 1e6));
   }
   var _hrStart = _hrtimeBigint();
   var monotonicClock = {
@@ -41,8 +41,9 @@
   };
   var wallClock = {
     now() {
-      const seconds = BigInt(Math.floor(Date.now() / 1e3));
-      const nanoseconds = Date.now() % 1e3 * 1e6;
+      let now = Date.now();
+      const seconds = BigInt(Math.floor(now / 1e3));
+      const nanoseconds = now % 1e3 * 1e6;
       return { seconds, nanoseconds };
     },
     resolution() {
@@ -53,10 +54,16 @@
   // browser/filesystem.js
   var filesystem_exports = {};
   __export(filesystem_exports, {
-    filesystem: () => filesystem,
-    filesystemFilesystem: () => filesystem
+    filesystemTypes: () => types,
+    preopens: () => preopens,
+    types: () => types
   });
-  var filesystem = {
+  var preopens = {
+    getDirectories() {
+      return [];
+    }
+  };
+  var types = {
     readViaStream(fd, offset) {
       console.log(`[filesystem] READ STREAM ${fd} ${offset}`);
     },
@@ -161,6 +168,12 @@
     },
     dropDirectoryEntryStream(stream) {
       console.log(`[filesystem] DROP DIRECTORY ENTRY`, stream);
+    },
+    metadataHash(fd) {
+      console.log(`[filesystem] METADATA HASH`, fd);
+    },
+    metadataHashAt(fd, pathFlags, path) {
+      console.log(`[filesystem] METADATA HASH AT `, fd, pathFlags, path);
     }
   };
 
@@ -170,12 +183,12 @@
     incomingHandler: () => incomingHandler,
     outgoingHandler: () => outgoingHandler,
     send: () => send,
-    types: () => types
+    types: () => types2
   });
 
   // http/error.js
   var UnexpectedError = class extends Error {
-    /** @type { import("../types/http").HttpErrorUnexpectedError } */
+    /** @type { import("../../types/imports/wasi-http-types").ErrorUnexpectedError } */
     payload;
     constructor(message = "unexpected-error") {
       super(message);
@@ -224,7 +237,7 @@
     handle() {
     }
   };
-  var types = {
+  var types2 = {
     dropFields(_fields) {
       console.log("[types] Drop fields");
     },
@@ -264,11 +277,8 @@
     incomingRequestMethod(_req) {
       console.log("[types] Incoming request method");
     },
-    incomingRequestPath(_req) {
-      console.log("[types] Incoming request path");
-    },
-    incomingRequestQuery(_req) {
-      console.log("[types] Incoming request query");
+    incomingRequestPathWithQuery(_req) {
+      console.log("[types] Incoming request path with query");
     },
     incomingRequestScheme(_req) {
       console.log("[types] Incoming request scheme");
@@ -282,7 +292,7 @@
     incomingRequestConsume(_req) {
       console.log("[types] Incoming request consume");
     },
-    newOutgoingRequest(_method, _path, _query, _scheme, _authority, _headers) {
+    newOutgoingRequest(_method, _pathWithQuery, _scheme, _authority, _headers) {
       console.log("[types] New outgoing request");
     },
     outgoingRequestWrite(_req) {
@@ -351,25 +361,23 @@
       console.log(`[streams] Drop input stream ${s}`);
     },
     write(s, buf) {
+      streams.blockingWrite(s, buf);
+    },
+    blockingWrite(s, buf) {
       switch (s) {
         case 0:
           throw new Error(`TODO: write stdin`);
         case 1: {
-          const decoder = new TextDecoder();
-          console.log(decoder.decode(buf));
-          return BigInt(buf.byteLength);
+          process.stdout.write(buf);
+          return [BigInt(buf.byteLength), "ended"];
         }
         case 2: {
-          const decoder = new TextDecoder();
-          console.error(decoder.decode(buf));
-          return BigInt(buf.byteLength);
+          process.stderr.write(buf);
+          return [BigInt(buf.byteLength), "ended"];
         }
         default:
           throw new Error(`TODO: write ${s}`);
       }
-    },
-    blockingWrite(s, _buf) {
-      console.log(`[streams] Blocking write ${s}`);
     },
     writeZeroes(s, _len) {
       console.log(`[streams] Write zeroes ${s}`);
@@ -397,12 +405,12 @@
   // browser/logging.js
   var logging_exports = {};
   __export(logging_exports, {
-    handler: () => handler,
+    logging: () => logging,
     setLevel: () => setLevel
   });
-  var levels = ["trace", "debug", "info", "warn", "error"];
+  var levels = ["trace", "debug", "info", "warn", "error", "critical"];
   var logLevel = levels.indexOf("warn");
-  var handler = {
+  var logging = {
     log(level, context, msg) {
       if (logLevel > levels.indexOf(level))
         return;
@@ -607,26 +615,46 @@
     }
   };
 
-  // browser/cli-base.js
-  var cli_base_exports = {};
-  __export(cli_base_exports, {
+  // browser/cli.js
+  var cli_exports = {};
+  __export(cli_exports, {
+    _setArgs: () => _setArgs,
+    _setCwd: () => _setCwd,
     _setEnv: () => _setEnv,
     environment: () => environment,
     exit: () => exit,
-    preopens: () => preopens,
     stderr: () => stderr,
     stdin: () => stdin,
-    stdout: () => stdout
+    stdout: () => stdout,
+    terminalInput: () => terminalInput,
+    terminalOutput: () => terminalOutput,
+    terminalStderr: () => terminalStderr,
+    terminalStdin: () => terminalStdin,
+    terminalStdout: () => terminalStdout
   });
   var _env;
+  var _args = [];
+  var _cwd = null;
   function _setEnv(envObj) {
     _env = Object.entries(envObj);
+  }
+  function _setArgs(args) {
+    _args = args;
+  }
+  function _setCwd(cwd) {
+    _cwd = cwd;
   }
   var environment = {
     getEnvironment() {
       if (!_env)
-        _env = [];
+        _setEnv(process.env);
       return _env;
+    },
+    getArguments() {
+      return _args;
+    },
+    initialCwd() {
+      return _cwd;
     }
   };
   var ComponentExit = class extends Error {
@@ -638,11 +666,6 @@
   var exit = {
     exit(status) {
       throw new ComponentExit(status.tag === "err" ? 1 : 0);
-    }
-  };
-  var preopens = {
-    getDirectories() {
-      return [];
     }
   };
   var stdin = {
@@ -660,6 +683,29 @@
       return 2;
     }
   };
+  var terminalInput = {
+    dropTerminalInput() {
+    }
+  };
+  var terminalOutput = {
+    dropTerminalOutput() {
+    }
+  };
+  var terminalStderr = {
+    getTerminalStderr() {
+      return 0;
+    }
+  };
+  var terminalStdin = {
+    getTerminalStdin() {
+      return 1;
+    }
+  };
+  var terminalStdout = {
+    getTerminalStdout() {
+      return 2;
+    }
+  };
 
   // browser/index.js
   var importObject = {
@@ -671,7 +717,7 @@
     poll: poll_exports,
     random: random_exports,
     sockets: sockets_exports,
-    cliBase: cli_base_exports
+    cli: cli_exports
   };
   var browser_default = importObject;
 
@@ -693,6 +739,4 @@
     }
     return wasiExports;
   }
-
-  return getWasiImports();
 })();

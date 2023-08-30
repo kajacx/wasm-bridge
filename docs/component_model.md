@@ -7,7 +7,10 @@ It is possible to use the [wit component model](https://github.com/WebAssembly/c
 1. [Install Rust](https://www.rust-lang.org/tools/install)
 2. Add WASM target with `rustup target add wasm32-unknown-unknown`
 3. [Install `wasm-component`](https://github.com/bytecodealliance/cargo-component)
-   with `cargo install --git https://github.com/bytecodealliance/cargo-component cargo-component`
+   with `cargo install --git https://github.com/bytecodealliance/cargo-component --locked cargo-component --rev e24c73
+e440662bcf265a4c9c8aead1557f3af75e`
+
+**Note**: due to changes in wasi the latest main branch of `cargo-component` may not reflect the interface expected by the current version of `wasmtime`. As such a specific revision must be targeted.
 
 
 These steps are the same when running a wit component in wasmtime normally.
