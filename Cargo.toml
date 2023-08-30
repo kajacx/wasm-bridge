@@ -5,9 +5,9 @@ members = [
   "crates/wasm-bridge-js",
   "crates/wasm-bridge-macros",
   "examples/wit_components/",
-  "examples/wit_components/records/",
+  "examples/wit_components/guest/records/",
   "examples/wasi_components/",
-  "examples/wasi_components/io_redirect",
+  "examples/wasi_components/guest/io_redirect",
 ]
 
 exclude = [
