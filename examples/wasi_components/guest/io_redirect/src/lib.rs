@@ -1,5 +1,5 @@
 wit_bindgen::generate!({
-    path: "../io_redirect.wit",
+    path: "../../io_redirect.wit",
     world: "io-redirect",
 });
 
