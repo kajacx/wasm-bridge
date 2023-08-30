@@ -3,8 +3,11 @@ use wasm_bridge::{
     Config, Engine, Result, Store,
 };
 
+const GUEST_BYTES: &[u8] =
+    include_bytes!("../../../target/wasm32-unknown-unknown/debug/example_records_guest.wasm");
+
 wasm_bridge::component::bindgen!({
-    path: "../protocol.wit",
+    path: "./records.wit",
     world: "records",
 });
 
@@ -15,10 +18,8 @@ impl RecordsImports for Host {
     }
 }
 
-const GUEST_BYTES: &[u8] =
-    include_bytes!("../../../../../target/wasm32-unknown-unknown/debug/example_records_guest.wasm");
-
-fn main() -> Result<()> {
+#[test]
+fn records() {
     let mut config = Config::new();
     config.wasm_component_model(true);
 
@@ -43,6 +44,4 @@ fn main() -> Result<()> {
         .unwrap();
 
     assert_eq!(result, vec![2, 6, 7]);
-
-    Ok(())
 }
