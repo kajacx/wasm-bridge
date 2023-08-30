@@ -1,5 +1,5 @@
 [package]
-name = "tests-wit-components"
+name = "wit-components-tests"
 edition.workspace = true
 version = "0.0.0"
 

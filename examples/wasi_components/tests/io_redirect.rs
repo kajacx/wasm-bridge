@@ -10,7 +10,7 @@ use wasm_bridge::wasi::preview2::*;
 use std::sync::{Arc, Mutex};
 
 wasm_bridge::component::bindgen!({
-    path: "../protocol.wit",
+    path: "./io_redirect.wit",
     world: "io-redirect",
     async: true,
 });
@@ -35,10 +35,11 @@ impl WasiView for State {
     }
 }
 
-#[tokio::main]
-pub async fn main() -> Result<()> {
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), tokio::test)]
+pub async fn io_redirect() -> Result<()> {
     const GUEST_BYTES: &[u8] =
-        include_bytes!("../../../../../target/wasm32-wasi/debug/example_io_redirect_guest.wasm");
+        include_bytes!("../../../target/wasm32-wasi/debug/io_redirect_guest.wasm");
 
     no_config(GUEST_BYTES).await?;
     inherit(GUEST_BYTES).await?;
@@ -71,6 +72,7 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     instance
         .call_writeln_to_stdout(&mut store, "NO_PRINT")
         .await?;
+
     instance
         .call_writeln_to_stderr(&mut store, "NO_PRINT")
         .await?;
@@ -103,6 +105,7 @@ async fn inherit(component_bytes: &[u8]) -> Result<()> {
     instance
         .call_writeln_to_stdout(&mut store, "PRINT_OUT_1")
         .await?;
+
     instance
         .call_writeln_to_stderr(&mut store, "PRINT_ERR_1")
         .await?;
@@ -204,7 +207,7 @@ impl OutputStream for OutStream {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-#[async_trait::async_trait]
+#[wasm_bridge::async_trait]
 impl HostOutputStream for OutStream {
     fn write(&mut self, bytes: Bytes) -> Result<(usize, StreamState), wasm_bridge::Error> {
         let amount = bytes.len().min(self.max);
@@ -249,7 +252,7 @@ impl InputStream for InStream {
     }
 }
 #[cfg(not(target_arch = "wasm32"))]
-#[async_trait::async_trait]
+#[wasm_bridge::async_trait]
 impl HostInputStream for InStream {
     fn read(&mut self, size: usize) -> Result<(Bytes, StreamState), wasm_bridge::Error> {
         let len = size.min(self.data.len() - self.offset).min(self.max);
