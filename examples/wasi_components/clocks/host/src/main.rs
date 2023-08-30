@@ -2,7 +2,7 @@ use std::sync::Mutex;
 
 use wasm_bridge::{
     component::{Component, Linker},
-    Config, Engine, Result, Store,
+    wasi, Config, Engine, Result, Store,
 };
 
 use wasm_bridge::wasi::preview2::*;
@@ -54,7 +54,7 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes)?;
 
     let mut linker = Linker::new(store.engine());
-    wasi::command::add_to_linker(&mut linker)?;
+    wasi::preview2::command::add_to_linker(&mut linker)?;
 
     let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker).await?;
 
@@ -91,7 +91,7 @@ async fn custom_clock(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes)?;
 
     let mut linker = Linker::new(store.engine());
-    wasi::command::add_to_linker(&mut linker)?;
+    wasi::preview2::command::add_to_linker(&mut linker)?;
 
     let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker).await?;
 
@@ -143,11 +143,21 @@ struct FiveSecondsBetweenCalls(Mutex<u64>);
 impl HostMonotonicClock for FiveSecondsBetweenCalls {
     fn now(&self) -> u64 {
         let mut lock = self.0.try_lock().unwrap();
-        *lock = *lock + 5_000_000_000;
+        *lock += 5_000_000_000;
         *lock
     }
 
     fn resolution(&self) -> u64 {
         1
     }
+}
+
+#[tokio::main]
+pub async fn main() -> Result<()> {
+    const GUEST_BYTES: &[u8] =
+        include_bytes!("../../../../../target/wasm32-wasi/debug/example_clocks_guest.wasm");
+
+    run_test(GUEST_BYTES).await?;
+
+    Ok(())
 }

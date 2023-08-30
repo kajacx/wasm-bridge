@@ -4,6 +4,7 @@ use std::collections::HashSet;
 use std::fmt;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
 use syn::{braced, parse_quote, Data, DeriveInput, Error, Result, Token};
 use wasmtime_component_util::{DiscriminantSize, FlagsSize};
 
@@ -45,8 +46,8 @@ fn find_style(input: &DeriveInput) -> Result<Style> {
         }
 
         let syntax_error = || {
-            Err(Error::new_spanned(
-                &attribute.tokens,
+            Err(Error::new(
+                attribute.span(),
                 "expected `component(<style>)` syntax",
             ))
         };

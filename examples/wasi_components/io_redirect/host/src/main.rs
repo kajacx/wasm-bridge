@@ -35,6 +35,7 @@ impl WasiView for State {
     }
 }
 
+#[tokio::main]
 pub async fn main() -> Result<()> {
     const GUEST_BYTES: &[u8] =
         include_bytes!("../../../../../target/wasm32-wasi/debug/example_io_redirect_guest.wasm");
@@ -91,7 +92,7 @@ async fn inherit(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes)?;
 
     let mut linker = Linker::new(store.engine());
-    wasi::command::add_to_linker(&mut linker)?;
+    wasi::preview2::command::add_to_linker(&mut linker)?;
 
     let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await?;
 
@@ -253,7 +254,7 @@ impl HostInputStream for InStream {
     fn read(&mut self, size: usize) -> Result<(Bytes, StreamState), wasm_bridge::Error> {
         let len = size.min(self.data.len() - self.offset).min(self.max);
 
-        let from_slice = &self.data[self.offset..(self.offset + len)];
+        let from_slice = self.data[self.offset..(self.offset + len)].to_vec();
 
         let buf = Bytes::from(from_slice);
         self.offset += len;
