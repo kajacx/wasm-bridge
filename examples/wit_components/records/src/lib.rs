@@ -1,5 +1,5 @@
 wit_bindgen::generate!({
-    path: "../protocol.wit",
+    path: "../records.wit",
     world: "records",
 });
 

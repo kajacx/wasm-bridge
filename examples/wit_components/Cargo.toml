@@ -1,0 +1,9 @@
+[package]
+name = "tests-wit-components"
+edition.workspace = true
+version = "0.0.0"
+
+[dependencies]
+wasm-bridge = { path = "../../crates/wasm-bridge/",  features = ["component-model"]}
+wasm-bindgen-test = "0.3"
+
