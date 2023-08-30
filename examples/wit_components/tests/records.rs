@@ -4,7 +4,7 @@ use wasm_bridge::{
 };
 
 const GUEST_BYTES: &[u8] =
-    include_bytes!("../../../target/wasm32-unknown-unknown/debug/example_records_guest.wasm");
+    include_bytes!("../../../target/wasm32-unknown-unknown/debug/records_guest.wasm");
 
 wasm_bridge::component::bindgen!({
     path: "./records.wit",

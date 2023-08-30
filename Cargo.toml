@@ -6,6 +6,8 @@ members = [
   "crates/wasm-bridge-macros",
   "examples/wit_components/",
   "examples/wit_components/records/",
+  "examples/wasi_components/",
+  "examples/wasi_components/io_redirect",
 ]
 
 exclude = [

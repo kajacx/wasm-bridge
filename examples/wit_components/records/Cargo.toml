@@ -1,5 +1,5 @@
 [package]
-name = "test-records-guest"
+name = "records-guest"
 edition.workspace = true
 version = "0.0.0"
 

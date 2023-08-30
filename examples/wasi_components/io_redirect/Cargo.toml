@@ -1,5 +1,5 @@
 [package]
-name = "example-io_redirect-guest"
+name = "io-redirect-guest"
 edition.workspace = true
 version = "0.0.0"
 
