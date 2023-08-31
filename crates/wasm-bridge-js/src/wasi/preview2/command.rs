@@ -72,7 +72,10 @@ pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()
 fn get_imports() -> Object {
     let imports = js_sys::eval(WASI_IMPORTS_STR).expect("eval bundled wasi imports");
 
-    assert!(imports.is_object(), "wasi imports must be an object");
+    assert!(
+        imports.is_object(),
+        "wasi imports must be an object, {imports:#?}"
+    );
 
     imports.into()
 }

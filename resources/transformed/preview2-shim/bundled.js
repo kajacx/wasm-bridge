@@ -739,4 +739,6 @@
     }
     return wasiExports;
   }
+
+  return getWasiImports();
 })();

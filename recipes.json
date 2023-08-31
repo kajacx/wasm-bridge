@@ -1,4 +1,15 @@
 {
+    "test-wasm": {
+        "cmd": [
+            "wasm-pack",
+            "test",
+            "--node",
+            "./examples/wasi_components/"
+        ],
+        "qf": {
+            "compiler": "cargo"
+        }
+    },
     "test-io": {
         "cmd": [
             "./examples/wasi_components/run_examples.sh",
