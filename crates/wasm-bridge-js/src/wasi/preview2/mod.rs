@@ -1,3 +1,4 @@
+pub mod stdio;
 mod wasi_ctx_builder;
 pub use wasi_ctx_builder::WasiCtxBuilder;
 
@@ -21,5 +22,4 @@ pub use clocks::*;
 mod random;
 pub(crate) use random::*;
 
-mod environment;
-pub(crate) use environment::add_to_linker;
+pub(crate) mod environment;
