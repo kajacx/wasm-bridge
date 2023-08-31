@@ -1,4 +1,3 @@
-pub mod stdio;
 mod wasi_ctx_builder;
 pub use wasi_ctx_builder::WasiCtxBuilder;
 
@@ -23,3 +22,6 @@ mod random;
 pub(crate) use random::*;
 
 pub(crate) mod environment;
+pub(crate) mod filesystem;
+pub(crate) mod preopens;
+pub(crate) mod stdio;
