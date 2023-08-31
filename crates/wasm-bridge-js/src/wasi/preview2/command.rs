@@ -6,7 +6,7 @@ use crate::wasi::preview2::{clocks, WasiView};
 use crate::{Result, StoreContextMut};
 
 static WASI_IMPORTS_STR: &str =
-    include_str!("../../../../../../resources/transformed/preview2-shim/bundled.js");
+    include_str!("../../../../../resources/transformed/preview2-shim/bundled.js");
 
 const STDIN_IDENT: u32 = 0;
 const STDOUT_IDENT: u32 = 1;
