@@ -5,6 +5,8 @@ use crate::component::Linker;
 use crate::wasi::preview2::{clocks, WasiView};
 use crate::{Result, StoreContextMut};
 
+use super::environment;
+
 static WASI_IMPORTS_STR: &str =
     include_str!("../../../../../resources/transformed/preview2-shim/bundled.js");
 
@@ -66,6 +68,7 @@ pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()
 
     clocks::add_to_linker(linker)?;
 
+    environment::add_to_linker(linker)?;
     Ok(())
 }
 

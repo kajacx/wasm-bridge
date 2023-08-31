@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::*;
 
 pub struct WasiCtx {
@@ -9,6 +11,8 @@ pub struct WasiCtx {
 
     wall_clock: Box<dyn HostWallClock>,
     monotonic_clock: Box<dyn HostMonotonicClock>,
+
+    env: HashMap<String, String>,
 }
 
 impl WasiCtx {
@@ -19,6 +23,7 @@ impl WasiCtx {
         random: Option<SecureRandom>,
         wall_clock: Option<Box<dyn HostWallClock>>,
         monotonic_clock: Option<Box<dyn HostMonotonicClock>>,
+        env: HashMap<String, String>,
     ) -> Self {
         Self {
             stdin: stdin.unwrap_or_else(|| Box::new(void_stream())),
@@ -27,6 +32,7 @@ impl WasiCtx {
             random: random.unwrap_or_else(js_rand),
             wall_clock: wall_clock.unwrap_or_else(|| Box::new(real_wall_clock())),
             monotonic_clock: monotonic_clock.unwrap_or_else(|| Box::new(default_monotonic_clock())),
+            env,
         }
     }
 
@@ -52,5 +58,9 @@ impl WasiCtx {
 
     pub(crate) fn monotonic_clock(&self) -> &dyn HostMonotonicClock {
         &*self.monotonic_clock
+    }
+
+    pub(crate) fn environment(&self) -> &HashMap<String, String> {
+        &self.env
     }
 }

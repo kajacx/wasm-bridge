@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, io::Write, rc::Rc};
 
 use js_sys::{Function, WebAssembly};
 use wasm_bindgen::prelude::*;

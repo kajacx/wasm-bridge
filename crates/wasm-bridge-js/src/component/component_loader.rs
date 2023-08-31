@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use anyhow::{bail, Context};
 use js_component_bindgen::{transpile, TranspileOpts};
 use js_sys::Function;
