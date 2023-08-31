@@ -201,10 +201,10 @@ impl OutputStream for OutStream {
         Ok(())
     }
 
-    async fn write(&mut self, buf: &[u8]) -> Result<u64> {
+    async fn write(&mut self, buf: &[u8]) -> Result<(usize, StreamStatus)> {
         let amount = buf.len().min(self.max);
         self.data.try_lock().unwrap().extend(&buf[..amount]);
-        Ok(amount as u64)
+        Ok((amount as usize, StreamStatus::Open))
     }
 }
 
@@ -239,14 +239,21 @@ impl InputStream for InStream {
         Ok(())
     }
 
-    async fn read(&mut self, buf: &mut [u8]) -> Result<(u64, bool)> {
+    async fn read(&mut self, buf: &mut [u8]) -> Result<(u64, StreamStatus)> {
         let len = buf.len().min(self.data.len() - self.offset).min(self.max);
         let from_slice = &self.data[self.offset..(self.offset + len)];
 
         (&mut buf[..len]).copy_from_slice(from_slice);
         self.offset += len;
 
-        Ok((len as _, self.data.len() == self.offset))
+        Ok((
+            len as _,
+            if self.data.len() == self.offset {
+                StreamStatus::Ended
+            } else {
+                StreamStatus::Open
+            },
+        ))
     }
 
     async fn num_ready_bytes(&self) -> Result<u64> {
