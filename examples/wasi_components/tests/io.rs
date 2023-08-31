@@ -7,7 +7,10 @@ use wasm_bridge::{
 
 use wasm_bridge::wasi::preview2::*;
 
-use std::sync::{Arc, Mutex};
+use std::{
+    io::Write,
+    sync::{Arc, Mutex},
+};
 
 wasm_bridge::component::bindgen!({
     path: "./io_redirect.wit",
@@ -37,9 +40,8 @@ impl WasiView for State {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), tokio::test)]
-pub async fn io_redirect() -> Result<()> {
-    const GUEST_BYTES: &[u8] =
-        include_bytes!("../../../target/wasm32-wasi/debug/io_redirect_guest.wasm");
+pub async fn test() -> Result<()> {
+    const GUEST_BYTES: &[u8] = include_bytes!("../../../target/wasm32-wasi/debug/io_guest.wasm");
 
     no_config(GUEST_BYTES).await?;
     inherit(GUEST_BYTES).await?;
@@ -59,7 +61,7 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     let engine = Engine::new(&config)?;
     let mut store = Store::new(&engine, State { table, wasi });
 
-    let component = Component::new(&store.engine(), &component_bytes)?;
+    let component = Component::new(store.engine(), component_bytes)?;
 
     let mut linker = Linker::new(store.engine());
     wasi::preview2::command::add_to_linker(&mut linker)?;
