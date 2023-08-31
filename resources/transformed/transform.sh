@@ -21,7 +21,7 @@ cp ../random.js browser/random.js
 esbuild index.js --bundle --outfile=bundled.js
 
 # return the import object from the bundle
-head -n -1 bundled.js > bundled_new.js
+tail -r bundled.js | tail +2 | tail -r > bundled_new.js
 echo >> bundled_new.js
 echo '  return getWasiImports();' >> bundled_new.js
 echo '})();' >> bundled_new.js
