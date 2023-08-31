@@ -1,11 +1,13 @@
 use crate::Result;
 
+use super::StreamStatus;
+
 pub trait InputStream: Send {
     fn as_any(&self) -> &dyn std::any::Any;
 
     fn readable(&self) -> Result<()>;
 
-    fn read(&mut self, buf: &mut [u8]) -> Result<(u64, bool)>;
+    fn read(&mut self, buf: &mut [u8]) -> Result<(u64, StreamStatus)>;
 
     fn num_ready_bytes(&self) -> Result<u64>;
 }
@@ -21,8 +23,8 @@ impl InputStream for VoidStream {
         Ok(())
     }
 
-    fn read(&mut self, _buf: &mut [u8]) -> Result<(u64, bool)> {
-        Ok((0, true))
+    fn read(&mut self, _buf: &mut [u8]) -> Result<(u64, StreamStatus)> {
+        Ok((0, StreamStatus::Open))
     }
 
     fn num_ready_bytes(&self) -> Result<u64> {
