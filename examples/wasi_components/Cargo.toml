@@ -10,3 +10,9 @@ bytes = "1.4"
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies]
 tokio = { version = "1.32", features = ["full"] }
+
+[dev-dependencies]
+tracing-web = "0.1"
+tracing-subscriber = { version = "0.3", features = ["time"] }
+wasm-bindgen-test = "0.3"
+time = { version = "0.3", features = ["wasm-bindgen"] }

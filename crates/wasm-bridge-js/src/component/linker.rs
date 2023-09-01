@@ -29,9 +29,11 @@ impl<T> Linker<T> {
         component: &Component,
     ) -> Result<Instance> {
         let import_object = js_sys::Object::new();
+
         if let Some(imports) = &self.wasi_imports {
             js_sys::Object::assign(&import_object, imports);
         }
+
         let import_object: JsValue = import_object.into();
 
         let mut closures = Vec::with_capacity(self.fns.len());
@@ -121,6 +123,7 @@ impl<T> PreparedFn<T> {
 
     #[must_use]
     fn add_to_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandle {
+        tracing::debug!("import func {}", self.name);
         let (js_val, handler) = (self.creator)(handle);
 
         let object: JsValue = Object::new().into();
@@ -133,6 +136,7 @@ impl<T> PreparedFn<T> {
 
     #[must_use]
     fn add_to_instance_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandle {
+        tracing::debug!("instance func {}", self.name);
         let (js_val, handler) = (self.creator)(handle);
 
         Reflect::set(imports, &self.name.to_lower_camel_case().into(), &js_val)

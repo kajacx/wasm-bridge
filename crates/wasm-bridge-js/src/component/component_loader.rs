@@ -31,6 +31,8 @@ impl ComponentLoader {
             if name.ends_with(".wasm") {
                 wasm_cores.push((name, bytes));
             } else if name.ends_with(".js") {
+                let s = String::from_utf8_lossy(&bytes);
+                tracing::debug!(s = %&*s, "js loader");
                 // panic!("{}", String::from_utf8_lossy(&bytes));
                 // TODO: test that instantiate is not already Some?
                 instantiate = Some(load_instantiate_fn(&bytes)?);
