@@ -15,5 +15,20 @@ pub(crate) fn add_to_linker<T: 'static + WasiView>(linker: &mut Linker<T>) -> Re
         |_data: StoreContextMut<T>, (_this,): (u32,)| -> Result<()> { Ok(()) },
     )?;
 
+    linker.instance("wasi:cli/terminal-stdin")?.func_wrap(
+        "get-terminal-stdin",
+        |_data: StoreContextMut<T>, (_this,): (u32,)| -> Result<Option<u32>> { Ok(None) },
+    )?;
+
+    linker.instance("wasi:cli/terminal-stdout")?.func_wrap(
+        "get-terminal-stdout",
+        |_data: StoreContextMut<T>, (_this,): (u32,)| -> Result<Option<u32>> { Ok(None) },
+    )?;
+
+    linker.instance("wasi:cli/terminal-stderr")?.func_wrap(
+        "get-terminal-stderr",
+        |_data: StoreContextMut<T>, (_this,): (u32,)| -> Result<Option<u32>> { Ok(None) },
+    )?;
+
     Ok(())
 }
