@@ -1,6 +1,6 @@
 export const streams = {
   read(s, len) {
-    console.log(`[streams] Read ${s} ${len}`);
+    console.log(`[streams] Original Read ${s} ${len}`);
   },
   blockingRead(s, len) {
     console.log(`[streams] Blocking read ${s} ${len}`);

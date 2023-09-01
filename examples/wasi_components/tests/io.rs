@@ -260,6 +260,7 @@ impl InputStream for InStream {
         Ok((self.data.len() - self.offset) as _)
     }
 }
+
 #[cfg(not(target_arch = "wasm32"))]
 #[wasm_bridge::async_trait]
 impl HostInputStream for InStream {
