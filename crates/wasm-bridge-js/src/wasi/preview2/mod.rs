@@ -26,3 +26,4 @@ pub(crate) mod environment;
 pub(crate) mod filesystem;
 pub(crate) mod preopens;
 pub(crate) mod stdio;
+pub(crate) mod terminal;

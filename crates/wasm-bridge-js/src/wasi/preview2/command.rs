@@ -6,7 +6,7 @@ use crate::wasi::preview2::{clocks, WasiView};
 use crate::{Result, StoreContextMut};
 
 use super::stdio::{STDERR_IDENT, STDIN_IDENT, STDOUT_IDENT};
-use super::{environment, filesystem, preopens, stdio};
+use super::{environment, filesystem, preopens, stdio, terminal};
 
 static WASI_IMPORTS_STR: &str =
     include_str!("../../../../../resources/transformed/preview2-shim/bundled.js");
@@ -79,6 +79,7 @@ pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()
     environment::add_to_linker(linker)?;
     preopens::add_to_linker(linker)?;
     filesystem::add_to_linker(linker)?;
+    terminal::add_to_linker(linker)?;
 
     Ok(())
 }
