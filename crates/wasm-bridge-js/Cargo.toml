@@ -18,6 +18,7 @@ js-component-bindgen = { version = "0.9.5", optional = true }
 anyhow = { version = "1.0.22" }
 heck = { version = "0.4.1" }
 rand_core = { version = "0.6.4", optional = true }
+getrandom = { version = "0.2.10", optional = true }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.37"
@@ -25,5 +26,5 @@ wasm-bindgen-test = "0.3.37"
 [features]
 component-model = ["wasm-bridge-macros", "js-component-bindgen"]
 async = ["wasm-bridge-macros/async"]
-wasi = ["async", "rand_core"]
+wasi = ["async", "rand_core", "getrandom", "getrandom/js"]
 error-logging = []

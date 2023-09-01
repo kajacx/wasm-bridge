@@ -3,12 +3,14 @@ use wasm_bindgen::JsValue;
 
 use crate::{helpers::map_js_error, Result};
 
+use super::StreamStatus;
+
 pub trait OutputStream: Send {
     fn as_any(&self) -> &dyn std::any::Any;
 
     fn writable(&self) -> Result<()>;
 
-    fn write(&mut self, buf: &[u8]) -> Result<u64>;
+    fn write(&mut self, buf: &[u8]) -> Result<(usize, StreamStatus)>;
 }
 
 struct VoidingStream;
@@ -22,8 +24,9 @@ impl OutputStream for VoidingStream {
         Ok(())
     }
 
-    fn write(&mut self, buf: &[u8]) -> Result<u64> {
-        Ok(buf.len() as _)
+    /// Non blocking write
+    fn write(&mut self, buf: &[u8]) -> Result<(usize, StreamStatus)> {
+        Ok((buf.len(), StreamStatus::Open))
     }
 }
 
@@ -42,7 +45,7 @@ impl OutputStream for InheritStream {
         Ok(())
     }
 
-    fn write(&mut self, buf: &[u8]) -> Result<u64> {
+    fn write(&mut self, buf: &[u8]) -> Result<(usize, StreamStatus)> {
         let text = String::from_utf8_lossy(buf);
 
         // Do not store the js Function, it makes the stream not Send
@@ -55,7 +58,7 @@ impl OutputStream for InheritStream {
             .call1(&JsValue::UNDEFINED, &text.as_ref().into())
             .map_err(map_js_error("Call output stream function"))?;
 
-        Ok(buf.len() as _)
+        Ok((buf.len() as _, StreamStatus::Open))
     }
 }
 

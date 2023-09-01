@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use anyhow::{bail, Context};
 use js_component_bindgen::{transpile, TranspileOpts};
 use js_sys::Function;
@@ -29,6 +31,7 @@ impl ComponentLoader {
             if name.ends_with(".wasm") {
                 wasm_cores.push((name, bytes));
             } else if name.ends_with(".js") {
+                // panic!("{}", String::from_utf8_lossy(&bytes));
                 // TODO: test that instantiate is not already Some?
                 instantiate = Some(load_instantiate_fn(&bytes)?);
             }

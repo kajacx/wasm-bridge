@@ -72,7 +72,7 @@ impl<T> Linker<T> {
         self
     }
 
-    pub fn func_wrap<Params, Results, F>(&mut self, name: &str, func: F) -> Result<()>
+    pub fn func_wrap<Params, Results, F>(&mut self, name: &str, func: F) -> Result<&mut Self>
     where
         T: 'static,
         F: IntoMakeClosure<T, Params, Results>,
@@ -80,10 +80,10 @@ impl<T> Linker<T> {
         self.fns
             .push(PreparedFn::new(name, func.into_make_closure()));
 
-        Ok(())
+        Ok(self)
     }
 
-    pub fn func_wrap_async<Params, Results, F>(&mut self, name: &str, func: F) -> Result<()>
+    pub fn func_wrap_async<Params, Results, F>(&mut self, name: &str, func: F) -> Result<&mut Self>
     where
         T: 'static,
         F: IntoMakeClosure<T, Params, Results>,

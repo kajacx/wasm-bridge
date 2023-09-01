@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use rand_core::RngCore;
 
 use super::*;
@@ -13,6 +15,7 @@ pub struct WasiCtxBuilder {
 
     wall_clock: Option<Box<dyn HostWallClock>>,
     monotonic_clock: Option<Box<dyn HostMonotonicClock>>,
+    env: HashMap<String, String>,
 }
 
 impl WasiCtxBuilder {
@@ -28,6 +31,7 @@ impl WasiCtxBuilder {
             self.random,
             self.wall_clock,
             self.monotonic_clock,
+            self.env,
         ))
     }
 
@@ -104,5 +108,13 @@ impl WasiCtxBuilder {
             monotonic_clock: Some(Box::new(monotonic_clock)),
             ..self
         }
+    }
+
+    pub fn set_env(mut self, env: &[(impl AsRef<str>, impl AsRef<str>)]) -> Self {
+        self.env = env
+            .iter()
+            .map(|(k, v)| (k.as_ref().to_string(), v.as_ref().to_string()))
+            .collect();
+        self
     }
 }

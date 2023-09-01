@@ -256,11 +256,13 @@ impl Parse for Opt {
             Ok(Opt::TrappableErrorType(
                 fields
                     .into_iter()
-                    .map(|(wit_owner, wit_name, rust_name)| TrappableError {
-                        wit_owner: Some(wit_owner),
-                        wit_name,
-                        rust_name,
-                    })
+                    .map(
+                        |(wit_owner, wit_type_name, rust_type_name)| TrappableError {
+                            wit_package_path: wit_owner,
+                            wit_type_name,
+                            rust_type_name,
+                        },
+                    )
                     .collect(),
             ))
         } else if l.peek(kw::interfaces) {
