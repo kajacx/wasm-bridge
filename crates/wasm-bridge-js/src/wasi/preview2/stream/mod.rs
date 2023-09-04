@@ -10,3 +10,11 @@ pub enum StreamStatus {
     Open,
     Ended,
 }
+impl StreamStatus {
+    pub(crate) fn to_variant(&self) -> String {
+        match self {
+            Self::Open => "open".into(),
+            Self::Ended => "ended".into(),
+        }
+    }
+}

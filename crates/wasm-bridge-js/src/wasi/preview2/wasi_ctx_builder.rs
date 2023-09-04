@@ -30,6 +30,7 @@ impl WasiCtxBuilder {
 
     pub fn build(&mut self, _table: &mut Table) -> Result<WasiCtx> {
         let v = std::mem::take(self);
+        tracing::debug!("stdin {}", v.stdin.is_some());
 
         Ok(WasiCtx::new(
             v.stdin,

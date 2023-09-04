@@ -41,6 +41,17 @@ impl WasiView for State {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), tokio::test)]
 pub async fn test() -> Result<()> {
+    use tracing_subscriber::prelude::*;
+    #[cfg(target_arch = "wasm32")]
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        .with_ansi(true) // Only partially supported across browsers
+        .without_time()
+        .with_writer(tracing_web::MakeConsoleWriter); // write events to the console
+
+    #[cfg(not(target_arch = "wasm32"))]
+    let fmt_layer = tracing_subscriber::fmt::layer().with_ansi(true);
+
+    tracing_subscriber::registry().with(fmt_layer).init();
     const GUEST_BYTES: &[u8] = include_bytes!("../../../target/wasm32-wasi/debug/io_guest.wasm");
 
     no_config(GUEST_BYTES).await?;

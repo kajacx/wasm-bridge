@@ -1,3 +1,4 @@
+use wasm_bindgen_test::wasm_bindgen_test;
 use wasm_bridge::{
     component::{Component, Linker},
     Config, Engine, Result, Store,
@@ -19,7 +20,20 @@ impl RecordsImports for Host {
 }
 
 #[test]
+#[wasm_bindgen_test]
 fn records() {
+    use tracing_subscriber::prelude::*;
+    #[cfg(target_arch = "wasm32")]
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        .with_ansi(true) // Only partially supported across browsers
+        .without_time()
+        .with_writer(tracing_web::MakeConsoleWriter); // write events to the console
+
+    #[cfg(not(target_arch = "wasm32"))]
+    let fmt_layer = tracing_subscriber::fmt::layer().with_ansi(true);
+
+    tracing_subscriber::registry().with(fmt_layer).init();
+
     let mut config = Config::new();
     config.wasm_component_model(true);
 

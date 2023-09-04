@@ -6,14 +6,14 @@ use crate::wasi::preview2::{clocks, WasiView};
 use crate::{Result, StoreContextMut};
 
 use super::stdio::{STDERR_IDENT, STDIN_IDENT, STDOUT_IDENT};
-use super::{environment, filesystem, preopens, stdio, terminal};
+use super::{environment, filesystem, preopens, stdio, streams, terminal};
 
 static WASI_IMPORTS_STR: &str =
     include_str!("../../../../../resources/transformed/preview2-shim/bundled.js");
 
 pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
     // Default imports
-    linker.set_wasi_imports(get_imports());
+    // linker.set_wasi_imports(get_imports());
 
     // Overrides
     // linker.instance("wasi:io/streams")?.func_wrap(
@@ -80,11 +80,12 @@ pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()
     preopens::add_to_linker(linker)?;
     filesystem::add_to_linker(linker)?;
     terminal::add_to_linker(linker)?;
+    streams::add_to_linker(linker)?;
 
     Ok(())
 }
 
-/// Returns the shims import objects
+/// Fills the wasi imports by the browser shim
 fn get_imports() -> Object {
     let imports = js_sys::eval(WASI_IMPORTS_STR).expect("eval bundled wasi imports");
 

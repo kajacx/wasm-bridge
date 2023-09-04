@@ -343,7 +343,7 @@
   });
   var streams = {
     read(s, len) {
-      console.log(`[streams] Bundled Read ${s} ${len}`);
+      console.log(`[streams] Original Read ${s} ${len}`);
     },
     blockingRead(s, len) {
       console.log(`[streams] Blocking read ${s} ${len}`);
@@ -734,6 +734,12 @@
         if (export_name == "wallClock") {
           export_name_tr = "wall-clock";
         }
+        let funcs = Object.entries(
+          exports[package_name][export_name]
+        ).map(([key, _]) => {
+          return key;
+        }).join(", ");
+        console.log(`export wasi:${package_name}/${export_name_tr} as ${export_name} ${funcs}`);
         wasiExports[`wasi:${package_name}/${export_name_tr}`] = exports[package_name][export_name];
       }
     }

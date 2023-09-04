@@ -16,10 +16,10 @@ wat = { version = "1.0.70", git = "https://github.com/bytecodealliance/wasm-tool
 wasm-bridge-macros = { path = "../wasm-bridge-macros", version = "0.2.2", optional = true }
 js-component-bindgen = { version = "0.9.5", optional = true }
 anyhow = { version = "1.0.22" }
-heck = { version = "0.4.1" }
 rand_core = { version = "0.6.4", optional = true }
 getrandom = { version = "0.2.10", optional = true }
 tracing = "0.1"
+convert_case = "0.6.0"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.37"

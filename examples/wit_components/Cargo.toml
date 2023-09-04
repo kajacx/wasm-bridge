@@ -7,3 +7,7 @@ version = "0.0.0"
 wasm-bridge = { path = "../../crates/wasm-bridge/",  features = ["component-model"]}
 wasm-bindgen-test = "0.3"
 
+[dev-dependencies]
+tracing-web = "0.1"
+tracing-subscriber = { version = "0.3", features = ["time"] }
+wasm-bindgen-test = "0.3"

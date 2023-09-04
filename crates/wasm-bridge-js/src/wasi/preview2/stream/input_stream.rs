@@ -24,7 +24,7 @@ impl InputStream for VoidStream {
     }
 
     fn read(&mut self, _buf: &mut [u8]) -> Result<(u64, StreamStatus)> {
-        Ok((0, StreamStatus::Open))
+        Ok((0, StreamStatus::Ended))
     }
 
     fn num_ready_bytes(&self) -> Result<u64> {

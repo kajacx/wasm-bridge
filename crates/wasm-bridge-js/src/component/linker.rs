@@ -1,6 +1,6 @@
 use std::{collections::HashMap, rc::Rc};
 
-use heck::ToLowerCamelCase;
+use convert_case::Casing;
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
@@ -31,6 +31,7 @@ impl<T> Linker<T> {
         let import_object = js_sys::Object::new();
 
         if let Some(imports) = &self.wasi_imports {
+            tracing::debug!("assign wasi imports");
             js_sys::Object::assign(&import_object, imports);
         }
 
@@ -44,12 +45,17 @@ impl<T> Linker<T> {
             closures.push(drop_handle);
         }
 
+        // JCO makes instance functions use camel case
         for (instance_name, instance_linker) in self.instances.iter() {
+            let _span = tracing::debug_span!("link instance", instance_name).entered();
             let instance_obj = Object::new();
 
             for function in instance_linker.fns.iter() {
+                tracing::debug!(function = function.name.as_str(), "link instance func");
+
                 let drop_handle =
                     function.add_to_instance_imports(&instance_obj, data_handle.clone());
+
                 closures.push(drop_handle);
             }
 
@@ -136,11 +142,13 @@ impl<T> PreparedFn<T> {
 
     #[must_use]
     fn add_to_instance_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandle {
-        tracing::debug!("instance func {}", self.name);
         let (js_val, handler) = (self.creator)(handle);
 
-        Reflect::set(imports, &self.name.to_lower_camel_case().into(), &js_val)
-            .expect("imports is object");
+        let name = self.name.to_case(convert_case::Case::Camel);
+
+        tracing::debug!(?name, "instance func");
+
+        Reflect::set(imports, &name.into(), &js_val).expect("imports is object");
 
         handler
     }

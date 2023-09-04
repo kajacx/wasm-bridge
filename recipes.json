@@ -1,10 +1,21 @@
 {
-    "test-wasm": {
+    "test-wasi": {
         "cmd": [
             "wasm-pack",
             "test",
             "--node",
             "./examples/wasi_components/"
+        ],
+        "qf": {
+            "compiler": "cargo"
+        }
+    },
+    "test-wit": {
+        "cmd": [
+            "wasm-pack",
+            "test",
+            "--node",
+            "./examples/wit_components/"
         ],
         "qf": {
             "compiler": "cargo"
