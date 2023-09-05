@@ -9,7 +9,7 @@ use super::WasiView;
 /// Adds environment integration to the linker
 pub(crate) fn add_to_linker<T: 'static + WasiView>(linker: &mut Linker<T>) -> Result<()> {
     linker
-        .instance("wasi:cli-base/environment")?
+        .instance("wasi:cli/environment")?
         .func_wrap("get-environment", |data: StoreContextMut<T>, (): ()| {
             Ok(data
                 .ctx()
@@ -24,8 +24,7 @@ pub(crate) fn add_to_linker<T: 'static + WasiView>(linker: &mut Linker<T>) -> Re
         )?
         .func_wrap("initial-cwd", |_data: StoreContextMut<T>, (): ()| {
             Ok(String::from("."))
-        })?
-        .alias("cli");
+        })?;
 
     Ok(())
 }

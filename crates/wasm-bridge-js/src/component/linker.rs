@@ -50,20 +50,22 @@ impl<T> Linker<T> {
         // JCO makes instance functions use camel case
         for (instance_name, instance_linker) in self.instances.iter() {
             let _span = tracing::debug_span!("link instance", instance_name).entered();
+
             let instance_obj = Object::new();
 
-            for instance_name in once(instance_name).chain(&instance_linker.aliases) {
-                for function in instance_linker.fns.iter() {
-                    tracing::debug!(function = function.name.as_str(), "link instance func");
+            for function in instance_linker.fns.iter() {
+                tracing::debug!(function = function.name.as_str(), "link instance func");
 
-                    let drop_handle =
-                        function.add_to_instance_imports(&instance_obj, data_handle.clone());
+                let drop_handle =
+                    function.add_to_instance_imports(&instance_obj, data_handle.clone());
 
-                    closures.push(drop_handle);
-                }
+                closures.push(drop_handle);
             }
 
-            Reflect::set(&import_object, &instance_name.into(), &instance_obj).unwrap();
+            for instance_name in once(instance_name).chain(&instance_linker.aliases) {
+                tracing::debug!(instance_name, "assign instance");
+                Reflect::set(&import_object, &instance_name.into(), &instance_obj).unwrap();
+            }
         }
 
         let closures = Rc::from(closures);

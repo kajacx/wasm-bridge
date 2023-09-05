@@ -56,7 +56,7 @@ pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()
             Ok(data.ctx_mut().random().next_u64())
         })?;
 
-    linker.instance("wasi:cli-base/exit")?.func_wrap(
+    linker.instance("wasi:cli/exit")?.func_wrap(
         "exit",
         |_data: StoreContextMut<T>,
          (_status,): (std::result::Result<(), ()>,)|

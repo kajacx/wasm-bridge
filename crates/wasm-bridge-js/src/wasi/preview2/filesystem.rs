@@ -10,7 +10,7 @@ pub type InputStream = u32;
 
 pub(crate) fn add_to_linker<T: 'static + WasiView>(linker: &mut Linker<T>) -> Result<()> {
     linker
-        .instance("wasi:filesystem/filesystem")?
+        .instance("wasi:filesystem/types")?
         .func_wrap(
             "append-via-stream",
             |_data: StoreContextMut<T>, (_this,): (Descriptor,)| -> Result<OutputStream> {
