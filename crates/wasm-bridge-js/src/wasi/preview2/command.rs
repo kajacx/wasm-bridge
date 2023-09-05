@@ -5,14 +5,11 @@ use crate::component::Linker;
 use crate::wasi::preview2::{clocks, WasiView};
 use crate::{Result, StoreContextMut};
 
-use super::environment;
+use super::stdio::{STDERR_IDENT, STDIN_IDENT, STDOUT_IDENT};
+use super::{environment, stdio};
 
 static WASI_IMPORTS_STR: &str =
     include_str!("../../../../../resources/transformed/preview2-shim/bundled.js");
-
-const STDIN_IDENT: u32 = 0;
-const STDOUT_IDENT: u32 = 1;
-const STDERR_IDENT: u32 = 2;
 
 pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
     // Default imports
@@ -66,7 +63,18 @@ pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()
             Ok(data.ctx_mut().random().next_u64())
         })?;
 
+    linker.instance("wasi:cli-base/exit")?.func_wrap(
+        "exit",
+        |_data: StoreContextMut<T>,
+         (_status,): (std::result::Result<(), ()>,)|
+         -> anyhow::Result<()> {
+            todo!("exit called");
+            // Ok(())
+        },
+    )?;
+
     clocks::add_to_linker(linker)?;
+    stdio::add_to_linker(linker)?;
 
     environment::add_to_linker(linker)?;
     Ok(())
