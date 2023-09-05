@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, iter::once, rc::Rc};
 
 use convert_case::Casing;
 use js_sys::{Object, Reflect};
@@ -9,6 +9,7 @@ use crate::{AsContextMut, DataHandle, DropHandle, Engine, Result};
 use super::*;
 
 pub struct Linker<T> {
+    aliases: Vec<String>,
     fns: Vec<PreparedFn<T>>,
     instances: HashMap<String, Linker<T>>,
     wasi_imports: Option<Object>,
@@ -20,6 +21,7 @@ impl<T> Linker<T> {
             fns: vec![],
             instances: HashMap::new(),
             wasi_imports: None,
+            aliases: vec![],
         }
     }
 
@@ -50,13 +52,15 @@ impl<T> Linker<T> {
             let _span = tracing::debug_span!("link instance", instance_name).entered();
             let instance_obj = Object::new();
 
-            for function in instance_linker.fns.iter() {
-                tracing::debug!(function = function.name.as_str(), "link instance func");
+            for instance_name in once(instance_name).chain(&instance_linker.aliases) {
+                for function in instance_linker.fns.iter() {
+                    tracing::debug!(function = function.name.as_str(), "link instance func");
 
-                let drop_handle =
-                    function.add_to_instance_imports(&instance_obj, data_handle.clone());
+                    let drop_handle =
+                        function.add_to_instance_imports(&instance_obj, data_handle.clone());
 
-                closures.push(drop_handle);
+                    closures.push(drop_handle);
+                }
             }
 
             Reflect::set(&import_object, &instance_name.into(), &instance_obj).unwrap();
@@ -110,6 +114,11 @@ impl<T> Linker<T> {
     #[cfg(feature = "wasi")]
     pub(crate) fn set_wasi_imports(&mut self, imports: Object) {
         self.wasi_imports = Some(imports);
+    }
+
+    pub(crate) fn alias(&mut self, dst: &str) -> &mut Self {
+        self.aliases.push(dst.into());
+        self
     }
 }
 
