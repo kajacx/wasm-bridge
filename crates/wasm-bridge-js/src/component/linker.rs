@@ -9,7 +9,6 @@ use crate::{AsContextMut, DataHandle, DropHandle, Engine, Result};
 use super::*;
 
 pub struct Linker<T> {
-    aliases: Vec<String>,
     fns: Vec<PreparedFn<T>>,
     instances: HashMap<String, Linker<T>>,
     wasi_imports: Option<Object>,
@@ -21,7 +20,6 @@ impl<T> Linker<T> {
             fns: vec![],
             instances: HashMap::new(),
             wasi_imports: None,
-            aliases: vec![],
         }
     }
 
@@ -62,10 +60,8 @@ impl<T> Linker<T> {
                 closures.push(drop_handle);
             }
 
-            for instance_name in once(instance_name).chain(&instance_linker.aliases) {
-                tracing::debug!(instance_name, "assign instance");
-                Reflect::set(&import_object, &instance_name.into(), &instance_obj).unwrap();
-            }
+            tracing::debug!(instance_name, "assign instance");
+            Reflect::set(&import_object, &instance_name.into(), &instance_obj).unwrap();
         }
 
         let closures = Rc::from(closures);
@@ -111,16 +107,6 @@ impl<T> Linker<T> {
             .instances
             .entry(name.to_owned())
             .or_insert_with(|| Linker::new(&Engine {}))) // TODO: engine re-creation
-    }
-
-    #[cfg(feature = "wasi")]
-    pub(crate) fn set_wasi_imports(&mut self, imports: Object) {
-        self.wasi_imports = Some(imports);
-    }
-
-    pub(crate) fn alias(&mut self, dst: &str) -> &mut Self {
-        self.aliases.push(dst.into());
-        self
     }
 }
 
