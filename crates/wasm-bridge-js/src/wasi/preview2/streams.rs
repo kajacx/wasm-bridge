@@ -24,7 +24,6 @@ pub(crate) fn add_to_linker<T: 'static + WasiView>(linker: &mut Linker<T>) -> Re
                 let mut bytes = vec![0u8; max_bytes as usize];
 
                 let (count, status) = data.ctx_mut().stdin().read(&mut bytes)?;
-                // tracing::debug!(?count, "bytes read");
 
                 bytes.truncate(count as _);
 
@@ -55,7 +54,6 @@ pub(crate) fn add_to_linker<T: 'static + WasiView>(linker: &mut Linker<T>) -> Re
             |data: StoreContextMut<T>,
              (id, buffer): (u32, Vec<u8>)|
              -> Result<Result<(u64, String), ()>> {
-                tracing::debug!(?id, "write");
                 let (bytes_written, status) = match id {
                     STDOUT_IDENT => data.ctx_mut().stdout().write(&buffer)?,
 
