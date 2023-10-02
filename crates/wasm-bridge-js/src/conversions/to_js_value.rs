@@ -240,6 +240,7 @@ impl<T: ToJsValue> ToJsValue for (T,) {
     type ReturnAbi = T::ReturnAbi;
 
     fn to_js_value(&self) -> JsValue {
+        tracing::info!("begin to_js_value {}", stringify!(T));
         self.0.to_js_value()
     }
 
@@ -252,6 +253,8 @@ impl<T: ToJsValue> ToJsValue for (T,) {
     }
 
     fn to_function_args(&self) -> Array {
+        let _span = tracing::info_span!("to_js_value", ty = std::any::type_name::<T>()).entered();
+
         self.0.to_function_args()
     }
 }
@@ -262,7 +265,10 @@ macro_rules! to_js_value_many {
             type ReturnAbi = JsValue;
 
             fn to_js_value(&self) -> JsValue {
-                self.to_function_args().into()
+                tracing::info!("begin to_js_value {}", stringify!(($($name, )*)));
+                let v = self.to_function_args().into();
+                tracing::info!("end to_js_value {}", stringify!(($($name, )*)));
+                v
             }
 
             fn into_return_abi(self) -> Result<Self::ReturnAbi, JsValue> {

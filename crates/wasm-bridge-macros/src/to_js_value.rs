@@ -6,16 +6,18 @@ use syn::{DataEnum, DataStruct};
 pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
     let mut impl_block = TokenStream::new();
 
-    for field in data.fields {
+    for (i, field) in data.fields.into_iter().enumerate() {
+        eprintln!("to field: {i} {:?}", field.ident);
         let field_name = field.ident;
 
-        let field_name_str = quote!(#field_name).to_string();
-        let field_name_converted = field_name_str.to_lower_camel_case();
+        // let field_name_str = quote!(#field_name).to_string();
+        // let field_name_converted = field_name_str.to_lower_camel_case();
 
         let tokens = quote!(
-            wasm_bridge::js_sys::Reflect::set(
+            tracing::info!("set field {} {:?}", #i, self.#field_name);
+            wasm_bridge::js_sys::Reflect::set_u32(
                 &value,
-                &wasm_bridge::helpers::static_str_to_js(#field_name_converted),
+                #i as u32,
                 &self.#field_name.to_js_value(),
             ).expect("value is object");
         );
@@ -28,10 +30,13 @@ pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
             type ReturnAbi = wasm_bridge::wasm_bindgen::JsValue;
 
             fn to_js_value(&self) -> wasm_bridge::wasm_bindgen::JsValue {
-                let value  = wasm_bridge::js_sys::Object::new();
+                let value  = wasm_bridge::js_sys::Array::new();
                 let value: wasm_bridge::wasm_bindgen::JsValue = value.into();
 
                 #impl_block
+
+                let n = stringify!(#name);
+                tracing::info!("impl ToJsValue for {} {value:?}", n);
 
                 value
             }
@@ -40,6 +45,7 @@ pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
                 Ok(self.to_js_value())
             }
         }
+
     }
 }
 

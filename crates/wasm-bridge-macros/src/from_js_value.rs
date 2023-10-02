@@ -7,18 +7,21 @@ pub fn from_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
     let mut impl_block = TokenStream::new();
     let mut fields_constructor = TokenStream::new();
 
-    for field in data.fields {
+    for (i, field) in data.fields.into_iter().enumerate() {
+        eprintln!("from field: {i} {:?}", field.ident);
         let field_type = field.ty;
         let field_name = field.ident;
 
-        let field_name_str = quote!(#field_name).to_string();
-        let field_name_converted = field_name_str.to_lower_camel_case();
+        // let field_name_str = quote!(#field_name).to_string();
+        // let field_name_converted = field_name_str.to_lower_camel_case();
 
         let tokens = quote!(
-            let js_field = wasm_bridge::js_sys::Reflect::get(value, &wasm_bridge::helpers::static_str_to_js(#field_name_converted))
+            let js_field = wasm_bridge::js_sys::Reflect::get_u32(value, #i as u32)
                 .map_err(wasm_bridge::helpers::map_js_error("Get struct field"))?;
+            tracing::info!("read field {} {:?}", #i, js_field);
             let #field_name = <#field_type>::from_js_value(&js_field)?;
         );
+
         impl_block.append_all(tokens);
 
         fields_constructor.append_all(quote!(#field_name, ));
