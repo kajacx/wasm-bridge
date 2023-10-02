@@ -6,6 +6,8 @@ use syn::{DataEnum, DataStruct};
 pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
     let mut impl_block = TokenStream::new();
 
+    let field_count = data.fields.len();
+
     for (i, field) in data.fields.into_iter().enumerate() {
         let field_name = field.ident;
 
@@ -27,7 +29,7 @@ pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
             type ReturnAbi = wasm_bridge::wasm_bindgen::JsValue;
 
             fn to_js_value(&self) -> wasm_bridge::wasm_bindgen::JsValue {
-                let value  = wasm_bridge::js_sys::Array::new();
+                let value  = wasm_bridge::js_sys::Array::new_with_length(#field_count as u32);
 
                 #impl_block
 
