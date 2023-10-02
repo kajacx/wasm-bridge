@@ -53,7 +53,7 @@ pub fn to_js_value_enum(name: Ident, data: DataEnum) -> TokenStream {
 
         let return_value = quote!(
             Self::#variant_name => {
-                wasm_bridge::helpers::static_str_to_js(#variant_name_converted)
+                wasm_bridge::helpers::static_str_to_js(#variant_name_converted).into()
             },
         );
 
