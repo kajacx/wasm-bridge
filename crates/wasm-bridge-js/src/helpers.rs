@@ -61,6 +61,7 @@ pub fn map_js_error<T: Debug + AsRef<JsValue>>(hint: &'static str) -> impl Fn(T)
 }
 
 /// From: https://github.com/cloudflare/serde-wasm-bindgen/blob/main/src/lib.rs
+#[inline]
 pub fn static_str_to_js(s: &'static str) -> JsString {
     use std::cell::RefCell;
     use std::collections::HashMap;
