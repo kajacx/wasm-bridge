@@ -94,11 +94,15 @@ pub fn static_str_to_js(s: &'static str) -> JsString {
         // instead of its value.
         static CACHE: RefCell<HashMap<*const str, JsString, PtrBuildHasher>> = Default::default();
     }
+
     CACHE.with(|cache| {
         cache
             .borrow_mut()
             .entry(s)
-            .or_insert_with(|| s.into())
+            .or_insert_with(|| {
+                tracing::debug!(?s, "adding static str to cache");
+                s.into()
+            })
             .clone()
     })
 }
