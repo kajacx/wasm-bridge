@@ -13,11 +13,10 @@ pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
         // let field_name_converted = field_name_str.to_lower_camel_case();
 
         let tokens = quote!(
-            wasm_bridge::js_sys::Reflect::set_u32(
-                &value,
+            value.set(
                 #i as u32,
-                &self.#field_name.to_js_value(),
-            ).expect("value is object");
+                self.#field_name.to_js_value(),
+            );
         );
 
         impl_block.append_all(tokens);
@@ -29,11 +28,10 @@ pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
 
             fn to_js_value(&self) -> wasm_bridge::wasm_bindgen::JsValue {
                 let value  = wasm_bridge::js_sys::Array::new();
-                let value: wasm_bridge::wasm_bindgen::JsValue = value.into();
 
                 #impl_block
 
-                let n = stringify!(#name);
+                let value: wasm_bridge::wasm_bindgen::JsValue = value.into();
 
                 value
             }
