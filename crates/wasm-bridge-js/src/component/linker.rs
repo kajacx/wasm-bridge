@@ -4,7 +4,7 @@ use convert_case::Casing;
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
-use crate::{AsContextMut, DataHandle, DropHandle, Engine, Result};
+use crate::{helpers::static_str_to_js, AsContextMut, DataHandle, DropHandle, Engine, Result};
 
 use super::*;
 
@@ -130,7 +130,7 @@ impl<T> PreparedFn<T> {
         let (js_val, handler) = (self.creator)(handle);
 
         let object: JsValue = Object::new().into();
-        Reflect::set(&object, &"default".into(), &js_val).expect("object is object");
+        Reflect::set(&object, &static_str_to_js("default"), &js_val).expect("object is object");
 
         Reflect::set(imports, &self.name.as_str().into(), &object).expect("imports is object");
 

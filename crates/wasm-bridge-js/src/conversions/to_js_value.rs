@@ -7,7 +7,7 @@ use wasm_bindgen::{
     JsValue,
 };
 
-use crate::Val;
+use crate::{helpers::static_str_to_js, Val};
 
 pub trait ToJsValue: Sized {
     type ReturnAbi: ReturnWasmAbi + IntoWasmAbi;
@@ -150,8 +150,8 @@ impl<T: ToJsValue, E: ToJsValue> ToJsValue for Result<T, E> {
             Ok(value) => ("ok", value.to_js_value()),
             Err(err) => ("err", err.to_js_value()),
         };
-        Reflect::set(&result, &"tag".into(), &tag.into()).unwrap();
-        Reflect::set(&result, &"val".into(), &val).unwrap();
+        Reflect::set(&result, &static_str_to_js("tag"), &tag.into()).unwrap();
+        Reflect::set(&result, &static_str_to_js("val"), &val).unwrap();
         result
     }
 
