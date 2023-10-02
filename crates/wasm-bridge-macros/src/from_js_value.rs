@@ -15,7 +15,7 @@ pub fn from_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
         let field_name_converted = field_name_str.to_lower_camel_case();
 
         let tokens = quote!(
-            let js_field = wasm_bridge::js_sys::Reflect::get(value, &wasm_bridge::string_interning::static_str_to_js(#field_name_converted))
+            let js_field = wasm_bridge::js_sys::Reflect::get(value, &wasm_bridge::helpers::static_str_to_js(#field_name_converted))
                 .map_err(wasm_bridge::helpers::map_js_error("Get struct field"))?;
             let #field_name = <#field_type>::from_js_value(&js_field)?;
         );

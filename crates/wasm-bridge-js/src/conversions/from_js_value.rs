@@ -223,7 +223,7 @@ impl<T: FromJsValue> FromJsValue for Vec<T> {
     type WasmAbi = JsValue;
 
     fn from_js_value(value: &JsValue) -> Result<Self> {
-        let length = Reflect::get(value, &"length".into())
+        let length = Reflect::get(value, &helpers::static_str_to_js("length"))
             .map_err(map_js_error("Get length of array"))?
             .as_f64()
             .context("Array length should be a number")? as u32;
