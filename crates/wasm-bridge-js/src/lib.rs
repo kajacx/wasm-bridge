@@ -1,4 +1,5 @@
 mod engine;
+pub mod string_interning;
 pub use engine::*;
 
 mod store;

@@ -15,7 +15,7 @@ pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
         let tokens = quote!(
             wasm_bridge::js_sys::Reflect::set(
                 &value,
-                &#field_name_converted.into(),
+                &wasm_bridge::string_interning::static_str_to_js(#field_name_converted),
                 &self.#field_name.to_js_value(),
             ).expect("value is object");
         );
