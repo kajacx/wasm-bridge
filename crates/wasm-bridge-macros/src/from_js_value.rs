@@ -15,7 +15,8 @@ pub fn from_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
         // let field_name_converted = field_name_str.to_lower_camel_case();
 
         let tokens = quote!(
-            let js_field = value.get(#i as u32);
+            let js_field = wasm_bridge::js_sys::Reflect::get_u32(value, #i as u32)
+                .map_err(wasm_bridge::helpers::map_js_error("Get struct field"))?;
             let #field_name = <#field_type>::from_js_value(&js_field)?;
         );
 
@@ -29,10 +30,6 @@ pub fn from_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
             type WasmAbi = wasm_bridge::wasm_bindgen::JsValue;
 
             fn from_js_value(value: &wasm_bridge::wasm_bindgen::JsValue) -> wasm_bridge::Result<Self> {
-                use wasm_bridge::wasm_bindgen::JsCast;
-
-                let value: &wasm_bridge::js_sys::Array = value .dyn_ref().unwrap();
-
                 #impl_block
 
                 Ok(Self { #fields_constructor })
