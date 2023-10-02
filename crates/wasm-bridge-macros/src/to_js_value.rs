@@ -1,4 +1,4 @@
-use heck::{ToKebabCase, ToLowerCamelCase};
+use heck::ToKebabCase;
 use proc_macro2::*;
 use quote::{quote, TokenStreamExt};
 use syn::{DataEnum, DataStruct};
@@ -7,14 +7,12 @@ pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
     let mut impl_block = TokenStream::new();
 
     for (i, field) in data.fields.into_iter().enumerate() {
-        eprintln!("to field: {i} {:?}", field.ident);
         let field_name = field.ident;
 
         // let field_name_str = quote!(#field_name).to_string();
         // let field_name_converted = field_name_str.to_lower_camel_case();
 
         let tokens = quote!(
-            tracing::info!("set field {} {:?}", #i, self.#field_name);
             wasm_bridge::js_sys::Reflect::set_u32(
                 &value,
                 #i as u32,
@@ -36,7 +34,6 @@ pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
                 #impl_block
 
                 let n = stringify!(#name);
-                tracing::info!("impl ToJsValue for {} {value:?}", n);
 
                 value
             }
