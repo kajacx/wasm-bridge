@@ -28,8 +28,14 @@ pub trait ToJsValue: Sized {
     }
 
     /// When converting Vec<Self> to JsValue, create array or Int32Array for example
-    fn create_array_of_size(size: u32) -> JsValue {
-        Array::new_with_length(size).into()
+    fn create_array(items: &[Self]) -> JsValue {
+        let array = Array::new();
+
+        for item in items {
+            array.push(&item.to_js_value());
+        }
+
+        array.into()
     }
 }
 
@@ -66,14 +72,40 @@ macro_rules! to_js_value_single {
                 Ok(self)
             }
 
-            fn create_array_of_size(size: u32) -> JsValue {
-                <$array>::new_with_length(size).into()
+            fn create_array(items: &[Self]) -> JsValue {
+                let array = <$array>::new_with_length(items.len() as u32);
+                for (i, &item) in items.iter().enumerate() {
+                    array.set_index(i as u32, item.into())
+                }
+
+                array.into()
             }
         }
     };
 }
+impl ToJsValue for bool {
+    type ReturnAbi = Self;
 
-to_js_value_single!(bool, Array);
+    fn to_js_value(&self) -> JsValue {
+        (*self).into()
+    }
+
+    fn into_return_abi(self) -> Result<Self::ReturnAbi, JsValue> {
+        Ok(self)
+    }
+
+    fn create_array(items: &[Self]) -> JsValue {
+        let array = Array::new();
+
+        for item in items {
+            array.push(&item.to_js_value());
+        }
+
+        array.into()
+    }
+}
+
+// to_js_value_single!(bool, Array);
 
 to_js_value_single!(i8, Int8Array);
 to_js_value_single!(i16, Int16Array);
@@ -188,9 +220,7 @@ impl<'a, T: ToJsValue> ToJsValue for &'a [T] {
 
     #[inline]
     fn to_js_value(&self) -> JsValue {
-        let array: Array = self.iter().map(|item| item.to_js_value()).collect();
-
-        array.into()
+        T::create_array(self)
     }
 
     fn into_return_abi(self) -> Result<Self::ReturnAbi, JsValue> {
