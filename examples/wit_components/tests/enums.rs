@@ -58,6 +58,7 @@ impl EnumsImports for HostData {
 #[wasm_bindgen_test::wasm_bindgen_test]
 fn enums() -> Result<()> {
     wit_components_tests::setup_tracing();
+
     let mut config = Config::new();
     config.wasm_component_model(true);
 

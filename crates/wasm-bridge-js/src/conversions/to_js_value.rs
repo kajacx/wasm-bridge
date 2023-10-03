@@ -145,14 +145,20 @@ impl<T: ToJsValue, E: ToJsValue> ToJsValue for Result<T, E> {
     type ReturnAbi = T::ReturnAbi;
 
     fn to_js_value(&self) -> JsValue {
-        let result: JsValue = Object::new().into();
-        let (tag, val) = match self {
-            Ok(value) => ("ok", value.to_js_value()),
-            Err(err) => ("err", err.to_js_value()),
+        let result = Array::new_with_length(2);
+
+        match self {
+            Ok(value) => {
+                result.set(0, 0u8.into());
+                result.set(1, value.to_js_value());
+            }
+            Err(err) => {
+                result.set(0, 1u8.into());
+                result.set(1, err.to_js_value());
+            }
         };
-        Reflect::set(&result, &static_str_to_js("tag"), &tag.into()).unwrap();
-        Reflect::set(&result, &static_str_to_js("val"), &val).unwrap();
-        result
+
+        result.into()
     }
 
     fn into_return_abi(self) -> Result<Self::ReturnAbi, JsValue> {

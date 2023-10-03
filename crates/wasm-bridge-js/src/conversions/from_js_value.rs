@@ -1,6 +1,6 @@
 use anyhow::Context;
-use js_sys::Reflect;
-use wasm_bindgen::{convert::FromWasmAbi, JsValue};
+use js_sys::{Array, Reflect};
+use wasm_bindgen::{convert::FromWasmAbi, JsCast, JsValue};
 
 use crate::{
     helpers::{map_js_error, static_str_to_js},
@@ -64,7 +64,7 @@ macro_rules! from_js_value_signed {
             fn from_js_value(value: &JsValue) -> Result<Self> {
                 match value.as_f64() {
                     Some(number) => Ok(number as _),
-                    None => Err(map_js_error("Expected a number")(value)),
+                    None => Err(map_js_error("Expected a signed number")(value)),
                 }
             }
 
@@ -104,7 +104,7 @@ macro_rules! from_js_value_unsigned {
                     // Value might be bigger than $name::MAX / 2 or smaller than 0
                     Some(number) if number < 0.0 => Ok(number as $signed as _),
                     Some(number) => Ok(number as _),
-                    None => Err(map_js_error("Expected a number")(value)),
+                    None => unreachable!("invalid type for number {value:?}"),
                 }
             }
 
@@ -187,22 +187,18 @@ impl<T: FromJsValue> FromJsValue for Option<T> {
 impl<T: FromJsValue, E: FromJsValue> FromJsValue for Result<T, E> {
     type WasmAbi = JsValue;
 
+    #[inline]
     fn from_js_value(value: &JsValue) -> Result<Self> {
         // TODO: better error handling
-        let tag = Reflect::get(value, &static_str_to_js("tag"))
-            .map_err(map_js_error("Get tag from result"))?
-            .as_string()
-            .context("Result tag should be string")?;
+        let value: &Array = value.dyn_ref().unwrap();
 
-        let val = Reflect::get(value, &static_str_to_js("val"))
-            .map_err(map_js_error("Get val from result"))?;
+        let tag = u8::from_js_value(&value.get(0)).context(anyhow::anyhow!("in result"))?;
+        let value = value.get(1);
 
-        if tag == "ok" {
-            Ok(Ok(T::from_js_value(&val)?))
-        } else if tag == "err" {
-            Ok(Err(E::from_js_value(&val)?))
-        } else {
-            Err(map_js_error("Unknown result tag")(value))
+        match tag {
+            0 => Ok(Ok(T::from_js_value(&value)?)),
+            1 => Ok(Err(E::from_js_value(&value)?)),
+            _ => Err(map_js_error("Unknown result tag")(value)),
         }
     }
 
