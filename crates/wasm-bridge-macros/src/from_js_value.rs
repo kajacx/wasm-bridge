@@ -11,11 +11,10 @@ pub fn from_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
         let field_type = field.ty;
         let field_name = field.ident;
 
-        // let field_name_str = quote!(#field_name).to_string();
-        // let field_name_converted = field_name_str.to_lower_camel_case();
+        let i = i as u32;
 
         let tokens = quote!(
-            let js_field = value.get(#i as u32);
+            let js_field = value.get(#i);
             let #field_name = <#field_type>::from_js_value(&js_field)?;
         );
 
@@ -49,7 +48,7 @@ pub fn from_js_value_enum(name: Ident, data: DataEnum) -> TokenStream {
     let tokens = data.variants.into_iter().enumerate().map(|(i, variant)| {
         let variant_name = variant.ident;
 
-        let i = i as u32;
+        let i = i as u8;
         quote!(
             #i => {
                 return Ok(Self::#variant_name)
@@ -62,7 +61,7 @@ pub fn from_js_value_enum(name: Ident, data: DataEnum) -> TokenStream {
             type WasmAbi = wasm_bridge::wasm_bindgen::JsValue;
 
             fn from_js_value(value: &wasm_bridge::wasm_bindgen::JsValue) -> wasm_bridge::Result<Self> {
-                let tag = u32::from_js_value(value)?;
+                let tag = u8::from_js_value(value)?;
                 match tag {
                     #(#tokens)*
                     _ => {
@@ -82,9 +81,8 @@ pub fn from_js_value_enum(name: Ident, data: DataEnum) -> TokenStream {
 pub fn from_js_value_variant(name: Ident, data: DataEnum) -> TokenStream {
     let tokens = data.variants.into_iter().enumerate().map(|(i, variant)| {
         let variant_name = variant.ident;
-        let variant_name_str = quote!(#variant_name).to_string();
 
-        let i = i as u32;
+        let i = i as u8;
 
         let field = variant.fields.iter().next();
 
@@ -111,16 +109,8 @@ pub fn from_js_value_variant(name: Ident, data: DataEnum) -> TokenStream {
                 use wasm_bridge::wasm_bindgen::JsCast;
                 let value: &wasm_bridge::js_sys::Array = value.dyn_ref().expect("variant is array");
 
-                let tag = u32::from_js_value(&value.get(0))?;
+                let tag = u8::from_js_value(&value.get(0))?;
                 let val = value.get(1);
-                // let tag = wasm_bridge::js_sys::Reflect::get(value, &wasm_bridge::helpers::static_str_to_js("tag"))
-                //     .map_err(wasm_bridge::helpers::map_js_error("Get variant tag"))?
-                //     .as_string()
-                //     .ok_or(value)
-                //     .map_err(wasm_bridge::helpers::map_js_error("Variant tag should be a string"))?;
-
-                // let val = wasm_bridge::js_sys::Reflect::get(value, &wasm_bridge::helpers::static_str_to_js("val"))
-                //     .map_err(wasm_bridge::helpers::map_js_error("Get variant val"))?;
 
                 match tag {
                     #(#tokens)*

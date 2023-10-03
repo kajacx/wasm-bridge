@@ -22,12 +22,14 @@ pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
         impl_block.append_all(tokens);
     }
 
+    let field_count = field_count as u32;
+
     quote! {
         impl wasm_bridge::ToJsValue for #name {
             type ReturnAbi = wasm_bridge::wasm_bindgen::JsValue;
 
             fn to_js_value(&self) -> wasm_bridge::wasm_bindgen::JsValue {
-                let value  = wasm_bridge::js_sys::Array::new_with_length(#field_count as u32);
+                let value  = wasm_bridge::js_sys::Array::new_with_length(#field_count);
 
                 #impl_block
 
@@ -52,10 +54,10 @@ pub fn to_js_value_enum(name: Ident, data: DataEnum) -> TokenStream {
         // let variant_name_str = quote!(#variant_name).to_string();
         // let variant_name_converted = variant_name_str.to_kebab_case();
 
+        let i = i as u8;
         let return_value = quote!(
             Self::#variant_name => {
-                (#i as u32).into()
-                // wasm_bridge::helpers::static_str_to_js(#variant_name_converted).into()
+                #i.into()
             },
         );
 
@@ -80,8 +82,6 @@ pub fn to_js_value_enum(name: Ident, data: DataEnum) -> TokenStream {
 }
 
 pub fn to_js_value_variant(name: Ident, data: DataEnum) -> TokenStream {
-    let mut impl_block = TokenStream::new();
-
     let init_block = quote! {
 
         // [ tag, val ]
@@ -98,7 +98,7 @@ pub fn to_js_value_variant(name: Ident, data: DataEnum) -> TokenStream {
         .into_iter()
         .enumerate()
         .flat_map(|(i, variant)| {
-            let i = i as u32;
+            let i = i as u8;
             let variant_name = variant.ident;
 
             let field = variant.fields.iter().next();
@@ -107,14 +107,12 @@ pub fn to_js_value_variant(name: Ident, data: DataEnum) -> TokenStream {
                     Self::#variant_name(value) => {
                         result.set(0, #i.into());
                         result.set(1, value.to_js_value());
-                        // wasm_bridge::js_sys::Reflect::set(&result, &wasm_bridge::helpers::static_str_to_js("val"), &value.to_js_value()).expect("result is object");
                     },
                 )
             } else {
                 quote!(
                     Self::#variant_name => {
                         result.set(0, #i.into());
-                        // #create_result
                     },
                 )
             }
