@@ -20,5 +20,12 @@
         "qf": {
             "compiler": "cargo"
         }
+    },
+    "build-guest": {
+        "cmd": "build_guest.sh",
+        "qf": {
+            "compiler": "cargo"
+        },
+        "cwd": "./examples/wit_components/"
     }
 }

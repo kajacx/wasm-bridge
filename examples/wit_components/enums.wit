@@ -1,0 +1,43 @@
+package component-test:wit-protocol
+
+world enums {
+  // Variant enums
+  variant shape {
+    circle(float32),
+    rectangle(tuple<float32, float32>),
+    semi-circle(tuple<float32, float32>),
+    point
+  }
+
+  import double-shape: func(shape: shape) -> shape
+  export quadruple-shape: func(shape: shape) -> shape
+
+  // "Normal" enums
+  enum direction {
+    left,
+    right,
+    up,
+    down,
+    stay-center,
+  }
+
+  import rotate-cw: func(way: direction) -> direction
+  export rotate-ccw: func(way: direction) -> direction
+
+  // Option
+  import sqrt-import: func(num: option<float64>) -> option<float64>
+  export sqrt: func(num: option<float64>) -> option<float64>
+
+  // Results
+  import add-one-both: func(num: result<s32, u8>) -> result<s32, u8>
+  export add-three-both: func(num: result<s32, u8>) -> result<s32, u8>
+
+  import add-one-ok: func(num: result<s32>) -> result<s32>
+  export add-three-ok: func(num: result<s32>) -> result<s32>
+
+  import add-one-err: func(num: result<_, u8>) -> result<_, u8>
+  export add-three-err: func(num: result<_, u8>) -> result<_, u8>
+
+  import add-one-none: func(num: result) -> result
+  export add-three-none: func(num: result) -> result
+}
