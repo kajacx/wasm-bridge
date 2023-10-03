@@ -14,11 +14,9 @@ pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
         // let field_name_str = quote!(#field_name).to_string();
         // let field_name_converted = field_name_str.to_lower_camel_case();
 
+        let i = i as u32;
         let tokens = quote!(
-            value.set(
-                #i as u32,
-                self.#field_name.to_js_value(),
-            );
+            value.set(#i, self.#field_name.to_js_value());
         );
 
         impl_block.append_all(tokens);
@@ -49,14 +47,15 @@ pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
 pub fn to_js_value_enum(name: Ident, data: DataEnum) -> TokenStream {
     let mut impl_block = TokenStream::new();
 
-    for variant in data.variants {
+    for (i, variant) in data.variants.into_iter().enumerate() {
         let variant_name = variant.ident;
-        let variant_name_str = quote!(#variant_name).to_string();
-        let variant_name_converted = variant_name_str.to_kebab_case();
+        // let variant_name_str = quote!(#variant_name).to_string();
+        // let variant_name_converted = variant_name_str.to_kebab_case();
 
         let return_value = quote!(
             Self::#variant_name => {
-                wasm_bridge::helpers::static_str_to_js(#variant_name_converted).into()
+                (#i as u32).into()
+                // wasm_bridge::helpers::static_str_to_js(#variant_name_converted).into()
             },
         );
 
@@ -83,45 +82,56 @@ pub fn to_js_value_enum(name: Ident, data: DataEnum) -> TokenStream {
 pub fn to_js_value_variant(name: Ident, data: DataEnum) -> TokenStream {
     let mut impl_block = TokenStream::new();
 
-    for variant in data.variants {
-        let variant_name = variant.ident;
-        let variant_name_str = quote!(#variant_name).to_string();
-        let variant_name_converted = variant_name_str.to_kebab_case();
+    let init_block = quote! {
 
-        let create_result = quote!(
-            let result = wasm_bridge::js_sys::Object::new();
-            let result: wasm_bridge::wasm_bindgen::JsValue = result.into();
-            wasm_bridge::js_sys::Reflect::set(&result, &wasm_bridge::helpers::static_str_to_js("tag"), &wasm_bridge::helpers::static_str_to_js(#variant_name_converted)).expect("result is object");
-        );
+        // [ tag, val ]
+        let result = wasm_bridge::js_sys::Array::new_with_length(2);
+    };
 
-        let field = variant.fields.iter().next();
-        let return_value = match field {
-            Some(_) => quote!(
-                Self::#variant_name(value) => {
-                    #create_result
-                    wasm_bridge::js_sys::Reflect::set(&result, &wasm_bridge::helpers::static_str_to_js("val"), &value.to_js_value()).expect("result is object");
-                    result
-                }
-            ),
-            None => quote!(
-                Self::#variant_name => {
-                    #create_result
-                    result
-                }
-            ),
-        };
+    let ret_block = quote! {
+        let result: wasm_bridge::wasm_bindgen::JsValue = result.into();
+        result
+    };
 
-        impl_block.append_all(return_value);
-    }
+    let variants: TokenStream = data
+        .variants
+        .into_iter()
+        .enumerate()
+        .flat_map(|(i, variant)| {
+            let i = i as u32;
+            let variant_name = variant.ident;
+
+            let field = variant.fields.iter().next();
+            if field.is_some() {
+                quote!(
+                    Self::#variant_name(value) => {
+                        result.set(0, #i.into());
+                        result.set(1, value.to_js_value());
+                        // wasm_bridge::js_sys::Reflect::set(&result, &wasm_bridge::helpers::static_str_to_js("val"), &value.to_js_value()).expect("result is object");
+                    },
+                )
+            } else {
+                quote!(
+                    Self::#variant_name => {
+                        result.set(0, #i.into());
+                        // #create_result
+                    },
+                )
+            }
+        })
+        .collect();
 
     quote! {
         impl wasm_bridge::ToJsValue for #name {
             type ReturnAbi = wasm_bridge::wasm_bindgen::JsValue;
 
             fn to_js_value(&self) -> wasm_bridge::wasm_bindgen::JsValue {
+                #init_block
                 match self {
-                    #impl_block
+                    #variants
                 }
+
+                #ret_block
             }
 
             fn into_return_abi(self) -> Result<Self::ReturnAbi, wasm_bridge::wasm_bindgen::JsValue> {

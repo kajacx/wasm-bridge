@@ -13,7 +13,8 @@ members = [
 ]
 
 exclude = [
-  "tests/"
+  "tests/",
+  "jco/"
 ]
 
 [workspace.package]
