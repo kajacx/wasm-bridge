@@ -186,13 +186,11 @@ impl<'a, T: ToJsValue> ToJsValue for &'a T {
 impl<'a, T: ToJsValue> ToJsValue for &'a [T] {
     type ReturnAbi = JsValue;
 
+    #[inline]
     fn to_js_value(&self) -> JsValue {
-        let array = T::create_array_of_size(self.len() as _);
-        self.iter().enumerate().for_each(|(index, item)| {
-            // TODO: set_index is probably faster to Int32Array and "friends"
-            Reflect::set_u32(&array, index as _, &item.to_js_value()).expect("array is array");
-        });
-        array
+        let array: Array = self.iter().map(|item| item.to_js_value()).collect();
+
+        array.into()
     }
 
     fn into_return_abi(self) -> Result<Self::ReturnAbi, JsValue> {
