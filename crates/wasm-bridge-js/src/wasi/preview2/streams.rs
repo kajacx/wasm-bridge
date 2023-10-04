@@ -15,7 +15,7 @@ pub(crate) fn add_to_linker<T: 'static + WasiView>(linker: &mut Linker<T>) -> Re
             "read",
             |data: StoreContextMut<T>,
              (id, max_bytes): (u32, u64)|
-             -> Result<Result<(Vec<u8>, String), ()>> {
+             -> Result<Result<(Vec<u8>, u8), ()>> {
                 // tracing::debug!(?id, ?max_bytes, "read");
                 if id != STDIN_IDENT {
                     bail!("unexpected read stream id: {id}")
@@ -34,7 +34,7 @@ pub(crate) fn add_to_linker<T: 'static + WasiView>(linker: &mut Linker<T>) -> Re
             "blocking-read",
             |data: StoreContextMut<T>,
              (id, max_bytes): (u32, u64)|
-             -> Result<Result<(Vec<u8>, String), ()>> {
+             -> Result<Result<(Vec<u8>, u8), ()>> {
                 tracing::debug!(?id, ?max_bytes, "blocking-read");
                 if id != STDIN_IDENT {
                     bail!("unexpected read stream id: {id}")
@@ -53,7 +53,7 @@ pub(crate) fn add_to_linker<T: 'static + WasiView>(linker: &mut Linker<T>) -> Re
             "write",
             |data: StoreContextMut<T>,
              (id, buffer): (u32, Vec<u8>)|
-             -> Result<Result<(u64, String), ()>> {
+             -> Result<Result<(u64, u8), ()>> {
                 let (bytes_written, status) = match id {
                     STDOUT_IDENT => data.ctx_mut().stdout().write(&buffer)?,
 
@@ -70,7 +70,7 @@ pub(crate) fn add_to_linker<T: 'static + WasiView>(linker: &mut Linker<T>) -> Re
             "blocking-write",
             |data: StoreContextMut<T>,
              (id, buffer): (u32, Vec<u8>)|
-             -> Result<Result<(u64, String), ()>> {
+             -> Result<Result<(u64, u8), ()>> {
                 tracing::debug!(?id, "blocking-write");
                 let (bytes_written, status) = match id {
                     STDOUT_IDENT => data.ctx_mut().stdout().write(&buffer)?,

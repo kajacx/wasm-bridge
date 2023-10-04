@@ -11,10 +11,18 @@ pub enum StreamStatus {
     Ended,
 }
 impl StreamStatus {
-    pub(crate) fn to_variant(&self) -> String {
+    pub(crate) fn to_variant(&self) -> u8 {
         match self {
-            Self::Open => "open".into(),
-            Self::Ended => "ended".into(),
+            Self::Open => 0,
+            Self::Ended => 1,
+        }
+    }
+
+    pub(crate) fn from_variant(variant: u8) -> Self {
+        match variant {
+            0 => Self::Open,
+            1 => Self::Ended,
+            _ => unreachable!("invalid stream status variant: {variant}"),
         }
     }
 }
