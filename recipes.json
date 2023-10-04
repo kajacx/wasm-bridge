@@ -6,8 +6,10 @@
             "--node",
             "./examples/wasi_components/"
         ],
-        "qf": {
-            "compiler": "cargo"
+        "components": {
+            "qf": {
+                "compiler": "cargo"
+            }
         }
     },
     "test-wit": {
@@ -17,15 +19,19 @@
             "--node",
             "./examples/wit_components/"
         ],
-        "qf": {
-            "compiler": "cargo"
+        "components": {
+            "qf": {
+                "compiler": "cargo"
+            }
         }
     },
     "build-guest": {
         "cmd": "build_guest.sh",
-        "qf": {
-            "compiler": "cargo"
-        },
-        "cwd": "./examples/wit_components/"
+        "cwd": "./examples/wit_components/",
+        "components": {
+            "qf": {
+                "compiler": "cargo"
+            }
+        }
     }
 }

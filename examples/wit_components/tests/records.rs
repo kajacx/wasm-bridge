@@ -11,8 +11,17 @@ wasm_bridge::component::bindgen!({
 
 struct Host;
 impl RecordsImports for Host {
-    fn create_player(&mut self, name: String, inventory: Vec<u32>) -> Result<Player> {
-        Ok(Player { name, inventory })
+    fn create_player(
+        &mut self,
+        name: String,
+        inventory: Vec<String>,
+        counts: Vec<u32>,
+    ) -> Result<Player> {
+        Ok(Player {
+            name,
+            inventory,
+            counts,
+        })
     }
 }
 
@@ -33,17 +42,11 @@ fn records() {
 
     let (instance, _) = Records::instantiate(&mut store, &component, &linker).unwrap();
 
-    let result = instance
-        .call_get_inventory(
-            &mut store,
-            &Player {
-                name: "Foo".into(),
-                inventory: vec![2, 6, 7],
-            },
-        )
-        .unwrap();
+    let result = instance.call_get_inventory(&mut store).unwrap();
 
-    assert_eq!(result, vec![2, 6, 7]);
+    assert_eq!(result, ["sword", "shield", "apple"]);
+    let result = instance.call_get_counts(&mut store).unwrap();
+    assert_eq!(result, [1, 2, 5]);
 }
 
 const GUEST_BYTES: &[u8] =

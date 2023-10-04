@@ -7,7 +7,7 @@ use wasm_bindgen::{
     JsValue,
 };
 
-use crate::{helpers::static_str_to_js, Val};
+use crate::Val;
 
 pub trait ToJsValue: Sized {
     type ReturnAbi: ReturnWasmAbi + IntoWasmAbi;
