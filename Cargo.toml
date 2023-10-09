@@ -1,5 +1,5 @@
 [workspace]
-
+resolver = "2"
 members = [
   "crates/wasm-bridge",
   "crates/wasm-bridge-js",
