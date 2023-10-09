@@ -25,6 +25,5 @@ wat = ["wasmtime/wat", "wasm-bridge-js/wat"]
 component-model = ["wasmtime/component-model", "wasm-bridge-macros", "wasm-bridge-js/component-model"]
 async = ["wasmtime/async", "async-trait", "wasm-bridge-macros/async", "wasm-bridge-js/async"]
 sync = ["wasmtime-wasi/sync"]
-wasi = ["wasmtime-wasi",  "wasm-bridge-js/wasi", "async"]
 error-logging = ["wasm-bridge-js/error-logging"]
 

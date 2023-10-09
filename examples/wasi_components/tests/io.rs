@@ -222,7 +222,7 @@ impl OutputStream for OutStream {
 #[cfg(not(target_arch = "wasm32"))]
 #[wasm_bridge::async_trait]
 impl HostOutputStream for OutStream {
-    fn write(&mut self, bytes: Bytes) -> Result<(usize, StreamState), wasm_bridge::Error> {
+    fn write(&mut self, bytes: Bytes) -> Result<usize, StreamResult> {
         let amount = bytes.len().min(self.max);
         self.data.try_lock().unwrap().extend(&bytes[..amount]);
         Ok((amount, StreamState::Open))

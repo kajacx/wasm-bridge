@@ -1,7 +1,8 @@
-use heck::ToKebabCase;
 use proc_macro2::*;
-use quote::{quote, TokenStreamExt};
+use quote::{format_ident, quote, TokenStreamExt};
 use syn::{DataEnum, DataStruct};
+
+use crate::original::component::Flags;
 
 pub fn to_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
     let mut impl_block = TokenStream::new();

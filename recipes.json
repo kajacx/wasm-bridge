@@ -33,5 +33,15 @@
                 "compiler": "cargo"
             }
         }
+    },
+    "build wasm-bridge-wasi": {
+        "cmd": [
+            "cargo",
+            "build",
+            "--target",
+            "wasm32-unknown-unknown",
+            "-p",
+            "wasm-bridge-wasi"
+        ]
     }
 }
