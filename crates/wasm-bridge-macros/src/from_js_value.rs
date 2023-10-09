@@ -44,6 +44,37 @@ pub fn from_js_value_struct(name: Ident, data: DataStruct) -> TokenStream {
     }
 }
 
+pub(crate) fn from_js_value_flags(name: Ident, flags: &Flags) -> TokenStream {
+    let fields = flags.flags.iter().enumerate().map(|(i, field)| {
+        let field_name = format_ident!("{}", field.name);
+
+        let i = i as u32;
+
+        quote!(
+            #field_name: value & (1 << #i) != 0,
+        )
+    });
+
+    quote! {
+        impl wasm_bridge::FromJsValue for #name {
+            type WasmAbi = wasm_bridge::wasm_bindgen::JsValue;
+
+            fn from_js_value(value: &wasm_bridge::wasm_bindgen::JsValue) -> wasm_bridge::Result<Self> {
+                use wasm_bridge::wasm_bindgen::JsCast;
+
+                let value = u32::from_js_value(value)?;
+
+                Ok( Self {
+                    #(#fields)*
+                } )
+            }
+
+            fn from_wasm_abi(abi: Self::WasmAbi) -> wasm_bridge::Result<Self> {
+                Self::from_js_value(&abi)
+            }
+        }
+    }
+}
 pub fn from_js_value_enum(name: Ident, data: DataEnum) -> TokenStream {
     let tokens = data.variants.into_iter().enumerate().map(|(i, variant)| {
         let variant_name = variant.ident;
