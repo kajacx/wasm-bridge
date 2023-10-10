@@ -9,6 +9,7 @@ use wasm_bindgen::{
 
 use crate::Val;
 
+/// Used for converting a host side rust type into a splat of arguments
 pub trait ToJsValue: Sized {
     type ReturnAbi: ReturnWasmAbi + IntoWasmAbi;
 

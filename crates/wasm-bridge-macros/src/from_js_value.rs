@@ -1,4 +1,3 @@
-use heck::{ToKebabCase, ToLowerCamelCase};
 use proc_macro2::*;
 use quote::{format_ident, quote, TokenStreamExt};
 use syn::{DataEnum, DataStruct};
