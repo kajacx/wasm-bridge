@@ -1,10 +1,10 @@
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, iter::once, rc::Rc};
 
-use heck::ToLowerCamelCase;
+use convert_case::Casing;
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
-use crate::{AsContextMut, DataHandle, DropHandle, Engine, Result};
+use crate::{helpers::static_str_to_js, AsContextMut, DataHandle, DropHandle, Engine, Result};
 
 use super::*;
 
@@ -29,9 +29,12 @@ impl<T> Linker<T> {
         component: &Component,
     ) -> Result<Instance> {
         let import_object = js_sys::Object::new();
+
         if let Some(imports) = &self.wasi_imports {
+            tracing::debug!("assign wasi imports");
             js_sys::Object::assign(&import_object, imports);
         }
+
         let import_object: JsValue = import_object.into();
 
         let mut closures = Vec::with_capacity(self.fns.len());
@@ -42,15 +45,22 @@ impl<T> Linker<T> {
             closures.push(drop_handle);
         }
 
+        // JCO makes instance functions use camel case
         for (instance_name, instance_linker) in self.instances.iter() {
+            let _span = tracing::debug_span!("link instance", instance_name).entered();
+
             let instance_obj = Object::new();
 
             for function in instance_linker.fns.iter() {
+                tracing::debug!(function = function.name.as_str(), "link instance func");
+
                 let drop_handle =
                     function.add_to_instance_imports(&instance_obj, data_handle.clone());
+
                 closures.push(drop_handle);
             }
 
+            tracing::debug!(instance_name, "assign instance");
             Reflect::set(&import_object, &instance_name.into(), &instance_obj).unwrap();
         }
 
@@ -72,7 +82,7 @@ impl<T> Linker<T> {
         self
     }
 
-    pub fn func_wrap<Params, Results, F>(&mut self, name: &str, func: F) -> Result<()>
+    pub fn func_wrap<Params, Results, F>(&mut self, name: &str, func: F) -> Result<&mut Self>
     where
         T: 'static,
         F: IntoMakeClosure<T, Params, Results>,
@@ -80,10 +90,10 @@ impl<T> Linker<T> {
         self.fns
             .push(PreparedFn::new(name, func.into_make_closure()));
 
-        Ok(())
+        Ok(self)
     }
 
-    pub fn func_wrap_async<Params, Results, F>(&mut self, name: &str, func: F) -> Result<()>
+    pub fn func_wrap_async<Params, Results, F>(&mut self, name: &str, func: F) -> Result<&mut Self>
     where
         T: 'static,
         F: IntoMakeClosure<T, Params, Results>,
@@ -97,11 +107,6 @@ impl<T> Linker<T> {
             .instances
             .entry(name.to_owned())
             .or_insert_with(|| Linker::new(&Engine {}))) // TODO: engine re-creation
-    }
-
-    #[cfg(feature = "wasi")]
-    pub(crate) fn set_wasi_imports(&mut self, imports: Object) {
-        self.wasi_imports = Some(imports);
     }
 }
 
@@ -121,10 +126,11 @@ impl<T> PreparedFn<T> {
 
     #[must_use]
     fn add_to_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandle {
+        tracing::debug!("import func {}", self.name);
         let (js_val, handler) = (self.creator)(handle);
 
         let object: JsValue = Object::new().into();
-        Reflect::set(&object, &"default".into(), &js_val).expect("object is object");
+        Reflect::set(&object, &static_str_to_js("default"), &js_val).expect("object is object");
 
         Reflect::set(imports, &self.name.as_str().into(), &object).expect("imports is object");
 
@@ -135,8 +141,11 @@ impl<T> PreparedFn<T> {
     fn add_to_instance_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandle {
         let (js_val, handler) = (self.creator)(handle);
 
-        Reflect::set(imports, &self.name.to_lower_camel_case().into(), &js_val)
-            .expect("imports is object");
+        let name = self.name.to_case(convert_case::Case::Camel);
+
+        tracing::debug!(?name, "instance func");
+
+        Reflect::set(imports, &name.into(), &js_val).expect("imports is object");
 
         handler
     }

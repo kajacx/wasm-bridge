@@ -55,7 +55,7 @@ impl Instance {
     }
 
     fn from_js_object(instance: JsValue, closures: Vec<DropHandle>) -> Result<Self> {
-        let exports = Reflect::get(&instance, &"exports".into())
+        let exports = Reflect::get(&instance, &helpers::static_str_to_js("exports"))
             .map_err(map_js_error("Get instance's exports"))?;
 
         Ok(Self {

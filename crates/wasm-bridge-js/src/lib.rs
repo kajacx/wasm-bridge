@@ -27,9 +27,6 @@ pub mod helpers;
 #[cfg(feature = "component-model")]
 pub mod component;
 
-#[cfg(feature = "wasi")]
-pub mod wasi;
-
 #[cfg(feature = "async")]
 pub use wasm_bridge_macros::async_trait;
 

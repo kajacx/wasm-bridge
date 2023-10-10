@@ -1,13 +1,21 @@
 [workspace]
-
+resolver = "2"
 members = [
   "crates/wasm-bridge",
   "crates/wasm-bridge-js",
+  "crates/wasm-bridge-wasi",
   "crates/wasm-bridge-macros",
+
+  "examples/wit_components/",
+  "examples/wit_components/guest/*/",
+
+  "examples/wasi_components/",
+  "examples/wasi_components/guest/*",
 ]
 
 exclude = [
-  "tests/"
+  "tests/",
+  "jco/"
 ]
 
 [workspace.package]

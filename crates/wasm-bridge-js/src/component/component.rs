@@ -50,6 +50,7 @@ impl Component {
         import_object: &JsValue,
         closures: Rc<[DropHandle]>,
     ) -> Result<Instance> {
+        tracing::debug!("instantiate {:#?}", import_object);
         let exports = self
             .instantiate
             .call3(

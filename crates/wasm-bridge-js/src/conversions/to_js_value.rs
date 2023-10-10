@@ -9,6 +9,7 @@ use wasm_bindgen::{
 
 use crate::Val;
 
+/// Used for converting a host side rust type into a splat of arguments
 pub trait ToJsValue: Sized {
     type ReturnAbi: ReturnWasmAbi + IntoWasmAbi;
 
@@ -28,8 +29,14 @@ pub trait ToJsValue: Sized {
     }
 
     /// When converting Vec<Self> to JsValue, create array or Int32Array for example
-    fn create_array_of_size(size: u32) -> JsValue {
-        Array::new_with_length(size).into()
+    fn create_array(items: &[Self]) -> JsValue {
+        let array = Array::new();
+
+        for item in items {
+            array.push(&item.to_js_value());
+        }
+
+        array.into()
     }
 }
 
@@ -66,14 +73,40 @@ macro_rules! to_js_value_single {
                 Ok(self)
             }
 
-            fn create_array_of_size(size: u32) -> JsValue {
-                <$array>::new_with_length(size).into()
+            fn create_array(items: &[Self]) -> JsValue {
+                let array = <$array>::new_with_length(items.len() as u32);
+                for (i, &item) in items.iter().enumerate() {
+                    array.set_index(i as u32, item.into())
+                }
+
+                array.into()
             }
         }
     };
 }
+impl ToJsValue for bool {
+    type ReturnAbi = Self;
 
-to_js_value_single!(bool, Array);
+    fn to_js_value(&self) -> JsValue {
+        (*self).into()
+    }
+
+    fn into_return_abi(self) -> Result<Self::ReturnAbi, JsValue> {
+        Ok(self)
+    }
+
+    fn create_array(items: &[Self]) -> JsValue {
+        let array = Array::new();
+
+        for item in items {
+            array.push(&item.to_js_value());
+        }
+
+        array.into()
+    }
+}
+
+// to_js_value_single!(bool, Array);
 
 to_js_value_single!(i8, Int8Array);
 to_js_value_single!(i16, Int16Array);
@@ -145,14 +178,20 @@ impl<T: ToJsValue, E: ToJsValue> ToJsValue for Result<T, E> {
     type ReturnAbi = T::ReturnAbi;
 
     fn to_js_value(&self) -> JsValue {
-        let result: JsValue = Object::new().into();
-        let (tag, val) = match self {
-            Ok(value) => ("ok", value.to_js_value()),
-            Err(err) => ("err", err.to_js_value()),
+        let result = Array::new_with_length(2);
+
+        match self {
+            Ok(value) => {
+                result.set(0, 0u8.into());
+                result.set(1, value.to_js_value());
+            }
+            Err(err) => {
+                result.set(0, 1u8.into());
+                result.set(1, err.to_js_value());
+            }
         };
-        Reflect::set(&result, &"tag".into(), &tag.into()).unwrap();
-        Reflect::set(&result, &"val".into(), &val).unwrap();
-        result
+
+        result.into()
     }
 
     fn into_return_abi(self) -> Result<Self::ReturnAbi, JsValue> {
@@ -180,13 +219,9 @@ impl<'a, T: ToJsValue> ToJsValue for &'a T {
 impl<'a, T: ToJsValue> ToJsValue for &'a [T] {
     type ReturnAbi = JsValue;
 
+    #[inline]
     fn to_js_value(&self) -> JsValue {
-        let array = T::create_array_of_size(self.len() as _);
-        self.iter().enumerate().for_each(|(index, item)| {
-            // TODO: set_index is probably faster to Int32Array and "friends"
-            Reflect::set_u32(&array, index as _, &item.to_js_value()).expect("array is array");
-        });
-        array
+        T::create_array(self)
     }
 
     fn into_return_abi(self) -> Result<Self::ReturnAbi, JsValue> {
@@ -240,6 +275,7 @@ impl<T: ToJsValue> ToJsValue for (T,) {
     type ReturnAbi = T::ReturnAbi;
 
     fn to_js_value(&self) -> JsValue {
+        tracing::info!("begin to_js_value {}", stringify!(T));
         self.0.to_js_value()
     }
 

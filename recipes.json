@@ -1,0 +1,47 @@
+{
+    "test-wasi": {
+        "cmd": [
+            "wasm-pack",
+            "test",
+            "--node",
+            "./examples/wasi_components/"
+        ],
+        "components": {
+            "qf": {
+                "compiler": "cargo"
+            }
+        }
+    },
+    "test-wit": {
+        "cmd": [
+            "wasm-pack",
+            "test",
+            "--node",
+            "./examples/wit_components/"
+        ],
+        "components": {
+            "qf": {
+                "compiler": "cargo"
+            }
+        }
+    },
+    "build-guest": {
+        "cmd": "build_guest.sh",
+        "cwd": "./examples/wit_components/",
+        "components": {
+            "qf": {
+                "compiler": "cargo"
+            }
+        }
+    },
+    "build wasm-bridge-wasi": {
+        "cmd": [
+            "cargo",
+            "build",
+            "--target",
+            "wasm32-unknown-unknown",
+            "-p",
+            "wasm-bridge-wasi"
+        ]
+    }
+}

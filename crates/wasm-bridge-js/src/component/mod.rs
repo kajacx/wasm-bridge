@@ -24,7 +24,7 @@ mod component_loader;
 pub(crate) use component_loader::*;
 
 pub use wasm_bridge_macros::bindgen_js as bindgen;
-
+pub use wasm_bridge_macros::flags;
 pub use wasm_bridge_macros::FromJsValue;
 pub use wasm_bridge_macros::ToJsValue;
 

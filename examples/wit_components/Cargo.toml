@@ -1,0 +1,11 @@
+[package]
+name = "wit-components-tests"
+edition.workspace = true
+version = "0.0.0"
+
+[dependencies]
+wasm-bridge = { path = "../../crates/wasm-bridge/",  features = ["component-model"]}
+tracing = "0.1"
+tracing-web = "0.1"
+tracing-subscriber = { version = "0.3", features = ["time"] }
+wasm-bindgen-test = "0.3"

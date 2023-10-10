@@ -35,6 +35,7 @@ impl WasiView for State {
 }
 
 pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
+    panic!(");
     no_config(component_bytes).await?;
     custom_clock(component_bytes).await?;
 

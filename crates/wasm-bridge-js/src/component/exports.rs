@@ -1,7 +1,7 @@
 use std::{collections::HashMap, marker::PhantomData, rc::Rc};
 
 use anyhow::Context;
-use heck::ToLowerCamelCase;
+use convert_case::Casing;
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
@@ -61,7 +61,7 @@ impl ExportsRoot {
 
     pub fn typed_func<Params, Return>(&self, name: &str) -> Result<TypedFunc<Params, Return>> {
         // TODO: converting in the opposite direction when storing would be slightly faster
-        let name = name.to_lower_camel_case();
+        let name = name.to_case(convert_case::Case::Camel);
 
         let func = self
             .exported_fns
@@ -77,7 +77,10 @@ impl ExportsRoot {
             self.exported_objects
                 .get(name)
                 // TODO: This is a workaround for https://github.com/bytecodealliance/jco/issues/110
-                .or_else(|| self.exported_objects.get(&name.to_lower_camel_case()))?,
+                .or_else(|| {
+                    self.exported_objects
+                        .get(&name.to_case(convert_case::Case::Camel))
+                })?,
         ))
     }
 }

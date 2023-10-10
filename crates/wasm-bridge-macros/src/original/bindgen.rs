@@ -45,12 +45,14 @@ impl Parse for Config {
         let mut world = None;
         let mut inline = None;
         let mut path = None;
+        eprintln!("parse config {input:?}");
 
         if input.peek(token::Brace) {
             let content;
             syn::braced!(content in input);
             let fields = Punctuated::<Opt, Token![,]>::parse_terminated(&content)?;
             for field in fields.into_pairs() {
+                eprintln!("field: {:?}", field.value());
                 match field.into_value() {
                     Opt::Path(s) => {
                         if path.is_some() {
@@ -108,12 +110,16 @@ impl Parse for Config {
                 path = Some(input.parse::<syn::LitStr>()?.value());
             }
         }
+        eprintln!("parse source");
         let (resolve, pkg, files) = parse_source(&path, &inline)
             .map_err(|err| Error::new(call_site, format!("{err:?}")))?;
 
+        eprintln!("select world {world:?}");
         let world = resolve
             .select_world(pkg, world.as_deref())
             .map_err(|e| Error::new(call_site, format!("{e:?}")))?;
+
+        eprintln!("config ok");
         Ok(Config {
             opts,
             resolve,
@@ -173,6 +179,7 @@ mod kw {
     syn::custom_keyword!(with);
 }
 
+#[derive(Debug)]
 enum Opt {
     World(syn::LitStr),
     Path(syn::LitStr),
@@ -256,11 +263,13 @@ impl Parse for Opt {
             Ok(Opt::TrappableErrorType(
                 fields
                     .into_iter()
-                    .map(|(wit_owner, wit_name, rust_name)| TrappableError {
-                        wit_owner: Some(wit_owner),
-                        wit_name,
-                        rust_name,
-                    })
+                    .map(
+                        |(wit_owner, wit_type_name, rust_type_name)| TrappableError {
+                            wit_package_path: wit_owner,
+                            wit_type_name,
+                            rust_type_name,
+                        },
+                    )
                     .collect(),
             ))
         } else if l.peek(kw::interfaces) {

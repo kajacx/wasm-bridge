@@ -81,14 +81,14 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         as_string.to_string()
     };
 
-    // eprintln!("#[cfg(test)]");
-    // eprintln!("#[allow(warnings)]");
-    // eprintln!("mod test {{");
-    // eprintln!("  pub mod wasm_bridge {{");
-    // eprintln!("    pub use crate::*;");
-    // eprintln!("  }}");
-    // eprintln!("  {as_string}");
-    // eprintln!("}}");
+    eprintln!("#[cfg(test)]");
+    eprintln!("#[allow(warnings)]");
+    eprintln!("mod test {{");
+    eprintln!("  pub mod wasm_bridge {{");
+    eprintln!("    pub use crate::*;");
+    eprintln!("  }}");
+    eprintln!("  {as_string}");
+    eprintln!("}}");
 
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }

@@ -4,8 +4,12 @@ use std::collections::HashSet;
 use std::fmt;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
 use syn::{braced, parse_quote, Data, DeriveInput, Error, Result, Token};
 use wasmtime_component_util::{DiscriminantSize, FlagsSize};
+
+use crate::from_js_value::from_js_value_flags;
+use crate::to_js_value::to_js_value_flags;
 
 #[derive(Debug, Copy, Clone)]
 pub enum VariantStyle {
@@ -45,8 +49,8 @@ fn find_style(input: &DeriveInput) -> Result<Style> {
         }
 
         let syntax_error = || {
-            Err(Error::new_spanned(
-                &attribute.tokens,
+            Err(Error::new(
+                attribute.span(),
                 "expected `component(<style>)` syntax",
             ))
         };
@@ -336,6 +340,7 @@ fn expand_record_for_component_type(
     // the trouble.
 
     let expanded = quote! {
+        #[cfg(not(target_arch = "wasm32"))]
         #[doc(hidden)]
         #[derive(Clone, Copy)]
         #[repr(C)]
@@ -344,6 +349,7 @@ fn expand_record_for_component_type(
             _align: [wasmtime::ValRaw; 0],
         }
 
+        #[cfg(not(target_arch = "wasm32"))]
         unsafe impl #impl_generics wasmtime::component::ComponentType for #name #ty_generics #where_clause {
             type Lower = #lower <#lower_generic_args>;
 
@@ -353,7 +359,7 @@ fn expand_record_for_component_type(
             #[inline]
             fn typecheck(
                 ty: &#internal::InterfaceType,
-                types: &#internal::ComponentTypes,
+                types: &#internal::InstanceType,
             ) -> #internal::anyhow::Result<()> {
                 #internal::#typecheck(ty, types, &[#typecheck_argument])
             }
@@ -400,12 +406,12 @@ impl Expander for LiftExpander {
                 cx, #field_ty, &src.#ident
             )?,));
 
-            loads.extend(quote!(#ident: <#ty as wasmtime::component::Lift>::load(
-                cx, #field_ty,
-                &bytes
-                    [<#ty as wasmtime::component::ComponentType>::ABI.next_field32_size(&mut offset)..]
-                    [..<#ty as wasmtime::component::ComponentType>::SIZE32]
-            )?,));
+            // loads.extend(quote!(#ident: <#ty as wasmtime::component::Lift>::load(
+            //     cx, #field_ty,
+            //     &bytes
+            //         [<#ty as wasmtime::component::ComponentType>::ABI.next_field32_size(&mut offset)..]
+            //         [..<#ty as wasmtime::component::ComponentType>::SIZE32]
+            // )?,));
         }
 
         let generics = add_trait_bounds(generics, parse_quote!(wasmtime::component::Lift));
@@ -419,10 +425,11 @@ impl Expander for LiftExpander {
         };
 
         let expanded = quote! {
+            #[cfg(not(target_arch = "wasm32"))]
             unsafe impl #impl_generics wasmtime::component::Lift for #name #ty_generics #where_clause {
                 #[inline]
                 fn lift(
-                    cx: &#internal::LiftContext<'_>,
+                    cx: &mut #internal::LiftContext<'_>,
                     ty: #internal::InterfaceType,
                     src: &Self::Lower,
                 ) -> #internal::anyhow::Result<Self> {
@@ -434,16 +441,16 @@ impl Expander for LiftExpander {
 
                 #[inline]
                 fn load(
-                    cx: &#internal::LiftContext<'_>,
+                    cx: &mut #internal::LiftContext<'_>,
                     ty: #internal::InterfaceType,
                     bytes: &[u8],
                 ) -> #internal::anyhow::Result<Self> {
                     #extract_ty
-                    debug_assert!(
-                        (bytes.as_ptr() as usize)
-                            % (<Self as wasmtime::component::ComponentType>::ALIGN32 as usize)
-                            == 0
-                    );
+                    // debug_assert!(
+                    //     (bytes.as_ptr() as usize)
+                    //     % (<Self as wasmtime::component::ComponentType>::ALIGN32 as usize)
+                    //     == 0
+                    // );
                     let mut offset = 0;
                     Ok(Self {
                         #loads
@@ -493,11 +500,11 @@ impl Expander for LiftExpander {
                     )?),),
                 );
 
-                loads.extend(
-                    quote!(#index_quoted => Self::#ident(<#ty as wasmtime::component::Lift>::load(
-                        cx, #payload_ty, &payload[..<#ty as wasmtime::component::ComponentType>::SIZE32]
-                    )?),),
-                );
+                // loads.extend(
+                //     quote!(#index_quoted => Self::#ident(<#ty as wasmtime::component::Lift>::load(
+                //         cx, #payload_ty, &payload[..<#ty as wasmtime::component::ComponentType>::SIZE32]
+                //     )?),),
+                // );
             } else {
                 lifts.extend(quote!(#index_u32 => Self::#ident,));
 
@@ -522,10 +529,11 @@ impl Expander for LiftExpander {
         };
 
         let expanded = quote! {
+            #[cfg(not(target_arch = "wasm32"))]
             unsafe impl #impl_generics wasmtime::component::Lift for #name #ty_generics #where_clause {
                 #[inline]
                 fn lift(
-                    cx: &#internal::LiftContext<'_>,
+                    cx: &mut #internal::LiftContext<'_>,
                     ty: #internal::InterfaceType,
                     src: &Self::Lower,
                 ) -> #internal::anyhow::Result<Self> {
@@ -538,7 +546,7 @@ impl Expander for LiftExpander {
 
                 #[inline]
                 fn load(
-                    cx: &#internal::LiftContext<'_>,
+                    cx: &mut #internal::LiftContext<'_>,
                     ty: #internal::InterfaceType,
                     bytes: &[u8],
                 ) -> #internal::anyhow::Result<Self> {
@@ -599,6 +607,7 @@ impl Expander for LowerExpander {
         };
 
         let expanded = quote! {
+            #[cfg(not(target_arch = "wasm32"))]
             unsafe impl #impl_generics wasmtime::component::Lower for #name #ty_generics #where_clause {
                 #[inline]
                 fn lower<T>(
@@ -619,7 +628,7 @@ impl Expander for LowerExpander {
                     ty: #internal::InterfaceType,
                     mut offset: usize
                 ) -> #internal::anyhow::Result<()> {
-                    debug_assert!(offset % (<Self as wasmtime::component::ComponentType>::ALIGN32 as usize) == 0);
+                    // debug_assert!(offset % (<Self as wasmtime::component::ComponentType>::ALIGN32 as usize) == 0);
                     #extract_ty
                     #stores
                     Ok(())
@@ -709,6 +718,7 @@ impl Expander for LowerExpander {
         };
 
         let expanded = quote! {
+            #[cfg(not(target_arch = "wasm32"))]
             unsafe impl #impl_generics wasmtime::component::Lower for #name #ty_generics #where_clause {
                 #[inline]
                 fn lower<T>(
@@ -731,7 +741,7 @@ impl Expander for LowerExpander {
                     mut offset: usize
                 ) -> #internal::anyhow::Result<()> {
                     #extract_ty
-                    debug_assert!(offset % (<Self as wasmtime::component::ComponentType>::ALIGN32 as usize) == 0);
+                    // debug_assert!(offset % (<Self as wasmtime::component::ComponentType>::ALIGN32 as usize) == 0);
                     match self {
                         #stores
                     }
@@ -869,6 +879,7 @@ impl Expander for ComponentTypeExpander {
             #[doc(hidden)]
             #[derive(Clone, Copy)]
             #[repr(C)]
+            #[cfg(not(target_arch = "wasm32"))]
             pub struct #lower<#lower_payload_generic_params> {
                 tag: wasmtime::ValRaw,
                 payload: #lower_payload<#lower_payload_generic_args>
@@ -878,17 +889,19 @@ impl Expander for ComponentTypeExpander {
             #[allow(non_snake_case)]
             #[derive(Clone, Copy)]
             #[repr(C)]
+            #[cfg(not(target_arch = "wasm32"))]
             union #lower_payload<#lower_payload_generic_params> {
                 #lower_payload_case_declarations
             }
 
+            #[cfg(not(target_arch = "wasm32"))]
             unsafe impl #impl_generics wasmtime::component::ComponentType for #name #ty_generics #where_clause {
                 type Lower = #lower<#lower_generic_args>;
 
                 #[inline]
                 fn typecheck(
                     ty: &#internal::InterfaceType,
-                    types: &#internal::ComponentTypes,
+                    types: &#internal::InstanceType<'_>,
                 ) -> #internal::anyhow::Result<()> {
                     #internal::#typecheck(ty, types, &[#case_names_and_checks])
                 }
@@ -897,19 +910,22 @@ impl Expander for ComponentTypeExpander {
                     #internal::CanonicalAbiInfo::variant_static(&[#abi_list]);
             }
 
+            #[cfg(not(target_arch = "wasm32"))]
             unsafe impl #impl_generics #internal::ComponentVariant for #name #ty_generics #where_clause {
                 const CASES: &'static [Option<#internal::CanonicalAbiInfo>] = &[#abi_list];
             }
         };
 
-        Ok(quote!(const _: () = { #expanded };))
+        Ok(quote!(
+                const _: () = { #expanded };
+        ))
     }
 }
 
 #[derive(Debug)]
-struct Flag {
+pub(crate) struct Flag {
     rename: Option<String>,
-    name: String,
+    pub(crate) name: String,
 }
 
 impl Parse for Flag {
@@ -936,8 +952,8 @@ impl Parse for Flag {
 
 #[derive(Debug)]
 pub struct Flags {
-    name: String,
-    flags: Vec<Flag>,
+    pub(crate) name: String,
+    pub(crate) flags: Vec<Flag>,
 }
 
 impl Parse for Flags {
@@ -1179,6 +1195,96 @@ pub fn expand_flags(flags: &Flags) -> Result<TokenStream> {
         FlagsSize::Size4Plus(_) => (quote!(#internal::InterfaceType::U32), 4),
     };
 
+    let lift_impl = quote! {
+        #[cfg(not(target_arch = "wasm32"))]
+        unsafe impl wasmtime::component::Lower for #name {
+            fn lower<T>(
+                &self,
+                cx: &mut #internal::LowerContext<'_, T>,
+                _ty: #internal::InterfaceType,
+                dst: &mut std::mem::MaybeUninit<Self::Lower>,
+            ) -> #internal::anyhow::Result<()> {
+                #(
+                    self.#field_names.lower(
+                        cx,
+                        #field_interface_type,
+                        #internal::map_maybe_uninit!(dst.#field_names),
+                    )?;
+                )*
+                Ok(())
+            }
+
+            fn store<T>(
+                &self,
+                cx: &mut #internal::LowerContext<'_, T>,
+                _ty: #internal::InterfaceType,
+                mut offset: usize
+            ) -> #internal::anyhow::Result<()> {
+                // debug_assert!(offset % (<Self as wasmtime::component::ComponentType>::ALIGN32 as usize) == 0);
+                #(
+                    self.#field_names.store(
+                        cx,
+                        #field_interface_type,
+                        offset,
+                    )?;
+                    offset += std::mem::size_of_val(&self.#field_names);
+                )*
+                Ok(())
+            }
+        }
+
+        #[cfg(not(target_arch = "wasm32"))]
+        unsafe impl wasmtime::component::Lift for #name {
+            fn lift(
+                cx: &mut #internal::LiftContext<'_>,
+                _ty: #internal::InterfaceType,
+                src: &Self::Lower,
+            ) -> #internal::anyhow::Result<Self> {
+                Ok(Self {
+                    #(
+                        #field_names: wasmtime::component::Lift::lift(
+                            cx,
+                            #field_interface_type,
+                            &src.#field_names,
+                        )?,
+                    )*
+                })
+            }
+
+            fn load(
+                cx: &mut #internal::LiftContext<'_>,
+                _ty: #internal::InterfaceType,
+                bytes: &[u8],
+            ) -> #internal::anyhow::Result<Self> {
+                // debug_assert!(
+                //     (bytes.as_ptr() as usize)
+                //         % (<Self as wasmtime::component::ComponentType>::ALIGN32 as usize)
+                //         == 0
+                // );
+                #(
+                    let (field, bytes) = bytes.split_at(#field_size);
+                    let #field_names = wasmtime::component::Lift::load(
+                        cx,
+                        #field_interface_type,
+                        field,
+                    )?;
+                )*
+                Ok(Self { #(#field_names,)* })
+            }
+        }
+    };
+
+    let to_js = to_js_value_flags(name.clone(), flags);
+    let from_js = from_js_value_flags(name.clone(), flags);
+
+    let js_convert_impl = quote! {
+            #[cfg(target_arch = "wasm32")]
+            #to_js
+
+            #[cfg(target_arch = "wasm32")]
+            #from_js
+    };
+
     let expanded = quote! {
         #[derive(Copy, Clone, Default)]
         pub struct #name { #fields }
@@ -1274,80 +1380,9 @@ pub fn expand_flags(flags: &Flags) -> Result<TokenStream> {
 
         #component_type_impl
 
-        unsafe impl wasmtime::component::Lower for #name {
-            fn lower<T>(
-                &self,
-                cx: &mut #internal::LowerContext<'_, T>,
-                _ty: #internal::InterfaceType,
-                dst: &mut std::mem::MaybeUninit<Self::Lower>,
-            ) -> #internal::anyhow::Result<()> {
-                #(
-                    self.#field_names.lower(
-                        cx,
-                        #field_interface_type,
-                        #internal::map_maybe_uninit!(dst.#field_names),
-                    )?;
-                )*
-                Ok(())
-            }
+        #lift_impl
 
-            fn store<T>(
-                &self,
-                cx: &mut #internal::LowerContext<'_, T>,
-                _ty: #internal::InterfaceType,
-                mut offset: usize
-            ) -> #internal::anyhow::Result<()> {
-                debug_assert!(offset % (<Self as wasmtime::component::ComponentType>::ALIGN32 as usize) == 0);
-                #(
-                    self.#field_names.store(
-                        cx,
-                        #field_interface_type,
-                        offset,
-                    )?;
-                    offset += std::mem::size_of_val(&self.#field_names);
-                )*
-                Ok(())
-            }
-        }
-
-        unsafe impl wasmtime::component::Lift for #name {
-            fn lift(
-                cx: &#internal::LiftContext<'_>,
-                _ty: #internal::InterfaceType,
-                src: &Self::Lower,
-            ) -> #internal::anyhow::Result<Self> {
-                Ok(Self {
-                    #(
-                        #field_names: wasmtime::component::Lift::lift(
-                            cx,
-                            #field_interface_type,
-                            &src.#field_names,
-                        )?,
-                    )*
-                })
-            }
-
-            fn load(
-                cx: &#internal::LiftContext<'_>,
-                _ty: #internal::InterfaceType,
-                bytes: &[u8],
-            ) -> #internal::anyhow::Result<Self> {
-                debug_assert!(
-                    (bytes.as_ptr() as usize)
-                        % (<Self as wasmtime::component::ComponentType>::ALIGN32 as usize)
-                        == 0
-                );
-                #(
-                    let (field, bytes) = bytes.split_at(#field_size);
-                    let #field_names = wasmtime::component::Lift::load(
-                        cx,
-                        #field_interface_type,
-                        field,
-                    )?;
-                )*
-                Ok(Self { #(#field_names,)* })
-            }
-        }
+        #js_convert_impl
     };
 
     Ok(expanded)
