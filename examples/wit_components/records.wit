@@ -2,13 +2,11 @@ package component-test:wit-protocol
 
 world records {
   // Record structs
-  record player {
-    name: string,
-    inventory: list<string>,
-    counts: list<u32>,
+  record item {
+    a: u32,
+    b: u64,
   }
 
-  import create-player: func(name: string, inventory: list<string>, counts: list<u32>) -> player
-  export get-inventory: func() -> list<string>
-  export get-counts: func() -> list<u32>
+  export run: func(args: list<u32>) 
+  import send-item: func(item: item)
 }

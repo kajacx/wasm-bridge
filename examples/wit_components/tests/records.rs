@@ -9,19 +9,28 @@ wasm_bridge::component::bindgen!({
     world: "records",
 });
 
-struct Host;
+#[derive(Default, Debug, Clone)]
+struct Host {
+    messages: Vec<Item>,
+}
+
 impl RecordsImports for Host {
-    fn create_player(
-        &mut self,
-        name: String,
-        inventory: Vec<String>,
-        counts: Vec<u32>,
-    ) -> Result<Player> {
-        Ok(Player {
-            name,
-            inventory,
-            counts,
-        })
+    fn send_item(&mut self, item: Item) -> wasm_bridge::Result<()> {
+        self.messages.push(item);
+
+        Ok(())
+    }
+
+    // fn send_items(&mut self, items: Vec<Item>) -> wasm_bridge::Result<()> {
+    //     self.messages.extend(items);
+
+    //     Ok(())
+    // }
+}
+
+impl PartialEq for Item {
+    fn eq(&self, other: &Self) -> bool {
+        self.a == other.a && self.b == other.b
     }
 }
 
@@ -33,7 +42,7 @@ fn records() {
     config.wasm_component_model(true);
 
     let engine = Engine::new(&config).unwrap();
-    let mut store = Store::new(&engine, Host);
+    let mut store = Store::new(&engine, Host::default());
 
     let component = Component::new(store.engine(), GUEST_BYTES).unwrap();
 
@@ -42,11 +51,14 @@ fn records() {
 
     let (instance, _) = Records::instantiate(&mut store, &component, &linker).unwrap();
 
-    let result = instance.call_get_inventory(&mut store).unwrap();
+    instance.call_run(&mut store, &[]);
 
-    assert_eq!(result, ["sword", "shield", "apple"]);
-    let result = instance.call_get_counts(&mut store).unwrap();
-    assert_eq!(result, [1, 2, 5]);
+    let data = store.data();
+    assert_eq!(data.messages, &[Item { a: 1, b: 2 }]);
+
+    // assert_eq!(result, ["sword", "shield", "apple"]);
+    // let result = instance.call_get_counts(&mut store).unwrap();
+    // assert_eq!(result, [1, 2, 5]);
 }
 
 const GUEST_BYTES: &[u8] =

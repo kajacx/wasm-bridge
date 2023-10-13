@@ -1,0 +1,17 @@
+[package]
+name = "wasm-bridge-bindgen"
+edition = "2021"
+version.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+wit-bindgen-core = "0.12"
+
+tracing = "0.1"
+anyhow = "1.0"
+

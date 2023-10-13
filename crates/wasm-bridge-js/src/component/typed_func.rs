@@ -1,10 +1,8 @@
 use std::marker::PhantomData;
 
-use wasm_bindgen::JsValue;
+use crate::{AsContextMut, FromJsValue, Result, Store, ToJsValue};
 
-use crate::{AsContextMut, FromJsValue, Result, ToJsValue};
-
-use super::Func;
+use super::{Func, Lower};
 
 pub struct TypedFunc<Params, Return> {
     func: Func,
@@ -29,14 +27,15 @@ impl<Params, Return> TypedFunc<Params, Return> {
         &self.func
     }
 
-    pub fn call(&self, _store: impl AsContextMut, params: Params) -> Result<Return>
-    where
-        Params: ToJsValue,
-        Return: FromJsValue,
+    pub fn call<T>(&self, store: &mut Store<T>, params: Params) -> Result<Return>
+// where
+        // Self: Callable<T>,
     {
-        let argument = params.to_function_args();
-        let result = self.func.function.apply(&JsValue::UNDEFINED, &argument);
-        Return::from_fn_result(&result)
+        todo!()
+        // Callable::call(&self, store, params)
+        // let argument = params.to_function_args();
+        // let result = self.func.function.apply(&JsValue::UNDEFINED, &argument);
+        // Return::from_fn_result(&result)
     }
 
     pub fn call_async(&self, store: impl AsContextMut, params: Params) -> Result<Return>
@@ -44,7 +43,8 @@ impl<Params, Return> TypedFunc<Params, Return> {
         Params: ToJsValue,
         Return: FromJsValue,
     {
-        self.call(store, params)
+        todo!()
+        // self.call(store, params)
     }
 
     pub fn post_return(&self, _store: impl AsContextMut) -> Result<()> {
@@ -53,5 +53,30 @@ impl<Params, Return> TypedFunc<Params, Return> {
 
     pub fn post_return_async(&self, store: impl AsContextMut) -> Result<()> {
         self.post_return(store)
+    }
+}
+
+pub trait Callable<T> {
+    type Args;
+    type Return;
+
+    fn call(&self, store: &mut Store<T>, args: Self::Args) -> Result<Self::Return>;
+}
+
+impl<T, Arg, Ret> Callable<T> for TypedFunc<Arg, Ret>
+where
+    Arg: Lower,
+{
+    type Args = Arg;
+    type Return = Ret;
+
+    fn call(&self, store: &mut Store<T>, args: Self::Args) -> Result<Self::Return> {
+        // let mut arg = MaybeUninit::uninit().into();
+
+        // let ctx = LowerContext {};
+        // args.lower(ctx);
+        // self.func.function.call1(&JsValue::UNDEFINED, &arg);
+
+        todo!()
     }
 }

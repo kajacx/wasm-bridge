@@ -5,6 +5,7 @@ members = [
   "crates/wasm-bridge-js",
   "crates/wasm-bridge-wasi",
   "crates/wasm-bridge-macros",
+  "crates/wasm-bridge-bindgen",
 
   "examples/wit_components/",
   "examples/wit_components/guest/*/",

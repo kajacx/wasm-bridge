@@ -393,7 +393,6 @@ impl Expander for LiftExpander {
         generics: &syn::Generics,
         fields: &[&syn::Field],
     ) -> Result<TokenStream> {
-        panic!("lift should not be used");
         let internal = quote!(wasmtime::component::__internal);
 
         let mut lifts = TokenStream::new();
@@ -468,7 +467,6 @@ impl Expander for LiftExpander {
         cases: &[VariantCase],
         style: VariantStyle,
     ) -> Result<TokenStream> {
-        panic!("no lifting, the doctor said");
         let internal = quote!(wasmtime::component::__internal);
 
         let mut lifts = TokenStream::new();
@@ -644,7 +642,6 @@ impl Expander for LowerExpander {
         cases: &[VariantCase],
         style: VariantStyle,
     ) -> Result<TokenStream> {
-        panic!("thou shalt not lower");
         let internal = quote!(wasmtime::component::__internal);
 
         let mut lowers = TokenStream::new();

@@ -13,12 +13,15 @@
         }
     },
     "test-wit": {
-        "cmd": [
-            "wasm-pack",
-            "test",
-            "--node",
-            "./examples/wit_components/"
-        ],
+        "cmd": "wasm-pack test --node ./examples/wit_components/",
+        "components": {
+            "qf": {
+                "compiler": "cargo"
+            }
+        }
+    },
+    "test-records": {
+        "cmd": "wasm-pack test --node ./examples/wit_components/ --test records",
         "components": {
             "qf": {
                 "compiler": "cargo"
