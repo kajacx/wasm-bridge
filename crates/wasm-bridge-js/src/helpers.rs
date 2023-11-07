@@ -51,6 +51,7 @@ pub fn map_js_error<T: Debug + AsRef<JsValue>>(hint: &'static str) -> impl Fn(T)
                 value
             )
         } else {
+            tracing::error!(?value, "{hint}");
             anyhow::anyhow!(
                 "{}, error value: {:?}, enable 'error-logging' feature to log value to console.error.",
                 hint,

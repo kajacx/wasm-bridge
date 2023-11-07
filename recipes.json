@@ -28,6 +28,9 @@
             }
         }
     },
+    "build records": {
+        "cmd": "cargo build -p wit-components-tests --test records --target wasm32-unknown-unknown --all-features"
+    },
     "build-guest": {
         "cmd": "build_guest.sh",
         "cwd": "./examples/wit_components/",

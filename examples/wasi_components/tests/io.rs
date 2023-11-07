@@ -2,10 +2,10 @@ use bytes::{Buf, Bytes};
 use wasm_bridge::{
     async_trait,
     component::{Component, Linker},
-    wasi, Config, Engine, Result, Store,
+    Config, Engine, Result, Store,
 };
 
-use wasm_bridge::wasi::preview2::*;
+use wasm_bridge_wasi::preview2::*;
 
 use std::{
     io::Write,

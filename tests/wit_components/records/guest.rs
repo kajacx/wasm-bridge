@@ -3,7 +3,7 @@ wit_bindgen::generate!({
     world: "records",
 });
 
-struct Guest;
+stuct Guest;
 
 impl Records for Guest {
     fn get_inventory(player: Player) -> Vec<u32> {

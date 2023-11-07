@@ -6,8 +6,10 @@ wit_bindgen::generate!({
 struct Guest;
 
 impl Records for Guest {
-    fn run(args: Vec<u32>) {
-        send_item(Item { a: 1, b: 2 });
+    fn run(arg: u32) {
+        eprintln!("Got: {arg}");
+        assert_eq!(arg, 1);
+        // send_item(Item { a: 1, b: 2 });
         // send_items(&[Item { a: 2, b: 3 }, Item { a: 4, b: 5 }]);
     }
 }

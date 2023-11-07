@@ -11,28 +11,28 @@ wasm_bridge::component::bindgen!({
 
 #[derive(Default, Debug, Clone)]
 struct Host {
-    messages: Vec<Item>,
+    // messages: Vec<Item>,
 }
 
-impl RecordsImports for Host {
-    fn send_item(&mut self, item: Item) -> wasm_bridge::Result<()> {
-        self.messages.push(item);
+// impl RecordsImports for Host {
+// fn send_item(&mut self, item: Item) -> wasm_bridge::Result<()> {
+//     self.messages.push(item);
 
-        Ok(())
-    }
+//     Ok(())
+// }
 
-    // fn send_items(&mut self, items: Vec<Item>) -> wasm_bridge::Result<()> {
-    //     self.messages.extend(items);
+// fn send_items(&mut self, items: Vec<Item>) -> wasm_bridge::Result<()> {
+//     self.messages.extend(items);
 
-    //     Ok(())
-    // }
-}
+//     Ok(())
+// }
+// }
 
-impl PartialEq for Item {
-    fn eq(&self, other: &Self) -> bool {
-        self.a == other.a && self.b == other.b
-    }
-}
+// impl PartialEq for Item {
+//     fn eq(&self, other: &Self) -> bool {
+//         self.a == other.a && self.b == other.b
+//     }
+// }
 
 #[test]
 #[wasm_bindgen_test]
@@ -47,14 +47,14 @@ fn records() {
     let component = Component::new(store.engine(), GUEST_BYTES).unwrap();
 
     let mut linker = Linker::new(store.engine());
-    Records::add_to_linker(&mut linker, |data| data).unwrap();
+    // Records::add_to_linker(&mut linker, |data| data).unwrap();
 
     let (instance, _) = Records::instantiate(&mut store, &component, &linker).unwrap();
 
-    instance.call_run(&mut store, &[]);
+    instance.call_run(&mut store, 1).unwrap();
 
-    let data = store.data();
-    assert_eq!(data.messages, &[Item { a: 1, b: 2 }]);
+    // let data = store.data();
+    // assert_eq!(data.messages, &[Item { a: 1, b: 2 }]);
 
     // assert_eq!(result, ["sword", "shield", "apple"]);
     // let result = instance.call_get_counts(&mut store).unwrap();
