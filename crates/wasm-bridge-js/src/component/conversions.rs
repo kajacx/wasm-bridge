@@ -1,4 +1,4 @@
-use js_sys::{Array, DataView};
+use js_sys::{Array, DataView, Uint8Array};
 use wasm_bindgen::JsValue;
 
 pub struct LowerContext {}
@@ -44,6 +44,25 @@ impl Lower for u32 {
 
     fn lower_args(&self, _cx: &LowerContext, dst: &mut Array) {
         dst.push(&JsValue::from(*self));
+    }
+}
+
+impl<T: ComponentType> ComponentType for [T] {
+    const STRIDE: usize = T::STRIDE;
+}
+
+impl<T: Lower + ComponentType> Lower for [T] {
+    fn lower(&self, cx: &LowerContext, encoder: &mut Encoder<'_>) {
+        // let buffer = Uint8Array::new_with_byte_offset_and_length()
+        // let dv = DataView::new(buffer, 0, 0);
+    }
+
+    fn lower_ret(&self, cx: &LowerContext) -> JsValue {
+        todo!()
+    }
+
+    fn lower_args(&self, cx: &LowerContext, dst: &mut Array) {
+        todo!()
     }
 }
 

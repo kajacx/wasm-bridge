@@ -1,8 +1,9 @@
 use std::{marker::PhantomData, rc::Rc};
 
 use super::*;
-use crate::{AsContextMut, DropHandle, Result};
+use crate::{AsContextMut, DropHandle, Memory, Result};
 
+/// Stores the state for an instantiated WebAssembly module
 pub struct Instance {
     exports: Exports,
     _closures: Rc<[DropHandle]>,
@@ -18,6 +19,17 @@ impl Instance {
 
     pub fn exports(&self, _store: impl AsContextMut) -> &Exports {
         &self.exports
+    }
+
+    pub fn get_memory(&self, store: impl AsContextMut, name: &str) -> Option<Memory> {
+        todo!()
+        // let memory = self.exports.get(name)?;
+
+        // if memory.is_object() {
+        //     Some(Memory::new(memory.clone().into()))
+        // } else {
+        //     None
+        // }
     }
 }
 

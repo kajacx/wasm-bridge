@@ -2,12 +2,12 @@ package component-test:wit-protocol
 
 world records {
   // Record structs
-  // record item {
-  //   a: u32,
-  //   b: u64,
-  // }
+  record item {
+    a: u32,
+    b: u64,
+  }
 
   export run: func(arg: u32)
-  // export run: func(args: list<u32>) 
-  // import send-item: func(item: item)
+  export run-args: func(args: list<u32>) 
+  import send-item: func(item: item)
 }
