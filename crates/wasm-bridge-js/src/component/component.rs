@@ -17,7 +17,7 @@ pub struct Component {
 
 impl Component {
     pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
-        let files = ComponentLoader::generate_files(bytes.as_ref())?;
+        // let files = ComponentLoader::generate_files(bytes.as_ref())?;
 
         let (compile_core, drop0) = Self::make_compile_core(files.wasm_cores);
         let (instantiate_core, drop1) = Self::make_instantiate_core();
@@ -51,6 +51,7 @@ impl Component {
         closures: Rc<[DropHandle]>,
     ) -> Result<Instance> {
         tracing::debug!("instantiate {:#?}", import_object);
+
         let exports = self
             .instantiate
             .call3(

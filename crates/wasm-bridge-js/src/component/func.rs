@@ -1,6 +1,7 @@
-use std::rc::Rc;
+use std::{mem::MaybeUninit, rc::Rc};
 
-use js_sys::Function;
+use js_sys::{Array, DataView, Function};
+use wasm_bindgen::JsValue;
 
 use crate::DropHandle;
 

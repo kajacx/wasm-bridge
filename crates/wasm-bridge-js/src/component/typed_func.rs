@@ -1,10 +1,14 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, mem::MaybeUninit};
 
+use js_sys::Array;
 use wasm_bindgen::JsValue;
 
-use crate::{AsContextMut, FromJsValue, Result, ToJsValue};
+use crate::{
+    component::LowerContext, helpers::map_js_error, AsContextMut, FromJsValue, Result, Store,
+    ToJsValue,
+};
 
-use super::Func;
+use super::{Func, Lower};
 
 pub struct TypedFunc<Params, Return> {
     func: Func,
@@ -29,14 +33,27 @@ impl<Params, Return> TypedFunc<Params, Return> {
         &self.func
     }
 
-    pub fn call(&self, _store: impl AsContextMut, params: Params) -> Result<Return>
+    pub fn call<T>(&self, store: &mut Store<T>, args: Params) -> Result<Return>
     where
-        Params: ToJsValue,
-        Return: FromJsValue,
+        Self: Callable<T>,
+        Params: Lower,
     {
-        let argument = params.to_function_args();
-        let result = self.func.function.apply(&JsValue::UNDEFINED, &argument);
-        Return::from_fn_result(&result)
+        let ctx = LowerContext {};
+        let mut array = Array::new();
+        args.lower_args(&ctx, &mut array);
+
+        tracing::info!("Calling");
+        self.func
+            .function
+            .call1(&JsValue::UNDEFINED, &array)
+            .map_err(map_js_error("Failed to call function"))
+            .unwrap();
+
+        tracing::info!("Called");
+        todo!()
+        // let argument = params.to_function_args();
+        // let result = self.func.function.apply(&JsValue::UNDEFINED, &argument);
+        // Return::from_fn_result(&result)
     }
 
     pub fn call_async(&self, store: impl AsContextMut, params: Params) -> Result<Return>
@@ -44,7 +61,8 @@ impl<Params, Return> TypedFunc<Params, Return> {
         Params: ToJsValue,
         Return: FromJsValue,
     {
-        self.call(store, params)
+        todo!()
+        // self.call(store, params)
     }
 
     pub fn post_return(&self, _store: impl AsContextMut) -> Result<()> {
@@ -53,5 +71,26 @@ impl<Params, Return> TypedFunc<Params, Return> {
 
     pub fn post_return_async(&self, store: impl AsContextMut) -> Result<()> {
         self.post_return(store)
+    }
+}
+
+pub trait Callable<T> {
+    type Args;
+    type Return;
+
+    fn call(&self, store: &mut Store<T>, args: Self::Args) -> Result<Self::Return>;
+}
+
+impl<T, Arg, Ret> Callable<T> for TypedFunc<Arg, Ret>
+where
+    Arg: Lower,
+{
+    type Args = Arg;
+    type Return = Ret;
+
+    fn call(&self, store: &mut Store<T>, args: Self::Args) -> Result<Self::Return> {
+        // let mut arg = MaybeUninit::uninit().into();
+
+        todo!()
     }
 }

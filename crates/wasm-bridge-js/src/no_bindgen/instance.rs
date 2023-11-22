@@ -132,6 +132,7 @@ fn process_exports(js_exports: JsValue) -> Result<HashMap<String, JsValue>> {
         let export = Reflect::get(&js_exports, &name_js).expect("js_exports is object");
         exports.insert(name, export);
     }
+
     Ok(exports)
 }
 

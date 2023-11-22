@@ -13,17 +13,23 @@
         }
     },
     "test-wit": {
-        "cmd": [
-            "wasm-pack",
-            "test",
-            "--node",
-            "./examples/wit_components/"
-        ],
+        "cmd": "wasm-pack test --node ./examples/wit_components/",
         "components": {
             "qf": {
                 "compiler": "cargo"
             }
         }
+    },
+    "test-records": {
+        "cmd": "wasm-pack test --node ./examples/wit_components/ --test records",
+        "components": {
+            "qf": {
+                "compiler": "cargo"
+            }
+        }
+    },
+    "build records": {
+        "cmd": "cargo build -p wit-components-tests --test records --target wasm32-unknown-unknown --all-features"
     },
     "build-guest": {
         "cmd": "build_guest.sh",

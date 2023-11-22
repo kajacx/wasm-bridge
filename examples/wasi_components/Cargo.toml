@@ -5,6 +5,7 @@ version = "0.0.0"
 
 [dependencies]
 wasm-bridge = { path = "../../crates/wasm-bridge/",  features = ["component-model", "async"]}
+wasm-bridge-wasi = { path = "../../crates/wasm-bridge-wasi/" }
 wasm-bindgen-test = "0.3"
 bytes = "1.4"
 
