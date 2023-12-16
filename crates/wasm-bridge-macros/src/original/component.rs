@@ -30,7 +30,7 @@ impl fmt::Display for VariantStyle {
 }
 
 #[derive(Debug, Copy, Clone)]
-enum Style {
+pub enum Style {
     Record,
     Variant(VariantStyle),
 }

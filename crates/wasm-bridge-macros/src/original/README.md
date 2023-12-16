@@ -13,3 +13,4 @@ see [LICENSE](./LICENSE).
 
 - Renamed `lib.rs` to `mod.rs`
 - Removed `#[proc_macro]` and `#[proc_macro_derive(...)]` attributes
+- Re-exported `component::Style` and `component::VariantStyle`
