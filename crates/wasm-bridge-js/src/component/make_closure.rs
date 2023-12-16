@@ -1,7 +1,7 @@
 // use std::future::Future;
 use std::rc::Rc;
 
-use wasm_bindgen::{prelude::*, JsValue};
+use wasm_bindgen::{convert::ReturnWasmAbi, prelude::*, JsValue};
 
 use crate::{DataHandle, DropHandle, FromJsValue, Result, StoreContextMut, ToJsValue};
 
@@ -19,6 +19,7 @@ macro_rules! make_closure {
             $($name: FromJsValue + 'static,)*
             R: ToJsValue + 'static ,
             F: Fn(StoreContextMut<T>, ($($name, )*)) -> Result<R> + 'static,
+            Result<R::ReturnAbi, JsValue>: ReturnWasmAbi, // TODO: unnecessary return bound?
         {
             fn into_make_closure(self) -> MakeClosure<T> {
                 let self_rc = Rc::new(self);
