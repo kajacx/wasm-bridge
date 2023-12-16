@@ -1,11 +1,14 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "enums",
+    exports: {
+        world: MyGuest,
+    }
 });
 
-struct Guest;
+struct MyGuest;
 
-impl Enums for Guest {
+impl Guest for MyGuest {
     fn quadruple_shape(shape: Shape) -> Shape {
         let shape = double_shape(shape);
         let shape = double_shape(shape);
@@ -51,5 +54,3 @@ impl Enums for Guest {
         num
     }
 }
-
-export_enums!(Guest);
