@@ -1,14 +1,15 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "records",
+    exports: {
+        world: MyGuest,
+    }
 });
 
-struct Guest;
+struct MyGuest;
 
-impl Records for Guest {
+impl Guest for MyGuest {
     fn get_inventory(player: Player) -> Vec<u32> {
         player.inventory
     }
 }
-
-export_records!(Guest);
