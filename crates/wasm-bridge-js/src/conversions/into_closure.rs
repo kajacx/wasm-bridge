@@ -17,10 +17,7 @@ pub trait IntoMakeClosure<T, Params, Results> {
 fn is_from_wasm_abi<T: FromWasmAbi>() {}
 fn is_return_wasm_abi<T: ReturnWasmAbi>() {}
 
-fn test_it<R: IntoWasmAbi>()
-where
-    std::result::Result<R, JsValue>: ReturnWasmAbi,
-{
+fn test_it<R: IntoWasmAbi>() {
     is_return_wasm_abi::<Result<R, JsValue>>();
 }
 
@@ -35,12 +32,56 @@ fn make() {
     let a = Closure::<dyn Fn() -> i32>::new(|| 5);
 }
 
+fn main() {
+    let closure = Closure::<dyn Fn(i32) -> i32>::new(|i| i + 5);
+    let closure = Closure::<dyn Fn(i32) -> Result<i32, JsValue>>::new(|i| Ok(i + 5));
+
+    make_closures::<i32>();
+    make_closures_fixed::<i32>();
+}
+
+fn make_closures<T: IntoWasmAbi + 'static>() {
+    let closure = Closure::<dyn Fn(i32) -> T>::new(|_| todo!());
+    let closure = Closure::<dyn Fn(i32) -> Result<T, JsValue>>::new(|_| todo!());
+}
+
+// But this is where it gets weird
+fn make_closures_fixed<T: IntoWasmAbi + 'static>()
+where
+    Result<T, JsValue>: ReturnWasmAbi,
+{
+    let closure = Closure::<dyn Fn(i32) -> T>::new(|_| todo!()); //works
+    let closure = Closure::<dyn Fn(i32) -> Result<T, JsValue>>::new(|_| todo!());
+    // this now works
+}
+
+fn accept_return_wasm_abi<T: ReturnWasmAbi>() {}
+
+fn test_it_i32() {
+    accept_return_wasm_abi::<i32>(); // works
+    accept_return_wasm_abi::<Result<i32, JsValue>>(); // works
+}
+
+fn test_it_into_wasm_abi<T: IntoWasmAbi + 'static>() {
+    accept_return_wasm_abi::<T>(); // works
+    accept_return_wasm_abi::<Result<T, JsValue>>();
+    // again, works in minimal reproducible example, but not in main project
+}
+
+fn test_it_into_wasm_abi_fixed<T: IntoWasmAbi + 'static>()
+where
+    Result<T, JsValue>: ReturnWasmAbi, // <-- added this trait bound
+{
+    accept_return_wasm_abi::<T>(); // works
+    accept_return_wasm_abi::<Result<T, JsValue>>();
+}
+
 impl<T, R, F> IntoMakeClosure<T, (), R> for F
 where
     T: 'static,
     F: Fn(Caller<T>) -> R + 'static,
     R: ToJsValue + 'static,
-    Result<R::ReturnAbi, JsValue>: ReturnWasmAbi, // TODO: unnecessary return bound?
+    // Result<R::ReturnAbi, JsValue>: ReturnWasmAbi, // TODO: unnecessary return bound?
 {
     fn into_make_closure(self) -> MakeClosure<T> {
         let self_rc = Rc::new(self);
