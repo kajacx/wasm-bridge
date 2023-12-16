@@ -3,6 +3,8 @@ use syn::{parse_macro_input, DeriveInput, Error};
 mod bindgen;
 mod component;
 
+pub use component::{Style, VariantStyle};
+
 pub fn lift(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     component::expand(
         &component::LiftExpander,
