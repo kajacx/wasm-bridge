@@ -14,24 +14,6 @@ pub trait IntoMakeClosure<T, Params, Results> {
     fn into_make_closure(self) -> MakeClosure<T>;
 }
 
-fn is_from_wasm_abi<T: FromWasmAbi>() {}
-fn is_return_wasm_abi<T: ReturnWasmAbi>() {}
-
-fn test_it<R: IntoWasmAbi>() {
-    is_return_wasm_abi::<Result<R, JsValue>>();
-}
-
-fn make() {
-    is_from_wasm_abi::<u32>();
-    is_from_wasm_abi::<String>();
-    is_from_wasm_abi::<Option<u32>>();
-    //is_from_wasm_abi::<()>(); // no
-    //is_from_wasm_abi::<Result<u32, String>>(); // no
-    // is_from_wasm_abi::<(String, u8)>(); // no
-    test_it::<i32>();
-    let a = Closure::<dyn Fn() -> i32>::new(|| 5);
-}
-
 fn main() {
     let closure = Closure::<dyn Fn(i32) -> i32>::new(|i| i + 5);
     let closure = Closure::<dyn Fn(i32) -> Result<i32, JsValue>>::new(|i| Ok(i + 5));
