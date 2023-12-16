@@ -1,11 +1,14 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "errors",
+    exports: {
+        world: MyGuest,
+    }
 });
 
-struct Guest;
+struct MyGuest;
 
-impl Errors for Guest {
+impl Guest for MyGuest {
     fn simple_fail_guest(fail: WhereFail) -> WhereFail {
         match fail {
             WhereFail::GuestPanic => panic!("Fail in guest code with panic"),
@@ -21,5 +24,3 @@ impl Errors for Guest {
         }
     }
 }
-
-export_errors!(Guest);

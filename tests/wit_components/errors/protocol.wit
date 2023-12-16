@@ -1,4 +1,4 @@
-package component-test:wit-protocol
+package component-test:wit-protocol;
 
 world errors {
   enum where-fail {
@@ -9,9 +9,9 @@ world errors {
     host-ok-ok,
   }
    
-  import simple-fail-host: func(where: where-fail) -> where-fail
-  export simple-fail-guest: func(where: where-fail) -> where-fail
+  import simple-fail-host: func(where: where-fail) -> where-fail;
+  export simple-fail-guest: func(where: where-fail) -> where-fail;
 
-  import full-fail-host: func(where: where-fail) -> result<where-fail, where-fail>
-  export full-fail-guest: func(where: where-fail) -> result<where-fail, where-fail>
+  import full-fail-host: func(where: where-fail) -> result<where-fail, where-fail>;
+  export full-fail-guest: func(where: where-fail) -> result<where-fail, where-fail>;
 }
