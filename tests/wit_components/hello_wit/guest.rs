@@ -1,11 +1,16 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "test-world",
+    exports: {
+        world: GuestImpl,
+        "component-test:wit-protocol/guest-add": GuestImplAdd,
+        "guest-sub": GuestImplSub,
+    }
 });
 
 struct GuestImpl;
 
-impl TestWorld for GuestImpl {
+impl Guest for GuestImpl {
     fn promote_person(employee: Person, raise: u32) -> Person {
         set_salary(&employee, employee.salary + raise)
     }
@@ -30,7 +35,9 @@ impl TestWorld for GuestImpl {
     }
 }
 
-impl exports::component_test::wit_protocol::guest_add::GuestAdd for GuestImpl {
+struct GuestImplAdd;
+
+impl exports::component_test::wit_protocol::guest_add::Guest for GuestImplAdd {
     fn add_three(num: i32) -> i32 {
         let num = component_test::wit_protocol::host_add::add_one(num);
         let num = component_test::wit_protocol::host_add::add_one(num);
@@ -39,7 +46,9 @@ impl exports::component_test::wit_protocol::guest_add::GuestAdd for GuestImpl {
     }
 }
 
-impl exports::guest_sub::GuestSub for GuestImpl {
+struct GuestImplSub;
+
+impl exports::guest_sub::Guest for GuestImplSub {
     fn sub_three(num: i32) -> i32 {
         let num = host_sub::sub_one(num);
         let num = host_sub::sub_one(num);
@@ -47,5 +56,3 @@ impl exports::guest_sub::GuestSub for GuestImpl {
         num
     }
 }
-
-export_test_world!(GuestImpl);
