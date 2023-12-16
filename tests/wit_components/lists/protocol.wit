@@ -1,42 +1,42 @@
-package component-test:wit-protocol
+package component-test:wit-protocol;
 
 world lists {
-  import push-bool: func(bools: list<bool>, a: bool) -> list<bool> 
-  export push-bools: func(bools: list<bool>, a: bool, b: bool) -> list<bool>
+  import push-bool: func(bools: list<bool>, a: bool) -> list<bool>;
+  export push-bools: func(bools: list<bool>, a: bool, b: bool) -> list<bool>;
 
-  import push-s8: func(nums: list<s8>, a: s8) -> list<s8> 
-  export push-s8s: func(nums: list<s8>, a: s8, b: s8) -> list<s8>
+  import push-s8: func(nums: list<s8>, a: s8) -> list<s8>;
+  export push-s8s: func(nums: list<s8>, a: s8, b: s8) -> list<s8>;
 
-  import push-s16: func(nums: list<s16>, a: s16) -> list<s16> 
-  export push-s16s: func(nums: list<s16>, a: s16, b: s16) -> list<s16>
+  import push-s16: func(nums: list<s16>, a: s16) -> list<s16>;
+  export push-s16s: func(nums: list<s16>, a: s16, b: s16) -> list<s16>;
 
-  import push-s32: func(nums: list<s32>, a: s32) -> list<s32> 
-  export push-s32s: func(nums: list<s32>, a: s32, b: s32) -> list<s32>
+  import push-s32: func(nums: list<s32>, a: s32) -> list<s32>;
+  export push-s32s: func(nums: list<s32>, a: s32, b: s32) -> list<s32>;
 
-  import push-s64: func(nums: list<s64>, a: s64) -> list<s64> 
-  export push-s64s: func(nums: list<s64>, a: s64, b: s64) -> list<s64>
+  import push-s64: func(nums: list<s64>, a: s64) -> list<s64>;
+  export push-s64s: func(nums: list<s64>, a: s64, b: s64) -> list<s64>;
 
-  import push-u8: func(nums: list<u8>, a: u8) -> list<u8> 
-  export push-u8s: func(nums: list<u8>, a: u8, b: u8) -> list<u8>
+  import push-u8: func(nums: list<u8>, a: u8) -> list<u8>;
+  export push-u8s: func(nums: list<u8>, a: u8, b: u8) -> list<u8>;
 
-  import push-u16: func(nums: list<u16>, a: u16) -> list<u16> 
-  export push-u16s: func(nums: list<u16>, a: u16, b: u16) -> list<u16>
+  import push-u16: func(nums: list<u16>, a: u16) -> list<u16>;
+  export push-u16s: func(nums: list<u16>, a: u16, b: u16) -> list<u16>;
 
-  import push-u32: func(nums: list<u32>, a: u32) -> list<u32> 
-  export push-u32s: func(nums: list<u32>, a: u32, b: u32) -> list<u32>
+  import push-u32: func(nums: list<u32>, a: u32) -> list<u32>;
+  export push-u32s: func(nums: list<u32>, a: u32, b: u32) -> list<u32>;
 
-  import push-u64: func(nums: list<u64>, a: u64) -> list<u64> 
-  export push-u64s: func(nums: list<u64>, a: u64, b: u64) -> list<u64>
+  import push-u64: func(nums: list<u64>, a: u64) -> list<u64>;
+  export push-u64s: func(nums: list<u64>, a: u64, b: u64) -> list<u64>;
 
-  import push-float32: func(nums: list<float32>, a: float32) -> list<float32> 
-  export push-float32s: func(nums: list<float32>, a: float32, b: float32) -> list<float32>
+  import push-float32: func(nums: list<float32>, a: float32) -> list<float32>;
+  export push-float32s: func(nums: list<float32>, a: float32, b: float32) -> list<float32>;
 
-  import push-float64: func(nums: list<float64>, a: float64) -> list<float64> 
-  export push-float64s: func(nums: list<float64>, a: float64, b: float64) -> list<float64>
+  import push-float64: func(nums: list<float64>, a: float64) -> list<float64>;
+  export push-float64s: func(nums: list<float64>, a: float64, b: float64) -> list<float64>;
 
-  import push-char: func(chars: list<char>, a: char) -> list<char> 
-  export push-chars: func(chars: list<char>, a: char, b: char) -> list<char>
+  import push-char: func(chars: list<char>, a: char) -> list<char>;
+  export push-chars: func(chars: list<char>, a: char, b: char) -> list<char>;
 
-  import push-string: func(texts: list<string>, a: string) -> list<string> 
-  export push-strings: func(texts: list<string>, a: string, b: string) -> list<string>
+  import push-string: func(texts: list<string>, a: string) -> list<string>;
+  export push-strings: func(texts: list<string>, a: string, b: string) -> list<string>;
 }

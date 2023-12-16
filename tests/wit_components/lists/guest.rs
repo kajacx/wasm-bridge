@@ -1,11 +1,14 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "lists",
+    exports: {
+        world: MyGuest,
+    }
 });
 
-struct Guest;
+struct MyGuest;
 
-impl Lists for Guest {
+impl Guest for MyGuest {
     fn push_bools(bools: Vec<bool>, a: bool, b: bool) -> Vec<bool> {
         let bools = push_bool(&bools, a);
         let bools = push_bool(&bools, b);
@@ -79,14 +82,12 @@ impl Lists for Guest {
     }
 
     fn push_strings(strings: Vec<String>, a: String, b: String) -> Vec<String> {
-        let strings = strings.iter().map(String::as_str).collect::<Vec<_>>();
+        //let strings = strings.iter().map(String::as_str).collect::<Vec<_>>();
         let strings = push_string(&strings, &a);
 
-        let strings = strings.iter().map(String::as_str).collect::<Vec<_>>();
+        //let strings = strings.iter().map(String::as_str).collect::<Vec<_>>();
         let strings = push_string(&strings, &b);
 
         strings
     }
 }
-
-export_lists!(Guest);
