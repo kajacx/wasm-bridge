@@ -1,5 +1,5 @@
 use anyhow::{bail, Context};
-use js_component_bindgen::{transpile, TranspileOpts};
+use js_component_bindgen::{transpile, InstantiationMode, TranspileOpts};
 use js_sys::Function;
 
 use crate::{helpers::map_js_error, Result};
@@ -15,7 +15,7 @@ pub(crate) struct ComponentLoader {}
 impl ComponentLoader {
     pub fn generate_files(bytes: &[u8]) -> Result<ComponentFiles> {
         let opts = TranspileOpts {
-            instantiation: true,
+            instantiation: Some(InstantiationMode::Async), // TODO: check this
             ..Default::default()
         };
 
