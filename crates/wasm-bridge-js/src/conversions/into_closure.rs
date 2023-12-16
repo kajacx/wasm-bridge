@@ -1,6 +1,10 @@
 use std::rc::Rc;
 
-use wasm_bindgen::{convert::FromWasmAbi, prelude::Closure, JsValue};
+use wasm_bindgen::{
+    convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi},
+    prelude::Closure,
+    JsValue,
+};
 
 use crate::*;
 
@@ -8,6 +12,23 @@ pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>) -> (JsValue, DropHand
 
 pub trait IntoMakeClosure<T, Params, Results> {
     fn into_make_closure(self) -> MakeClosure<T>;
+}
+
+fn is_from_wasm_abi<T: FromWasmAbi>() {}
+fn is_return_wasm_abi<T: ReturnWasmAbi>() {}
+
+fn test_it<R: IntoWasmAbi>() {
+    is_return_wasm_abi::<Result<R, JsValue>>();
+}
+
+fn make() {
+    is_from_wasm_abi::<u32>();
+    is_from_wasm_abi::<String>();
+    is_from_wasm_abi::<Option<u32>>();
+    //is_from_wasm_abi::<()>(); // no
+    //is_from_wasm_abi::<Result<u32, String>>(); // no
+    // is_from_wasm_abi::<(String, u8)>(); // no
+    let a = Closure::<dyn Fn() -> i32>::new(|| 5);
 }
 
 impl<T, R, F> IntoMakeClosure<T, (), R> for F
@@ -69,50 +90,76 @@ into_make_closure_single!(u64);
 into_make_closure_single!(f32);
 into_make_closure_single!(f64);
 
-macro_rules! into_make_closure_many {
-    ($(($param: ident, $name: ident)),*) => {
-        impl<T, $($name, )* R, F> IntoMakeClosure<T, ($($name),*), R> for F
-        where
-            T: 'static,
-            F: Fn(Caller<T>, $($name),*) -> R + 'static,
-            $($name: FromWasmAbi + 'static,)*
-            R: ToJsValue + 'static,
-        {
-            fn into_make_closure(self) -> MakeClosure<T> {
-                let self_rc = Rc::new(self);
+impl<T, P0, P1, R, F> IntoMakeClosure<T, (P0, P1), R> for F
+where
+    T: 'static,
+    F: Fn(Caller<T>, P0, P1) -> R + 'static,
+    P0: FromWasmAbi + 'static,
+    P1: FromWasmAbi + 'static,
+    R: ToJsValue + 'static,
+{
+    fn into_make_closure(self) -> MakeClosure<T> {
+        let self_rc = Rc::new(self);
 
-                let make_closure = move |handle: DataHandle<T>| {
-                    let caller = Caller::new(handle);
-                    let self_clone = self_rc.clone();
+        let make_closure = move |handle: DataHandle<T>| {
+            let caller = Caller::new(handle);
+            let self_clone = self_rc.clone();
 
-                    let closure =
-                        Closure::<dyn Fn($($name),*) -> Result<R::ReturnAbi, JsValue>>::new(move |$($param: $name),*| {
-                            self_clone(caller.clone(), $($param),*).into_return_abi()
-                        });
+            let closure = Closure::<dyn Fn(P0, P1) -> Result<R::ReturnAbi, JsValue>>::new(
+                move |p0: P0, p1: P1| self_clone(caller.clone(), p0, p1).into_return_abi(),
+            );
 
-                    DropHandle::from_closure(closure)
-                };
+            DropHandle::from_closure(closure)
+        };
 
-                Box::new(make_closure)
-            }
-        }
-    };
+        Box::new(make_closure)
+    }
 }
 
-#[rustfmt::skip]
-into_make_closure_many!((p0, P0), (p1, P1));
-#[rustfmt::skip]
-into_make_closure_many!((p0, P0), (p1, P1), (p2, P2));
-#[rustfmt::skip]
-into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3));
-#[rustfmt::skip]
-into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4));
-#[rustfmt::skip]
-into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5));
-#[rustfmt::skip]
-into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6));
-#[rustfmt::skip]
-into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7));
+// macro_rules! into_make_closure_many {
+//     ($(($param: ident, $name: ident)),*) => {
+//         impl<T, $($name, )* R, F> IntoMakeClosure<T, ($($name),*), R> for F
+//         where
+//             T: 'static,
+//             F: Fn(Caller<T>, $($name),*) -> R + 'static,
+//             $($name: FromWasmAbi + 'static,)*
+//             R: ToJsValue + 'static,
+//         {
+//             fn into_make_closure(self) -> MakeClosure<T> {
+//                 let self_rc = Rc::new(self);
+
+//                 let make_closure = move |handle: DataHandle<T>| {
+//                     let caller = Caller::new(handle);
+//                     let self_clone = self_rc.clone();
+
+//                     let closure =
+//                         Closure::<dyn Fn($($name),*) -> Result<R::ReturnAbi, JsValue>>::new(move |$($param: $name),*| {
+//                             self_clone(caller.clone(), $($param),*).into_return_abi()
+//                         });
+
+//                     DropHandle::from_closure(closure)
+//                 };
+
+//                 Box::new(make_closure)
+//             }
+//         }
+//     };
+// }
+
+// // #[rustfmt::skip]
+// // into_make_closure_many!((p0, P0), (p1, P1));
+// #[rustfmt::skip]
+// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2));
+// #[rustfmt::skip]
+// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3));
+// #[rustfmt::skip]
+// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4));
+// #[rustfmt::skip]
+// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5));
+// #[rustfmt::skip]
+// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6));
+// #[rustfmt::skip]
+// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7));
 
 // js-sys doesn't support closures with more than 8 arguments
 // TODO: a workaround can exist though
