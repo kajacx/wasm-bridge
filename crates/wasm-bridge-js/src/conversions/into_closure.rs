@@ -17,7 +17,10 @@ pub trait IntoMakeClosure<T, Params, Results> {
 fn is_from_wasm_abi<T: FromWasmAbi>() {}
 fn is_return_wasm_abi<T: ReturnWasmAbi>() {}
 
-fn test_it<R: IntoWasmAbi>() {
+fn test_it<R: IntoWasmAbi>()
+where
+    std::result::Result<R, JsValue>: ReturnWasmAbi,
+{
     is_return_wasm_abi::<Result<R, JsValue>>();
 }
 
@@ -28,6 +31,7 @@ fn make() {
     //is_from_wasm_abi::<()>(); // no
     //is_from_wasm_abi::<Result<u32, String>>(); // no
     // is_from_wasm_abi::<(String, u8)>(); // no
+    test_it::<i32>();
     let a = Closure::<dyn Fn() -> i32>::new(|| 5);
 }
 
@@ -36,6 +40,7 @@ where
     T: 'static,
     F: Fn(Caller<T>) -> R + 'static,
     R: ToJsValue + 'static,
+    Result<R::ReturnAbi, JsValue>: ReturnWasmAbi, // TODO: unnecessary return bound?
 {
     fn into_make_closure(self) -> MakeClosure<T> {
         let self_rc = Rc::new(self);
@@ -62,6 +67,7 @@ macro_rules! into_make_closure_single {
             T: 'static,
             F: Fn(Caller<T>, $ty) -> R + 'static,
             R: ToJsValue + 'static,
+            Result<R::ReturnAbi, JsValue>: ReturnWasmAbi, // TODO: unnecessary return bound?
         {
             fn into_make_closure(self) -> MakeClosure<T> {
                 let self_rc = Rc::new(self);
@@ -97,6 +103,7 @@ where
     P0: FromWasmAbi + 'static,
     P1: FromWasmAbi + 'static,
     R: ToJsValue + 'static,
+    Result<R::ReturnAbi, JsValue>: ReturnWasmAbi, // TODO: unnecessary return bound?
 {
     fn into_make_closure(self) -> MakeClosure<T> {
         let self_rc = Rc::new(self);
