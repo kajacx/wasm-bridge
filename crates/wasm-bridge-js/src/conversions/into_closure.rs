@@ -102,50 +102,51 @@ where
     }
 }
 
-// macro_rules! into_make_closure_many {
-//     ($(($param: ident, $name: ident)),*) => {
-//         impl<T, $($name, )* R, F> IntoMakeClosure<T, ($($name),*), R> for F
-//         where
-//             T: 'static,
-//             F: Fn(Caller<T>, $($name),*) -> R + 'static,
-//             $($name: FromWasmAbi + 'static,)*
-//             R: ToJsValue + 'static,
-//         {
-//             fn into_make_closure(self) -> MakeClosure<T> {
-//                 let self_rc = Rc::new(self);
+macro_rules! into_make_closure_many {
+    ($(($param: ident, $name: ident)),*) => {
+        impl<T, $($name, )* R, F> IntoMakeClosure<T, ($($name),*), R> for F
+        where
+            T: 'static,
+            F: Fn(Caller<T>, $($name),*) -> R + 'static,
+            $($name: FromWasmAbi + 'static,)*
+            R: ToJsValue + 'static,
+            Result<R::ReturnAbi, JsValue>: ReturnWasmAbi, // TODO: unnecessary return bound?
+        {
+            fn into_make_closure(self) -> MakeClosure<T> {
+                let self_rc = Rc::new(self);
 
-//                 let make_closure = move |handle: DataHandle<T>| {
-//                     let caller = Caller::new(handle);
-//                     let self_clone = self_rc.clone();
+                let make_closure = move |handle: DataHandle<T>| {
+                    let caller = Caller::new(handle);
+                    let self_clone = self_rc.clone();
 
-//                     let closure =
-//                         Closure::<dyn Fn($($name),*) -> Result<R::ReturnAbi, JsValue>>::new(move |$($param: $name),*| {
-//                             self_clone(caller.clone(), $($param),*).into_return_abi()
-//                         });
+                    let closure =
+                        Closure::<dyn Fn($($name),*) -> Result<R::ReturnAbi, JsValue>>::new(move |$($param: $name),*| {
+                            self_clone(caller.clone(), $($param),*).into_return_abi()
+                        });
 
-//                     DropHandle::from_closure(closure)
-//                 };
+                    DropHandle::from_closure(closure)
+                };
 
-//                 Box::new(make_closure)
-//             }
-//         }
-//     };
-// }
+                Box::new(make_closure)
+            }
+        }
+    };
+}
 
-// // #[rustfmt::skip]
-// // into_make_closure_many!((p0, P0), (p1, P1));
 // #[rustfmt::skip]
-// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2));
-// #[rustfmt::skip]
-// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3));
-// #[rustfmt::skip]
-// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4));
-// #[rustfmt::skip]
-// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5));
-// #[rustfmt::skip]
-// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6));
-// #[rustfmt::skip]
-// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7));
+// into_make_closure_many!((p0, P0), (p1, P1));
+#[rustfmt::skip]
+into_make_closure_many!((p0, P0), (p1, P1), (p2, P2));
+#[rustfmt::skip]
+into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3));
+#[rustfmt::skip]
+into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4));
+#[rustfmt::skip]
+into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5));
+#[rustfmt::skip]
+into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6));
+#[rustfmt::skip]
+into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7));
 
 // js-sys doesn't support closures with more than 8 arguments
 // TODO: a workaround can exist though

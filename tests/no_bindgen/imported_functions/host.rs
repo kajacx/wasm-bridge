@@ -166,26 +166,25 @@ async fn many_values(mut store: &mut Store<()>) -> Result<()> {
 
     // Try new_module_async with module wat
 
-    // FIXME: bring back multi-value tests
-    // let module = new_module_async(store.engine(), wat.as_bytes()).await?;
-
-    // let mut linker = Linker::new(store.engine());
-    // linker.func_wrap(
-    //     "imported_fns",
-    //     "add_import",
-    //     |_: Caller<()>, a: i32, b: i64, c: u32, d: u64, e: f32, f: f64| {
-    //         (a + 1, b + 1, c + 1, d + 1, e + 1.0, f + 1.0)
-    //     },
-    // )?;
-    // let instance = instantiate_async(&mut store, &linker, &module).await?;
-
-    // let add = instance
-    //     .get_typed_func::<(i32, i64, u32, u64, f32, f64), (i32, i64, u32, u64, f32, f64)>(
-    //         &mut store, "add",
-    //     )?;
-    // let returned = add.call(&mut store, (5, 15, 25, 35, 45.5, 55.5))?;
-    // assert_eq!(returned, (6, 16, 26, 36, 46.5, 56.5));
-
+    let module = new_module_async(store.engine(), wat.as_bytes()).await?;
+ 
+    let mut linker = Linker::new(store.engine());
+    linker.func_wrap(
+        "imported_fns",
+        "add_import",
+        |_: Caller<()>, a: i32, b: i64, c: u32, d: u64, e: f32, f: f64| {
+            (a + 1, b + 1, c + 1, d + 1, e + 1.0, f + 1.0)
+        },
+    )?;
+    let instance = instantiate_async(&mut store, &linker, &module).await?;
+ 
+    let add = instance
+        .get_typed_func::<(i32, i64, u32, u64, f32, f64), (i32, i64, u32, u64, f32, f64)>(
+            &mut store, "add",
+        )?;
+    let returned = add.call(&mut store, (5, 15, 25, 35, 45.5, 55.5))?;
+    assert_eq!(returned, (6, 16, 26, 36, 46.5, 56.5));
+ 
     Ok(())
 }
 
