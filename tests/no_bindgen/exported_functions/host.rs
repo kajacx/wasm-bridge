@@ -117,24 +117,21 @@ fn many_values(mut store: &mut Store<()>) -> Result<()> {
 fn errors(bytes: &[u8]) -> Result<()> {
     let mut store = Store::<()>::default();
 
-    // Bad binary bytes
     Module::new(store.engine(), &[1, 5])
         .map(|_| ())
-        .expect_err("should not create module");
+        .expect_err("parsing module from invalid binary bytes");
 
-    // Bad text bytes
-    Module::new(store.engine(), "not a valit wat module".as_bytes())
+    Module::new(store.engine(), "not a valid wat module".as_bytes())
         .map(|_| ())
-        .expect_err("should not create module");
+        .expect_err("parsing module from invalid wat text");
 
     let module = Module::new(store.engine(), bytes)?;
     let instance = Instance::new(&mut store, &module, &[])?;
 
-    // Non-existing function
     instance
         .get_typed_func::<i32, i32>(&mut store, "non_existing")
         .map(|_| ())
-        .expect_err("should not get function");
+        .expect_err("trying to get a non existing function");
 
     // TODO: Number of arguments in currently the only type info available
     // Maybe look into how wasmer does it?
@@ -142,14 +139,13 @@ fn errors(bytes: &[u8]) -> Result<()> {
     instance
         .get_typed_func::<(i32, i32), i32>(&mut store, "add_five_i32")
         .map(|_| ())
-        .expect_err("should not get function");
+        .expect_err("incorrect number if input arguments");
 
     let panics = instance.get_typed_func::<(), ()>(&mut store, "panics")?;
 
-    // Implementation panics
     panics
         .call(&mut store, ())
-        .expect_err("should not get result");
+        .expect_err("guest code should panic");
 
     Ok(())
 }
