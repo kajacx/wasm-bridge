@@ -14,3 +14,4 @@ see [LICENSE](./LICENSE).
 - Renamed `lib.rs` to `mod.rs`
 - Removed `#[proc_macro]` and `#[proc_macro_derive(...)]` attributes
 - Re-exported `component::Style` and `component::VariantStyle`
+- Fixed clippy lint issues, see [#7698](https://github.com/bytecodealliance/wasmtime/pull/7698)
