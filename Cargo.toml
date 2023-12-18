@@ -10,6 +10,8 @@ exclude = [
   "tests/"
 ]
 
+resolver = "2"
+
 [workspace.package]
 version = "0.2.2"
 edition = "2021"
