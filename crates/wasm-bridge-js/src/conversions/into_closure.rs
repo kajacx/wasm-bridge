@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use wasm_bindgen::{
-    convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi, WasmAbi},
+    convert::{FromWasmAbi, ReturnWasmAbi},
     prelude::Closure,
     JsValue,
 };
