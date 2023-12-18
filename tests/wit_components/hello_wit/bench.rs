@@ -71,18 +71,23 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
 
     let (instance, _) = TestWorld::instantiate(&mut store, &component, &linker)?;
 
-    let result = instance.call_promote_person(
-        &mut store,
-        &Person {
-            full_name: "John Conner".into(),
-            age: 30,
-            salary: 10_000,
-        },
-        5_000,
-    )?;
-    assert_eq!(result.full_name, "John Conner");
-    assert_eq!(result.age, 30);
-    assert_eq!(result.salary, 15_000);
+    super::bench("Pass a struct around", || {
+        let result = instance
+            .call_promote_person(
+                &mut store,
+                &Person {
+                    full_name: "John Conner".into(),
+                    age: 30,
+                    salary: 10_000,
+                },
+                5_000,
+            )
+            .expect("call promote person");
+
+        assert_eq!(result.full_name, "John Conner");
+        assert_eq!(result.age, 30);
+        assert_eq!(result.salary, 15_000);
+    });
 
     store.data_mut().number = 0;
     instance.call_increment_twice(&mut store)?;
@@ -121,16 +126,16 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance.guest_sub().call_sub_three(&mut store, 5)?;
     assert_eq!(result, 2);
 
-    // super::bench("test bench", || {
-    //     compute_it(50);
-    // });
+    super::bench("test bench", || {
+        compute_it(50);
+    });
 
     Ok(())
 }
 
-// fn compute_it(n: i32) -> i32 {
-//     n * (n - 1)
-// }
+fn compute_it(n: i32) -> i32 {
+    n * (n - 1)
+}
 
 // #[cfg(test)]
 // mod benches {
