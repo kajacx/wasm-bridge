@@ -1,10 +1,10 @@
+use wasm_bindgen::JsValue;
+
 use super::*;
 
 impl Lower for i32 {
-    type Abi = i32;
-
-    fn to_abi<M: WriteableMemory>(&self, _memory: M) -> i32 {
-        *self
+    fn to_abi<M: WriteableMemory>(&self, _memory: M, args: &mut Vec<JsValue>) {
+        args.push((*self).into());
     }
 
     fn write_to<M: WriteableMemory>(&self, _memory: M, memory_slice: &mut M::Slice) {
@@ -13,10 +13,8 @@ impl Lower for i32 {
 }
 
 impl Lower for u32 {
-    type Abi = i32; // TODO: should this be u32 instead? Does it matter?
-
-    fn to_abi<M: WriteableMemory>(&self, _memory: M) -> Self::Abi {
-        *self as _
+    fn to_abi<M: WriteableMemory>(&self, _memory: M, args: &mut Vec<JsValue>) {
+        args.push((*self).into());
     }
 
     fn write_to<M: WriteableMemory>(&self, _memory: M, memory_slice: &mut M::Slice) {
@@ -25,32 +23,33 @@ impl Lower for u32 {
 }
 
 impl<T: Lower> Lower for Vec<T> {
-    type Abi = (u32, u32);
+    fn to_abi<M: WriteableMemory>(&self, memory: M, args: &mut Vec<JsValue>) {
+        let addr = write_vec_data(self, memory) as u32;
+        let len = self.len() as u32;
 
-    fn to_abi<M: WriteableMemory>(&self, mut memory: M) -> Self::Abi {
-        // Allocate space for length and all elements
-        let mut slice = memory.allocate(T::alignment(), T::flat_byte_size() * self.len());
-
-        // Write the number of elements first
-        (self.len() as u32).write_to(&mut memory, &mut slice);
-
-        // Then write all the elements to the slice buffer
-        for elem in self {
-            elem.write_to(&mut memory, &mut slice);
-        }
-
-        // Then actually write the slice buffer to memory
-        let addr = memory.flush(slice);
-
-        // Return the address with the element count
-        (addr as u32, self.len() as u32)
+        // First address, then element count
+        args.push(addr.into());
+        args.push(len.into());
     }
 
     fn write_to<M: WriteableMemory>(&self, mut memory: M, memory_slice: &mut M::Slice) {
-        // TODO: It just so happens that this is the same, but it should be extracted to a separate method
-        let (address, len) = self.to_abi(&mut memory);
+        let addr = write_vec_data(self, &mut memory) as u32;
+        let len = self.len() as u32;
 
-        address.write_to(&mut memory, memory_slice);
+        addr.write_to(&mut memory, memory_slice);
         len.write_to(memory, memory_slice);
     }
+}
+
+fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], mut memory: M) -> usize {
+    // Allocate space for all the elements
+    let mut slice = memory.allocate(T::alignment(), T::flat_byte_size() * data.len());
+
+    // Then write the elements to the slice buffer
+    for elem in data {
+        elem.write_to(&mut memory, &mut slice);
+    }
+
+    // Then actually write the slice buffer to memory
+    memory.flush(slice)
 }

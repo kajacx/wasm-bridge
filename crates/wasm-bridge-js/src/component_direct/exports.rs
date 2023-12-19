@@ -61,11 +61,11 @@ impl ExportsRoot {
 
     pub fn typed_func<Params, Return>(&self, name: &str) -> Result<TypedFunc<Params, Return>> {
         // TODO: converting in the opposite direction when storing would be slightly faster
-        let name = name.to_lower_camel_case();
+        // let name = name.to_lower_camel_case();
 
         let func = self
             .exported_fns
-            .get(&name)
+            .get(name)
             .with_context(|| format!("Exported function '{name}' not found"))?
             .clone();
 
