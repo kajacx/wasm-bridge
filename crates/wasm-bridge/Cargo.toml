@@ -25,4 +25,4 @@ component-model = ["wasmtime/component-model", "wasm-bridge-macros", "wasm-bridg
 async = ["wasmtime/async", "async-trait", "wasm-bridge-macros/async", "wasm-bridge-js/async"]
 wasi = ["wasmtime-wasi",  "wasm-bridge-js/wasi", "async"]
 error-logging = ["wasm-bridge-js/error-logging"]
-
+direct-bytes = ["wasm-bridge-js/direct-bytes"]

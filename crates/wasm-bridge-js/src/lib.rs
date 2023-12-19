@@ -33,5 +33,8 @@ pub mod wasi;
 #[cfg(feature = "async")]
 pub use wasm_bridge_macros::async_trait;
 
+#[cfg(feature = "direct-bytes")]
+pub mod direct_bytes;
+
 pub use js_sys;
 pub use wasm_bindgen;
