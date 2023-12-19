@@ -29,7 +29,7 @@ pub struct ExportsRoot {
 }
 
 impl ExportsRoot {
-    pub(crate) fn new(exports: JsValue, closures: &Rc<[DropHandle]>) -> Result<Self> {
+    pub(crate) fn new(exports: JsValue) -> Result<Self> {
         let names = Object::get_own_property_names(&exports.clone().into());
         let mut exported_fns = HashMap::<String, Func>::new();
         let mut exported_objects = HashMap::<String, ExportsRoot>::new();
