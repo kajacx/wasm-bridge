@@ -28,44 +28,44 @@ impl<T> Linker<T> {
         mut store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
-        let import_object = js_sys::Object::new();
-        if let Some(imports) = &self.wasi_imports {
-            js_sys::Object::assign(&import_object, imports);
-        }
-        let import_object: JsValue = import_object.into();
+        // let import_object = js_sys::Object::new();
+        // if let Some(imports) = &self.wasi_imports {
+        //     js_sys::Object::assign(&import_object, imports);
+        // }
+        // let import_object: JsValue = import_object.into();
 
-        let mut closures = Vec::with_capacity(self.fns.len());
-        let data_handle = store.as_context_mut().data_handle();
+        // let mut closures = Vec::with_capacity(self.fns.len());
+        // let data_handle = store.as_context_mut().data_handle();
 
-        for function in self.fns.iter() {
-            let drop_handle = function.add_to_imports(&import_object, data_handle.clone());
-            closures.push(drop_handle);
-        }
+        // for function in self.fns.iter() {
+        //     let drop_handle = function.add_to_imports(&import_object, data_handle.clone());
+        //     closures.push(drop_handle);
+        // }
 
-        for (instance_name, instance_linker) in self.instances.iter() {
-            let instance_obj = Object::new();
+        // for (instance_name, instance_linker) in self.instances.iter() {
+        //     let instance_obj = Object::new();
 
-            for function in instance_linker.fns.iter() {
-                let drop_handle =
-                    function.add_to_instance_imports(&instance_obj, data_handle.clone());
-                closures.push(drop_handle);
-            }
+        //     for function in instance_linker.fns.iter() {
+        //         let drop_handle =
+        //             function.add_to_instance_imports(&instance_obj, data_handle.clone());
+        //         closures.push(drop_handle);
+        //     }
 
-            Reflect::set(&import_object, &instance_name.into(), &instance_obj).unwrap();
-        }
+        //     Reflect::set(&import_object, &instance_name.into(), &instance_obj).unwrap();
+        // }
 
-        let closures = Rc::from(closures);
-        component.instantiate(store, &import_object, closures)
+        // let closures = Rc::from(closures);
+        // component.instantiate(store, &import_object, closures)
+        component.instantiate()
     }
 
     // TODO: async was removed thanks to the macro
-    pub fn instantiate_async(
+    pub async fn instantiate_async(
         &self,
         store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
-        // TODO: proper async instantiation
-        self.instantiate(store, component)
+        component.instantiate_async().await
     }
 
     pub fn root(&mut self) -> &mut Self {

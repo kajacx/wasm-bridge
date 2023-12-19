@@ -43,9 +43,9 @@ impl ExportsRoot {
                 Reflect::get(&exports, &name).map_err(map_js_error("Get exported value"))?;
 
             if exported.is_function() {
-                exported_fns.insert(name_string, Func::new(exported.into(), closures.clone()));
+                exported_fns.insert(name_string, Func::new(exported.into()));
             } else if exported.is_object() {
-                exported_objects.insert(name_string, ExportsRoot::new(exported, closures)?);
+                exported_objects.insert(name_string, ExportsRoot::new(exported)?);
             } else {
                 return Err(map_js_error(
                     "Exported value must be a function or an object",
