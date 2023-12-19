@@ -111,13 +111,15 @@ pub fn from_js_value_variant(name: Ident, data: DataEnum) -> TokenStream {
             type WasmAbi = wasm_bridge::wasm_bindgen::JsValue;
 
             fn from_js_value(value: &wasm_bridge::wasm_bindgen::JsValue) -> wasm_bridge::Result<Self> {
-                let tag = wasm_bridge::js_sys::Reflect::get(value, static_str_to_js("tag"))
+                let tag_str = wasm_bridge::helpers::static_str_to_js("tag");
+                let tag = wasm_bridge::js_sys::Reflect::get(value, tag_str)
                     .map_err(wasm_bridge::helpers::map_js_error("Get variant tag"))?
                     .as_string()
                     .ok_or(value)
                     .map_err(wasm_bridge::helpers::map_js_error("Variant tag should be a string"))?;
 
-                let val = wasm_bridge::js_sys::Reflect::get(value, static_str_to_js("val"))
+                let val_str = wasm_bridge::helpers::static_str_to_js("val");
+                let val = wasm_bridge::js_sys::Reflect::get(value, val_str)
                     .map_err(wasm_bridge::helpers::map_js_error("Get variant val"))?;
 
                 #impl_block

@@ -88,7 +88,10 @@ pub fn to_js_value_variant(name: Ident, data: DataEnum) -> TokenStream {
         let create_result = quote!(
             let result = wasm_bridge::js_sys::Object::new();
             let result: wasm_bridge::wasm_bindgen::JsValue = result.into();
-            wasm_bridge::js_sys::Reflect::set(&result, static_str_to_js("tag"), &#variant_name_converted.into()).expect("result is object");
+
+            let tag_str = wasm_bridge::helpers::static_str_to_js("tag");
+            let name_str = wasm_bridge::helpers::static_str_to_js(#variant_name_converted);
+            wasm_bridge::js_sys::Reflect::set(&result, tag_str, name_str).expect("result is object");
         );
 
         let field = variant.fields.iter().next();
@@ -96,7 +99,8 @@ pub fn to_js_value_variant(name: Ident, data: DataEnum) -> TokenStream {
             Some(_) => quote!(
                 Self::#variant_name(value) => {
                     #create_result
-                    wasm_bridge::js_sys::Reflect::set(&result, static_str_to_js("val"), &value.to_js_value()).expect("result is object");
+                    let val_str = wasm_bridge::helpers::static_str_to_js("val");
+                    wasm_bridge::js_sys::Reflect::set(&result, val_str, &value.to_js_value()).expect("result is object");
                     result
                 }
             ),

@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use js_sys::{Function, JsString};
+use js_sys::Function;
 use wasm_bindgen::JsValue;
 
 use crate::Error;
