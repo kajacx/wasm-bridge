@@ -34,6 +34,16 @@ impl SizeDescription for u32 {
     }
 }
 
+impl<T: SizeDescription> SizeDescription for &[T] {
+    fn alignment() -> usize {
+        4
+    }
+
+    fn flat_byte_size() -> usize {
+        8
+    }
+}
+
 impl<T: SizeDescription> SizeDescription for Vec<T> {
     fn alignment() -> usize {
         4

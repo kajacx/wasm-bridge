@@ -23,6 +23,25 @@ impl Lower for u32 {
     }
 }
 
+impl<T: Lower> Lower for &[T] {
+    fn to_abi<M: WriteableMemory>(&self, memory: &M, args: &mut Vec<JsValue>) {
+        let addr = write_vec_data(self, memory) as u32;
+        let len = self.len() as u32;
+
+        // First address, then element count
+        args.push(addr.into());
+        args.push(len.into());
+    }
+
+    fn write_to<M: WriteableMemory>(&self, memory: &M, memory_slice: &mut M::Slice) {
+        let addr = write_vec_data(self, memory) as u32;
+        let len = self.len() as u32;
+
+        addr.write_to(memory, memory_slice);
+        len.write_to(memory, memory_slice);
+    }
+}
+
 impl<T: Lower> Lower for Vec<T> {
     fn to_abi<M: WriteableMemory>(&self, memory: &M, args: &mut Vec<JsValue>) {
         let addr = write_vec_data(self, memory) as u32;
