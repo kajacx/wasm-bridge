@@ -7,7 +7,7 @@ use crate::{
     AsContextMut, Result,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Memory {
     memory: WebAssembly::Memory,
 }

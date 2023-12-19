@@ -7,30 +7,30 @@ pub trait Lower: SizeDescription {
     // type Abi;
 
     /// Gets the "final" thing that is passed into the wasm function call
-    fn to_abi<M: WriteableMemory>(&self, memory: &mut M, args: &mut Vec<JsValue>);
+    fn to_abi<M: WriteableMemory>(&self, memory: &M, args: &mut Vec<JsValue>);
 
     /// Writes itself and all children into the memory slice
-    fn write_to<M: WriteableMemory>(&self, memory: &mut M, memory_slice: &mut M::Slice);
+    fn write_to<M: WriteableMemory>(&self, memory: &M, memory_slice: &mut M::Slice);
 }
 
 pub trait WriteableMemory {
     type Slice: WriteableMemorySlice;
 
     /// Allocates `size` bytes with `align` alignment
-    fn allocate(&mut self, align: usize, size: usize) -> Self::Slice;
+    fn allocate(&self, align: usize, size: usize) -> Self::Slice;
 
     /// Actually writes the slice into memory, returning the slice's length in bytes
-    fn flush(&mut self, slice: Self::Slice) -> usize;
+    fn flush(&self, slice: Self::Slice) -> usize;
 }
 
-impl<T: WriteableMemory> WriteableMemory for &mut T {
+impl<T: WriteableMemory> WriteableMemory for &T {
     type Slice = T::Slice;
 
-    fn allocate(&mut self, align: usize, size: usize) -> Self::Slice {
+    fn allocate(&self, align: usize, size: usize) -> Self::Slice {
         T::allocate(self, align, size)
     }
 
-    fn flush(&mut self, slice: Self::Slice) -> usize {
+    fn flush(&self, slice: Self::Slice) -> usize {
         T::flush(self, slice)
     }
 }
@@ -45,18 +45,18 @@ impl<T: WriteableMemorySlice> WriteableMemorySlice for &mut T {
     }
 }
 
-struct ModuleWriteableMemory {
+#[derive(Debug, Clone)]
+pub(crate) struct ModuleWriteableMemory {
     memory: crate::Memory,
     realloc: Function,
 }
 
 impl ModuleWriteableMemory {
-    #[allow(unused)]
-    fn new(memory: crate::Memory, realloc: Function) -> Self {
+    pub(crate) fn new(memory: crate::Memory, realloc: Function) -> Self {
         Self { memory, realloc }
     }
 
-    fn malloc(&mut self, align: usize, size: usize) -> Result<usize, ()> {
+    fn malloc(&self, align: usize, size: usize) -> Result<usize, ()> {
         let zero: JsValue = 0.into();
 
         let args = Array::of4(&zero, &zero, &(align as u32).into(), &(size as u32).into());
@@ -71,7 +71,7 @@ impl ModuleWriteableMemory {
     }
 }
 
-struct ModuleWriteableMemorySlice {
+pub struct ModuleWriteableMemorySlice {
     start_offset: usize,
     data_buffer: Vec<u8>,
 }
@@ -88,12 +88,12 @@ impl ModuleWriteableMemorySlice {
 impl WriteableMemory for ModuleWriteableMemory {
     type Slice = ModuleWriteableMemorySlice;
 
-    fn allocate(&mut self, align: usize, size: usize) -> Self::Slice {
+    fn allocate(&self, align: usize, size: usize) -> Self::Slice {
         let start_offset = self.malloc(align, size).expect("calling malloc");
         ModuleWriteableMemorySlice::new(start_offset, size)
     }
 
-    fn flush(&mut self, slice: Self::Slice) -> usize {
+    fn flush(&self, slice: Self::Slice) -> usize {
         self.memory
             .write_impl(slice.start_offset, &slice.data_buffer)
             .expect("write bytes to buffer");
@@ -109,5 +109,5 @@ impl WriteableMemorySlice for ModuleWriteableMemorySlice {
 }
 
 pub trait LowerArgs {
-    fn to_fn_args<M: WriteableMemory>(self, memory: &mut M) -> Array;
+    fn to_fn_args<M: WriteableMemory>(self, memory: &M) -> Array;
 }

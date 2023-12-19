@@ -2,12 +2,16 @@ use std::marker::PhantomData;
 
 use wasm_bindgen::JsValue;
 
-use crate::{AsContextMut, FromJsValue, Result, ToJsValue};
+use crate::{
+    direct_bytes::{LowerArgs, ModuleWriteableMemory},
+    AsContextMut, FromJsValue, Memory, Result, ToJsValue,
+};
 
 use super::Func;
 
 pub struct TypedFunc<Params, Return> {
     func: Func,
+
     _phantom: PhantomData<dyn Fn(Params) -> Return>,
 }
 
@@ -15,6 +19,7 @@ impl<Params, Return> TypedFunc<Params, Return> {
     pub fn new(func: Func) -> Self {
         Self {
             func,
+
             _phantom: PhantomData,
         }
     }
@@ -31,17 +36,17 @@ impl<Params, Return> TypedFunc<Params, Return> {
 
     pub fn call(&self, _store: impl AsContextMut, params: Params) -> Result<Return>
     where
-        Params: ToJsValue,
+        Params: LowerArgs,
         Return: FromJsValue,
     {
-        let argument = params.to_function_args();
-        let result = self.func.function.apply(&JsValue::UNDEFINED, &argument);
+        let arguments = params.to_fn_args(&self.func.memory);
+        let result = self.func.function.apply(&JsValue::UNDEFINED, &arguments);
         Return::from_fn_result(&result)
     }
 
     pub fn call_async(&self, store: impl AsContextMut, params: Params) -> Result<Return>
     where
-        Params: ToJsValue,
+        Params: LowerArgs,
         Return: FromJsValue,
     {
         self.call(store, params)

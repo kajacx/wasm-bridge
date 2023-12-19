@@ -4,27 +4,27 @@ use wasm_bindgen::JsValue;
 use super::*;
 
 impl Lower for i32 {
-    fn to_abi<M: WriteableMemory>(&self, _memory: &mut M, args: &mut Vec<JsValue>) {
+    fn to_abi<M: WriteableMemory>(&self, _memory: &M, args: &mut Vec<JsValue>) {
         args.push((*self).into());
     }
 
-    fn write_to<M: WriteableMemory>(&self, _memory: &mut M, memory_slice: &mut M::Slice) {
+    fn write_to<M: WriteableMemory>(&self, _memory: &M, memory_slice: &mut M::Slice) {
         memory_slice.write(&self.to_le_bytes())
     }
 }
 
 impl Lower for u32 {
-    fn to_abi<M: WriteableMemory>(&self, _memory: &mut M, args: &mut Vec<JsValue>) {
+    fn to_abi<M: WriteableMemory>(&self, _memory: &M, args: &mut Vec<JsValue>) {
         args.push((*self).into());
     }
 
-    fn write_to<M: WriteableMemory>(&self, _memory: &mut M, memory_slice: &mut M::Slice) {
+    fn write_to<M: WriteableMemory>(&self, _memory: &M, memory_slice: &mut M::Slice) {
         memory_slice.write(&self.to_le_bytes())
     }
 }
 
 impl<T: Lower> Lower for Vec<T> {
-    fn to_abi<M: WriteableMemory>(&self, memory: &mut M, args: &mut Vec<JsValue>) {
+    fn to_abi<M: WriteableMemory>(&self, memory: &M, args: &mut Vec<JsValue>) {
         let addr = write_vec_data(self, memory) as u32;
         let len = self.len() as u32;
 
@@ -33,7 +33,7 @@ impl<T: Lower> Lower for Vec<T> {
         args.push(len.into());
     }
 
-    fn write_to<M: WriteableMemory>(&self, memory: &mut M, memory_slice: &mut M::Slice) {
+    fn write_to<M: WriteableMemory>(&self, memory: &M, memory_slice: &mut M::Slice) {
         let addr = write_vec_data(self, memory) as u32;
         let len = self.len() as u32;
 
@@ -42,7 +42,7 @@ impl<T: Lower> Lower for Vec<T> {
     }
 }
 
-fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], memory: &mut M) -> usize {
+fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], memory: &M) -> usize {
     // Allocate space for all the elements
     let mut slice = memory.allocate(T::alignment(), T::flat_byte_size() * data.len());
 
@@ -56,13 +56,13 @@ fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], memory: &mut M) -> u
 }
 
 impl LowerArgs for () {
-    fn to_fn_args<M: WriteableMemory>(self, _memory: &mut M) -> Array {
+    fn to_fn_args<M: WriteableMemory>(self, _memory: &M) -> Array {
         Array::new()
     }
 }
 
 impl<T: Lower> LowerArgs for (T,) {
-    fn to_fn_args<M: WriteableMemory>(self, memory: &mut M) -> Array {
+    fn to_fn_args<M: WriteableMemory>(self, memory: &M) -> Array {
         let mut args = vec![];
         self.0.to_abi(memory, &mut args);
         args.into_iter().collect()
@@ -70,7 +70,7 @@ impl<T: Lower> LowerArgs for (T,) {
 }
 
 impl<T: Lower, U: Lower> LowerArgs for (T, U) {
-    fn to_fn_args<M: WriteableMemory>(self, memory: &mut M) -> Array {
+    fn to_fn_args<M: WriteableMemory>(self, memory: &M) -> Array {
         let mut args = vec![];
         self.0.to_abi(memory, &mut args);
         self.1.to_abi(memory, &mut args);
@@ -79,7 +79,7 @@ impl<T: Lower, U: Lower> LowerArgs for (T, U) {
 }
 
 impl<T: Lower, U: Lower, V: Lower> LowerArgs for (T, U, V) {
-    fn to_fn_args<M: WriteableMemory>(self, memory: &mut M) -> Array {
+    fn to_fn_args<M: WriteableMemory>(self, memory: &M) -> Array {
         let mut args = vec![];
         self.0.to_abi(memory, &mut args);
         self.1.to_abi(memory, &mut args);
