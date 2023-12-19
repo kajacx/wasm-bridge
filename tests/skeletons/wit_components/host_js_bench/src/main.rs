@@ -10,7 +10,7 @@ fn main() {
     host::run_test(GUEST_BYTES).expect("host_js test should pass")
 }
 
-fn bench(name: &str, code: impl FnMut() -> ()) {
+fn bench<T>(name: &str, code: impl FnMut() -> T) {
     let bench = easybench_wasm::bench(code);
     log(&format!("{name}: {} ns per iteration", bench.ns_per_iter));
     log(&format!("{:?}", bench));
