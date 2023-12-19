@@ -3,14 +3,6 @@ use super::*;
 impl Lower for i32 {
     type ReturnAbi = i32;
 
-    fn alignment() -> usize {
-        4
-    }
-
-    fn flat_byte_size() -> usize {
-        4
-    }
-
     fn to_return_abi<M: WriteableMemory>(&self, _memory: M) -> i32 {
         *self
     }
@@ -23,14 +15,6 @@ impl Lower for i32 {
 impl Lower for u32 {
     type ReturnAbi = i32; // TODO: should this be u32 instead? Does it matter?
 
-    fn alignment() -> usize {
-        4
-    }
-
-    fn flat_byte_size() -> usize {
-        4
-    }
-
     fn to_return_abi<M: WriteableMemory>(&self, _memory: M) -> Self::ReturnAbi {
         *self as _
     }
@@ -42,14 +26,6 @@ impl Lower for u32 {
 
 impl<T: Lower> Lower for Vec<T> {
     type ReturnAbi = (u32, u32);
-
-    fn alignment() -> usize {
-        4
-    }
-
-    fn flat_byte_size() -> usize {
-        8
-    }
 
     fn to_return_abi<M: WriteableMemory>(&self, mut memory: M) -> Self::ReturnAbi {
         // Allocate space for length and all elements

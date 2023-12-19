@@ -24,8 +24,13 @@ pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
 pub mod helpers;
 
-#[cfg(feature = "component-model")]
+#[cfg(all(feature = "component-model", not(feature = "direct-bytes")))]
 pub mod component;
+
+#[cfg(all(feature = "component-model", feature = "direct-bytes"))]
+pub mod component_direct;
+#[cfg(all(feature = "component-model", feature = "direct-bytes"))]
+pub use component_direct as component;
 
 #[cfg(feature = "wasi")]
 pub mod wasi;

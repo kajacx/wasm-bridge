@@ -1,14 +1,10 @@
 use js_sys::{Array, Function};
 use wasm_bindgen::JsValue;
 
-pub trait Lower {
+use super::SizeDescription;
+
+pub trait Lower: SizeDescription {
     type ReturnAbi;
-
-    /// Alignment in bytes
-    fn alignment() -> usize;
-
-    /// How many bytes would a field of this type take in a struct
-    fn flat_byte_size() -> usize;
 
     /// Gets the "final" thing that is passed into the wasm function call
     fn to_return_abi<M: WriteableMemory>(&self, memory: M) -> Self::ReturnAbi;
