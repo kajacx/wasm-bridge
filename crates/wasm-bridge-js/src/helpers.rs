@@ -60,7 +60,7 @@ pub fn map_js_error<T: Debug + AsRef<JsValue>>(hint: &'static str) -> impl Fn(T)
     }
 }
 
-pub fn static_str_to_js(s: &'static str) -> JsString {
+pub fn static_str_to_js(s: &'static str) -> &'static JsValue {
     use std::cell::RefCell;
     use std::collections::HashMap;
 
@@ -68,16 +68,25 @@ pub fn static_str_to_js(s: &'static str) -> JsString {
         // Since we're mainly optimizing for converting the exact same string literal over and over again,
         // which will always have the same pointer, we can speed things up by indexing by the string's pointer
         // instead of its value.
-        static CACHE: RefCell<HashMap<(*const u8, usize), JsString>> = Default::default();
+        static CACHE: RefCell<HashMap<(*const u8, usize), &'static JsValue>> = Default::default();
     }
 
     let key = (s.as_ptr(), s.len());
 
     CACHE.with(|cache| {
-        cache
-            .borrow_mut()
-            .entry(key)
-            .or_insert_with(|| s.into())
-            .clone()
+        let mut cache = cache.borrow_mut();
+        let reference = cache.entry(key).or_insert_with(|| {
+            let js_val: JsValue = s.into();
+            let boxed = Box::new(js_val);
+            let leaked = Box::leak(boxed);
+            leaked as &'static JsValue
+        });
+        *reference
+        // .clone()
+        // .clone()
+        //let val = cache.borrow_mut().entry(key).or_insert_with(|| s.into());
+        // unsafe { &*(val as *const JsString) }
+        //val.clone()
+        //val as &'static JsString
     })
 }

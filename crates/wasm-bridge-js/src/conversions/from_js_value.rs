@@ -2,7 +2,10 @@ use anyhow::Context;
 use js_sys::Reflect;
 use wasm_bindgen::{convert::FromWasmAbi, JsValue};
 
-use crate::{helpers::map_js_error, *};
+use crate::{
+    helpers::{map_js_error, static_str_to_js},
+    *,
+};
 
 pub trait FromJsValue: Sized {
     type WasmAbi: FromWasmAbi;
@@ -186,13 +189,13 @@ impl<T: FromJsValue, E: FromJsValue> FromJsValue for Result<T, E> {
 
     fn from_js_value(value: &JsValue) -> Result<Self> {
         // TODO: better error handling
-        let tag = Reflect::get(value, &"tag".into())
+        let tag = Reflect::get(value, static_str_to_js("tag"))
             .map_err(map_js_error("Get tag from result"))?
             .as_string()
             .context("Result tag should be string")?;
 
-        let val =
-            Reflect::get(value, &"val".into()).map_err(map_js_error("Get val from result"))?;
+        let val = Reflect::get(value, static_str_to_js("val"))
+            .map_err(map_js_error("Get val from result"))?;
 
         if tag == "ok" {
             Ok(Ok(T::from_js_value(&val)?))
@@ -207,7 +210,7 @@ impl<T: FromJsValue, E: FromJsValue> FromJsValue for Result<T, E> {
         Ok(match result {
             Ok(val) => Ok(T::from_js_value(val)?),
             Err(err) => {
-                let payload = Reflect::get(err, &"payload".into())
+                let payload = Reflect::get(err, static_str_to_js("payload"))
                     .map_err(map_js_error("Get result error payload"))?;
                 Err(E::from_js_value(&payload)?)
             }
@@ -223,7 +226,7 @@ impl<T: FromJsValue> FromJsValue for Vec<T> {
     type WasmAbi = JsValue;
 
     fn from_js_value(value: &JsValue) -> Result<Self> {
-        let length = Reflect::get(value, &"length".into())
+        let length = Reflect::get(value, static_str_to_js("length"))
             .map_err(map_js_error("Get length of array"))?
             .as_f64()
             .context("Array length should be a number")? as u32;

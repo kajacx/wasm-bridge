@@ -1,6 +1,9 @@
 use std::{collections::HashMap, rc::Rc};
 
-use crate::{helpers::map_js_error, *};
+use crate::{
+    helpers::{map_js_error, static_str_to_js},
+    *,
+};
 use anyhow::{bail, Context};
 use js_sys::{
     Function, Object, Reflect,
@@ -55,7 +58,7 @@ impl Instance {
     }
 
     fn from_js_object(instance: JsValue, closures: Vec<DropHandle>) -> Result<Self> {
-        let exports = Reflect::get(&instance, &"exports".into())
+        let exports = Reflect::get(&instance, static_str_to_js("exports"))
             .map_err(map_js_error("Get instance's exports"))?;
 
         Ok(Self {
