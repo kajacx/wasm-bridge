@@ -1,4 +1,4 @@
-use js_sys::{Array, Function, Object};
+use js_sys::{Array, Function};
 use wasm_bindgen::JsValue;
 
 use super::SizeDescription;
@@ -7,10 +7,10 @@ pub trait Lower: SizeDescription {
     // type Abi;
 
     /// Gets the "final" thing that is passed into the wasm function call
-    fn to_abi<M: WriteableMemory>(&self, memory: M, args: &mut Vec<JsValue>);
+    fn to_abi<M: WriteableMemory>(&self, memory: &mut M, args: &mut Vec<JsValue>);
 
     /// Writes itself and all children into the memory slice
-    fn write_to<M: WriteableMemory>(&self, memory: M, memory_slice: &mut M::Slice);
+    fn write_to<M: WriteableMemory>(&self, memory: &mut M, memory_slice: &mut M::Slice);
 }
 
 pub trait WriteableMemory {
@@ -109,38 +109,5 @@ impl WriteableMemorySlice for ModuleWriteableMemorySlice {
 }
 
 pub trait LowerArgs {
-    fn to_fn_args<M: WriteableMemory>(self, memory: M) -> Array;
-}
-
-impl LowerArgs for () {
-    fn to_fn_args<M: WriteableMemory>(self, _memory: M) -> Array {
-        Array::new()
-    }
-}
-
-impl<T: Lower> LowerArgs for (T,) {
-    fn to_fn_args<M: WriteableMemory>(self, memory: M) -> Array {
-        let mut args = vec![];
-        self.0.to_abi(memory, &mut args);
-        args.into_iter().collect()
-    }
-}
-
-impl<T: Lower, U: Lower> LowerArgs for (T, U) {
-    fn to_fn_args<M: WriteableMemory>(self, mut memory: M) -> Array {
-        let mut args = vec![];
-        self.0.to_abi(&mut memory, &mut args);
-        self.1.to_abi(memory, &mut args);
-        args.into_iter().collect()
-    }
-}
-
-impl<T: Lower, U: Lower, V: Lower> LowerArgs for (T, U, V) {
-    fn to_fn_args<M: WriteableMemory>(self, mut memory: M) -> Array {
-        let mut args = vec![];
-        self.0.to_abi(&mut memory, &mut args);
-        self.1.to_abi(&mut memory, &mut args);
-        self.2.to_abi(memory, &mut args);
-        args.into_iter().collect()
-    }
+    fn to_fn_args<M: WriteableMemory>(self, memory: &mut M) -> Array;
 }
