@@ -1,7 +1,7 @@
 use js_sys::{Array, Function};
 use wasm_bindgen::JsValue;
 
-use super::SizeDescription;
+use super::{ReadableMemory, SizeDescription};
 
 pub trait Lower: SizeDescription {
     // type Abi;
@@ -68,6 +68,15 @@ impl ModuleWriteableMemory {
         // TODO: realloc might run out of memory, in that case, we should propagate error to the user
 
         Ok(result.as_f64().expect("realloc should return a number") as usize)
+    }
+}
+
+// TODO: just make it work ...
+impl ReadableMemory for ModuleWriteableMemory {
+    fn read_to_slice(&self, addr: usize, target: &mut [u8]) {
+        self.memory
+            .read_impl(addr, target)
+            .expect("Read memory should work")
     }
 }
 

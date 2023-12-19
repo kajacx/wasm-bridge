@@ -1,9 +1,11 @@
 use std::marker::PhantomData;
 
+use anyhow::Context;
 use wasm_bindgen::JsValue;
 
 use crate::{
-    direct_bytes::{LowerArgs, ModuleWriteableMemory},
+    direct_bytes::{Lift, LowerArgs, ModuleWriteableMemory},
+    helpers::map_js_error,
     AsContextMut, FromJsValue, Memory, Result, ToJsValue,
 };
 
@@ -11,7 +13,6 @@ use super::Func;
 
 pub struct TypedFunc<Params, Return> {
     func: Func,
-
     _phantom: PhantomData<dyn Fn(Params) -> Return>,
 }
 
@@ -19,7 +20,6 @@ impl<Params, Return> TypedFunc<Params, Return> {
     pub fn new(func: Func) -> Self {
         Self {
             func,
-
             _phantom: PhantomData,
         }
     }
@@ -37,17 +37,25 @@ impl<Params, Return> TypedFunc<Params, Return> {
     pub fn call(&self, _store: impl AsContextMut, params: Params) -> Result<Return>
     where
         Params: LowerArgs,
-        Return: FromJsValue,
+        Return: Lift,
+        Return::Abi: FromJsValue, // TODO: quick ugly hack
     {
         let arguments = params.to_fn_args(&self.func.memory);
-        let result = self.func.function.apply(&JsValue::UNDEFINED, &arguments);
-        Return::from_fn_result(&result)
+        let result = self
+            .func
+            .function
+            .apply(&JsValue::UNDEFINED, &arguments)
+            .map_err(map_js_error("Error inside exported function"))?;
+        let result_abi = Return::Abi::from_js_value(&result)
+            .context("Cannot cast return type to correct ABI type")?;
+        Lift::from_abi(result_abi, &self.func.memory)
     }
 
     pub fn call_async(&self, store: impl AsContextMut, params: Params) -> Result<Return>
     where
         Params: LowerArgs,
-        Return: FromJsValue,
+        Return: Lift,
+        Return::Abi: FromJsValue, // TODO: quick ugly hack
     {
         self.call(store, params)
     }
