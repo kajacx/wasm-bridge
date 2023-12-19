@@ -1,9 +1,9 @@
 use super::*;
 
 impl Lower for i32 {
-    type ReturnAbi = i32;
+    type Abi = i32;
 
-    fn to_return_abi<M: WriteableMemory>(&self, _memory: M) -> i32 {
+    fn to_abi<M: WriteableMemory>(&self, _memory: M) -> i32 {
         *self
     }
 
@@ -13,9 +13,9 @@ impl Lower for i32 {
 }
 
 impl Lower for u32 {
-    type ReturnAbi = i32; // TODO: should this be u32 instead? Does it matter?
+    type Abi = i32; // TODO: should this be u32 instead? Does it matter?
 
-    fn to_return_abi<M: WriteableMemory>(&self, _memory: M) -> Self::ReturnAbi {
+    fn to_abi<M: WriteableMemory>(&self, _memory: M) -> Self::Abi {
         *self as _
     }
 
@@ -25,9 +25,9 @@ impl Lower for u32 {
 }
 
 impl<T: Lower> Lower for Vec<T> {
-    type ReturnAbi = (u32, u32);
+    type Abi = (u32, u32);
 
-    fn to_return_abi<M: WriteableMemory>(&self, mut memory: M) -> Self::ReturnAbi {
+    fn to_abi<M: WriteableMemory>(&self, mut memory: M) -> Self::Abi {
         // Allocate space for length and all elements
         let mut slice = memory.allocate(T::alignment(), T::flat_byte_size() * self.len());
 
@@ -48,7 +48,7 @@ impl<T: Lower> Lower for Vec<T> {
 
     fn write_to<M: WriteableMemory>(&self, mut memory: M, memory_slice: &mut M::Slice) {
         // TODO: It just so happens that this is the same, but it should be extracted to a separate method
-        let (address, len) = self.to_return_abi(&mut memory);
+        let (address, len) = self.to_abi(&mut memory);
 
         address.write_to(&mut memory, memory_slice);
         len.write_to(memory, memory_slice);

@@ -9,39 +9,33 @@ use crate::{helpers::map_js_error, AsContextMut, DropHandle, Engine, Result, ToJ
 use super::*;
 
 pub struct Component {
-    instantiate: Function,
-    compile_core: JsValue,
-    instantiate_core: JsValue,
-    _drop_handles: [DropHandle; 2],
+    core_module: WebAssembly::Module,
+    // core2: Option<WebAssembly::Module>,
+    // core3: Option<WebAssembly::Module>,
 }
 
 impl Component {
     pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
         let files = ComponentLoader::generate_files(bytes.as_ref())?;
 
-        let (compile_core, drop0) = Self::make_compile_core(files.wasm_cores);
-        let (instantiate_core, drop1) = Self::make_instantiate_core();
+        // TODO: maybe we can give the bytes out more effectively? With memory view perhaps?
+        let core_module = WebAssembly::Module::new(&files.core.to_js_value())
+            .map_err(map_js_error("Synchronously compile main core"))?;
 
-        Ok(Self {
-            instantiate: files.instantiate,
-            compile_core,
-            instantiate_core,
-            _drop_handles: [drop0, drop1],
-        })
+        Ok(Self { core_module })
     }
 
     pub async fn new_async(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
         let files = ComponentLoader::generate_files(bytes.as_ref())?;
 
-        let (compile_core, drop0) = Self::make_compile_core_async(files.wasm_cores).await;
-        let (instantiate_core, drop1) = Self::make_instantiate_core();
+        let promise = WebAssembly::compile(&files.core.to_js_value());
+        let module = JsFuture::from(promise)
+            .await
+            .map_err(map_js_error("Asynchronously compile main core"))?;
 
-        Ok(Self {
-            instantiate: files.instantiate,
-            compile_core,
-            instantiate_core,
-            _drop_handles: [drop0, drop1],
-        })
+        let core_module = module.into();
+
+        Ok(Self { core_module })
     }
 
     pub(crate) fn instantiate(

@@ -4,10 +4,10 @@ use wasm_bindgen::JsValue;
 use super::SizeDescription;
 
 pub trait Lower: SizeDescription {
-    type ReturnAbi;
+    type Abi;
 
     /// Gets the "final" thing that is passed into the wasm function call
-    fn to_return_abi<M: WriteableMemory>(&self, memory: M) -> Self::ReturnAbi;
+    fn to_abi<M: WriteableMemory>(&self, memory: M) -> Self::Abi;
 
     /// Writes itself and all children into the memory slice
     fn write_to<M: WriteableMemory>(&self, memory: M, memory_slice: &mut M::Slice);
