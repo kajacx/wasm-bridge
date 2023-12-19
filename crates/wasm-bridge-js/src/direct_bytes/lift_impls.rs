@@ -40,8 +40,8 @@ impl<T: Lift> Lift for Vec<T> {
         let addr = u32::from_le_bytes(addr_and_len[0..4].try_into().unwrap()) as usize;
         let len = u32::from_le_bytes(addr_and_len[4..8].try_into().unwrap()) as usize;
 
-        let data = memory.read_to_vec(addr, len);
         let size = T::flat_byte_size();
+        let data = memory.read_to_vec(addr, size * len);
 
         let mut result = Vec::with_capacity(len);
         for i in 0..len {
