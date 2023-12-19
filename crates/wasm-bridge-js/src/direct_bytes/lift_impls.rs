@@ -50,3 +50,14 @@ impl<T: Lift> Lift for Vec<T> {
         Ok(result)
     }
 }
+
+// TODO: fix this
+impl<T: Lift> Lift for (T,) {
+    type Abi = T::Abi;
+    fn from_abi<M: ReadableMemory>(abi: Self::Abi, memory: M) -> Result<Self> {
+        Ok((T::from_abi(abi, memory)?,))
+    }
+    fn read_from<M: ReadableMemory>(slice: &[u8], memory: M) -> Result<Self> {
+        Ok((T::read_from(slice, memory)?,))
+    }
+}

@@ -53,3 +53,13 @@ impl<T: SizeDescription> SizeDescription for Vec<T> {
         8
     }
 }
+
+// TODO: probably remove this
+impl<T: SizeDescription> SizeDescription for (T,) {
+    fn alignment() -> usize {
+        T::alignment()
+    }
+    fn flat_byte_size() -> usize {
+        T::flat_byte_size()
+    }
+}
