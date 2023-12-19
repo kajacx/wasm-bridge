@@ -75,6 +75,17 @@ impl ListsImports for HostData {
         numbers.push(a);
         Ok(numbers)
     }
+
+    fn increment_bs(&mut self, mut variants: Vec<AbVariant>) -> Result<Vec<AbVariant>> {
+        variants.iter_mut().for_each(|var| {
+            *var = if let AbVariant::B(b) = var {
+                AbVariant::B(*b + 1)
+            } else {
+                *var
+            }
+        });
+        Ok(variants)
+    }
 }
 
 pub fn run_test(component_bytes: &[u8]) -> Result<()> {
@@ -143,5 +154,23 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         ]
     );
 
+    let result = instance.call_increment_abs(&mut store, &[AbVariant::A(1), AbVariant::B(2)])?;
+    assert_eq!(result, vec![AbVariant::A(2), AbVariant::B(3)]);
+
     Ok(())
+}
+
+impl PartialEq for AbVariant {
+    fn eq(&self, other: &Self) -> bool {
+        match self {
+            AbVariant::A(a1) => match other {
+                AbVariant::A(a2) => a1 == a2,
+                _ => false,
+            },
+            AbVariant::B(b1) => match other {
+                AbVariant::B(b2) => b1 == b2,
+                _ => false,
+            },
+        }
+    }
 }

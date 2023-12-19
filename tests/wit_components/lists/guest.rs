@@ -90,4 +90,15 @@ impl Guest for MyGuest {
 
         strings
     }
+
+    fn increment_abs(mut variants: Vec<AbVariant>) -> Vec<AbVariant> {
+        variants.iter_mut().for_each(|var| {
+            *var = if let AbVariant::A(a) = var {
+                AbVariant::A(*a + 1)
+            } else {
+                *var
+            }
+        });
+        increment_bs(&variants)
+    }
 }
