@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc};
+use std::collections::HashMap;
 
 use heck::ToLowerCamelCase;
 use js_sys::{Object, Reflect};
@@ -25,7 +25,7 @@ impl<T> Linker<T> {
 
     pub fn instantiate(
         &self,
-        mut store: impl AsContextMut<Data = T>,
+        _store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
         // let import_object = js_sys::Object::new();
@@ -62,7 +62,7 @@ impl<T> Linker<T> {
     // TODO: async was removed thanks to the macro
     pub async fn instantiate_async(
         &self,
-        store: impl AsContextMut<Data = T>,
+        _store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
         component.instantiate_async().await
@@ -105,11 +105,13 @@ impl<T> Linker<T> {
     }
 }
 
+#[allow(unused)] // TODO: this is for imports
 struct PreparedFn<T> {
     name: String,
     creator: MakeClosure<T>,
 }
 
+#[allow(dead_code)]
 impl<T> PreparedFn<T> {
     fn new(name: &str, creator: MakeClosure<T>) -> Self {
         Self {

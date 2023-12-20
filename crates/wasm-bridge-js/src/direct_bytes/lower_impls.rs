@@ -38,8 +38,8 @@ impl<T: Lower> Lower for &[T] {
         let addr = write_vec_data(self, memory)? as u32;
         let len = self.len() as u32;
 
-        addr.write_to(buffer, memory);
-        len.write_to(buffer, memory);
+        addr.write_to(buffer, memory)?;
+        len.write_to(buffer, memory)?;
 
         Ok(())
     }
@@ -61,7 +61,7 @@ fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], memory: &M) -> Resul
 
     // Then write the elements to the slice buffer
     for elem in data {
-        elem.write_to(&mut buffer, memory);
+        elem.write_to(&mut buffer, memory)?;
     }
 
     // Then actually write the slice buffer to memory and return the address
@@ -100,8 +100,8 @@ impl<T: Lower, U: Lower> Lower for (T, U) {
         // or there would be unfilled "gaps" and the data would get shifted.
 
         let align = Self::alignment();
-        self.0.write_to_aligned(buffer, memory, align);
-        self.1.write_to_aligned(buffer, memory, align);
+        self.0.write_to_aligned(buffer, memory, align)?;
+        self.1.write_to_aligned(buffer, memory, align)?;
         Ok(())
     }
 }
@@ -120,9 +120,9 @@ impl<T: Lower, U: Lower, V: Lower> Lower for (T, U, V) {
 
         // FIXME: this code is flat out wrong, must do proper memory layout calculation
         let align = Self::alignment();
-        self.0.write_to_aligned(buffer, memory, align);
-        self.1.write_to_aligned(buffer, memory, align);
-        self.2.write_to_aligned(buffer, memory, align);
+        self.0.write_to_aligned(buffer, memory, align)?;
+        self.1.write_to_aligned(buffer, memory, align)?;
+        self.2.write_to_aligned(buffer, memory, align)?;
         Ok(())
     }
 }

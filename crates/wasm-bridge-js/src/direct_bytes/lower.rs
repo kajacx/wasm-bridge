@@ -15,10 +15,11 @@ pub trait Lower: SizeDescription {
         buffer: &mut ByteBuffer,
         memory: &M,
         align: usize,
-    ) {
-        self.write_to(buffer, memory);
+    ) -> Result<()> {
+        self.write_to(buffer, memory)?;
         let real_size = next_multiple_of(Self::flat_byte_size(), align);
         buffer.skip(real_size - Self::flat_byte_size());
+        Ok(())
     }
 }
 

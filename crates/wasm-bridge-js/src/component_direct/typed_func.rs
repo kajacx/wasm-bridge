@@ -7,7 +7,7 @@ use wasm_bindgen::JsValue;
 use crate::{
     direct_bytes::{Lift, Lower},
     helpers::map_js_error,
-    AsContextMut, FromJsValue, Memory, Result, ToJsValue,
+    AsContextMut, Result,
 };
 
 use super::Func;

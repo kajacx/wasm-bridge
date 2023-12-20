@@ -1,15 +1,10 @@
-use std::{clone, collections::HashMap, marker::PhantomData, rc::Rc};
+use std::{collections::HashMap, marker::PhantomData};
 
 use anyhow::Context;
-use heck::ToLowerCamelCase;
 use js_sys::{Function, Object, Reflect, WebAssembly};
 use wasm_bindgen::JsValue;
 
-use crate::{
-    direct_bytes::ModuleMemory,
-    helpers::{self, map_js_error},
-    DropHandle, Result,
-};
+use crate::{direct_bytes::ModuleMemory, helpers::map_js_error, Result};
 
 use super::*;
 
@@ -91,7 +86,7 @@ impl ExportsRoot {
         Ok(TypedFunc::new(func))
     }
 
-    pub fn instance(&self, name: &str) -> Option<ExportInstance> {
+    pub fn instance(&self, _name: &str) -> Option<ExportInstance> {
         todo!("named interface nesting")
         // Some(ExportInstance::new(
         //     self.exported_objects
@@ -108,12 +103,12 @@ pub struct ExportInstance<'a, 'b> {
 }
 
 impl<'a, 'b> ExportInstance<'a, 'b> {
-    pub(crate) fn new(root: &'a ExportsRoot) -> Self {
-        Self {
-            root,
-            _phantom: PhantomData,
-        }
-    }
+    // pub(crate) fn new(root: &'a ExportsRoot) -> Self {
+    //     Self {
+    //         root,
+    //         _phantom: PhantomData,
+    //     }
+    // }
 
     pub fn typed_func<Params, Return>(&self, name: &str) -> Result<TypedFunc<Params, Return>> {
         self.root.typed_func(name)

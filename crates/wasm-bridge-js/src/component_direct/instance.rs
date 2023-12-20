@@ -1,10 +1,10 @@
-use std::{marker::PhantomData, rc::Rc};
+use std::marker::PhantomData;
 
 use js_sys::WebAssembly;
 use wasm_bindgen::JsValue;
 
 use super::*;
-use crate::{AsContextMut, DropHandle, Result};
+use crate::{AsContextMut, Result};
 
 pub struct Instance {
     exports: Exports,

@@ -1,10 +1,7 @@
-use std::{collections::HashMap, rc::Rc};
-
-use js_sys::{Function, Object, WebAssembly};
-use wasm_bindgen::prelude::*;
+use js_sys::{Object, WebAssembly};
 use wasm_bindgen_futures::JsFuture;
 
-use crate::{helpers::map_js_error, AsContextMut, DropHandle, Engine, Result, ToJsValue};
+use crate::{helpers::map_js_error, Engine, Result, ToJsValue};
 
 use super::*;
 
