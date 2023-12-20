@@ -1,10 +1,11 @@
 use std::{cell::Cell, marker::PhantomData};
 
 use anyhow::Context;
+use js_sys::Array;
 use wasm_bindgen::JsValue;
 
 use crate::{
-    direct_bytes::{Lift, LowerArgs, ModuleWriteableMemory},
+    direct_bytes::{Lift, Lower},
     helpers::map_js_error,
     AsContextMut, FromJsValue, Memory, Result, ToJsValue,
 };
@@ -38,10 +39,16 @@ impl<Params, Return> TypedFunc<Params, Return> {
 
     pub fn call(&self, _store: impl AsContextMut, params: Params) -> Result<Return>
     where
-        Params: LowerArgs,
+        Params: Lower,
         Return: Lift,
     {
-        let arguments = params.to_fn_args(&self.func.memory);
+        // TODO: re-use same vec and JS array?
+        // Local static variable should be different for each monomorphization?
+
+        let mut args = Vec::<JsValue>::new();
+        params.to_abi(&mut args, &self.func.memory);
+
+        let arguments: Array = args.into_iter().collect();
 
         let result_js = self
             .func
@@ -59,7 +66,7 @@ impl<Params, Return> TypedFunc<Params, Return> {
 
     pub fn call_async(&self, store: impl AsContextMut, params: Params) -> Result<Return>
     where
-        Params: LowerArgs,
+        Params: Lower,
         Return: Lift,
     {
         self.call(store, params)

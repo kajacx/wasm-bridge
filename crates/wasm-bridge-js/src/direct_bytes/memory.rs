@@ -1,3 +1,4 @@
+use anyhow::Context;
 use js_sys::{Array, Function};
 use wasm_bindgen::JsValue;
 

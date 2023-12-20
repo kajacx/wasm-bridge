@@ -1,21 +1,19 @@
-use std::rc::Rc;
-
 use js_sys::Function;
 
-use crate::{direct_bytes::ModuleWriteableMemory, DropHandle, Memory};
+use crate::direct_bytes::ModuleMemory;
 
 #[derive(Debug, Clone)]
 pub struct Func {
     pub(crate) function: Function,
     pub(crate) post_return: Option<Function>,
-    pub(crate) memory: &ModuleWriteableMemory,
+    pub(crate) memory: ModuleMemory,
 }
 
 impl Func {
     pub(crate) fn new(
         function: Function,
         post_return: Option<Function>,
-        memory: &ModuleWriteableMemory,
+        memory: ModuleMemory,
     ) -> Self {
         Self {
             function,
