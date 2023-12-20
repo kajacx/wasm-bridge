@@ -76,6 +76,21 @@ impl<T: SizeDescription, U: SizeDescription> SizeDescription for (T, U) {
     }
 }
 
+impl<T: SizeDescription, U: SizeDescription, V: SizeDescription> SizeDescription for (T, U, V) {
+    fn alignment() -> usize {
+        usize::max(usize::max(T::alignment(), U::alignment()), V::alignment())
+    }
+
+    fn flat_byte_size() -> usize {
+        let align = Self::alignment();
+
+        // FIXME: again, this is wrong
+        next_multiple_of(T::flat_byte_size(), align)
+            + next_multiple_of(U::flat_byte_size(), align)
+            + next_multiple_of(V::flat_byte_size(), align)
+    }
+}
+
 pub fn next_multiple_of(num: usize, multiple: usize) -> usize {
     (num + multiple - 1) / multiple
 }

@@ -6,7 +6,7 @@ use js_sys::{Function, Object, Reflect, WebAssembly};
 use wasm_bindgen::JsValue;
 
 use crate::{
-    direct_bytes::ModuleWriteableMemory,
+    direct_bytes::ModuleMemory,
     helpers::{self, map_js_error},
     DropHandle, Result,
 };
@@ -66,7 +66,7 @@ impl ExportsRoot {
             .get("cabi_realloc")
             .context("Cannot find cabi_realloc exported fn")?;
 
-        let memory = ModuleWriteableMemory::new(memory, realloc.clone());
+        let memory = ModuleMemory::new(memory, realloc.clone());
 
         let mut exported_fns = HashMap::<String, Func>::new();
         for (name, func) in exported_js_fns.into_iter() {

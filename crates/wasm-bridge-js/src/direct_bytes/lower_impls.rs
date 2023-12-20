@@ -105,3 +105,24 @@ impl<T: Lower, U: Lower> Lower for (T, U) {
         Ok(())
     }
 }
+
+impl<T: Lower, U: Lower, V: Lower> Lower for (T, U, V) {
+    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) {
+        self.0.to_abi(args, memory);
+        self.1.to_abi(args, memory);
+        self.2.to_abi(args, memory);
+    }
+
+    fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
+        // CAREFUL!!!
+        // `write_to` needs to fill the entire byte size of the pair,
+        // or there would be unfilled "gaps" and the data would get shifted.
+
+        // FIXME: this code is flat out wrong, must do proper memory layout calculation
+        let align = Self::alignment();
+        self.0.write_to_aligned(buffer, memory, align);
+        self.1.write_to_aligned(buffer, memory, align);
+        self.2.write_to_aligned(buffer, memory, align);
+        Ok(())
+    }
+}
