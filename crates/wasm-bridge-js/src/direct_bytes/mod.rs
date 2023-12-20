@@ -54,6 +54,15 @@ impl<T: SizeDescription> SizeDescription for Vec<T> {
     }
 }
 
+impl SizeDescription for () {
+    fn alignment() -> usize {
+        1
+    }
+    fn flat_byte_size() -> usize {
+        0
+    }
+}
+
 // TODO: probably remove this
 impl<T: SizeDescription> SizeDescription for (T,) {
     fn alignment() -> usize {
@@ -62,4 +71,27 @@ impl<T: SizeDescription> SizeDescription for (T,) {
     fn flat_byte_size() -> usize {
         T::flat_byte_size()
     }
+}
+
+impl<T: SizeDescription, U: SizeDescription> SizeDescription for (T, U) {
+    fn alignment() -> usize {
+        usize::max(T::alignment(), U::alignment())
+    }
+
+    fn flat_byte_size() -> usize {
+        let align = Self::alignment();
+        next_multiple_of(T::flat_byte_size(), align) + next_multiple_of(U::flat_byte_size(), align)
+    }
+}
+
+pub fn next_multiple_of(num: usize, multiple: usize) -> usize {
+    (num + multiple - 1) / multiple
+}
+
+#[test]
+fn test_next_multiple_of() {
+    assert_eq!(next_multiple_of(5, 7), 7);
+    assert_eq!(next_multiple_of(12, 8), 16);
+    assert_eq!(next_multiple_of(12, 4), 12);
+    assert_eq!(next_multiple_of(6, 6), 66);
 }

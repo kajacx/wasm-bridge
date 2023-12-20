@@ -4,7 +4,7 @@ use anyhow::Context;
 use wasm_bindgen::JsValue;
 
 use crate::{
-    direct_bytes::{Lift, LowerArgs, ModuleWriteableMemory},
+    direct_bytes::{Lift, LiftReturn, LowerArgs, ModuleWriteableMemory},
     helpers::map_js_error,
     AsContextMut, FromJsValue, Memory, Result, ToJsValue,
 };
@@ -39,30 +39,40 @@ impl<Params, Return> TypedFunc<Params, Return> {
     pub fn call(&self, _store: impl AsContextMut, params: Params) -> Result<Return>
     where
         Params: LowerArgs,
-        Return: Lift,
-        Return::Abi: FromJsValue, // TODO: quick ugly hack
+        Return: LiftReturn,
     {
         let arguments = params.to_fn_args(&self.func.memory);
-        let result = self
+
+        let result_js = self
             .func
             .function
             .apply(&JsValue::UNDEFINED, &arguments)
             .map_err(map_js_error("Error inside exported function"))?;
-        let result_abi = Return::Abi::from_js_value(&result)
+
+        let result = Return::from_js_return(&result_js, &self.func.memory)
             .context("Cannot cast return type to correct ABI type")?;
-        Lift::from_abi(result_abi, &self.func.memory)
+
+        self.post_return_arg.set(result_js);
+
+        Ok(result)
     }
 
     pub fn call_async(&self, store: impl AsContextMut, params: Params) -> Result<Return>
     where
         Params: LowerArgs,
-        Return: Lift,
-        Return::Abi: FromJsValue, // TODO: quick ugly hack
+        Return: LiftReturn,
     {
         self.call(store, params)
     }
 
     pub fn post_return(&self, _store: impl AsContextMut) -> Result<()> {
+        if let Some(func) = &self.func.post_return {
+            func.call1(
+                &JsValue::UNDEFINED,
+                &self.post_return_arg.replace(JsValue::UNDEFINED),
+            )
+            .map_err(map_js_error("Call post_return"))?;
+        }
         Ok(())
     }
 
