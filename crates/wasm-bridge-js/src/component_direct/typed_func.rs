@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{cell::Cell, marker::PhantomData};
 
 use anyhow::Context;
 use wasm_bindgen::JsValue;
@@ -13,6 +13,7 @@ use super::Func;
 
 pub struct TypedFunc<Params, Return> {
     func: Func,
+    post_return_arg: Cell<JsValue>,
     _phantom: PhantomData<dyn Fn(Params) -> Return>,
 }
 
@@ -20,6 +21,7 @@ impl<Params, Return> TypedFunc<Params, Return> {
     pub fn new(func: Func) -> Self {
         Self {
             func,
+            post_return_arg: Cell::new(JsValue::UNDEFINED),
             _phantom: PhantomData,
         }
     }

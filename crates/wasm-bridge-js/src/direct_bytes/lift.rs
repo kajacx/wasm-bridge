@@ -1,11 +1,10 @@
 use anyhow::Result;
+use wasm_bindgen::JsValue;
 
 use super::SizeDescription;
 
 pub trait Lift: SizeDescription + Sized {
-    type Abi;
-
-    fn from_abi<M: ReadableMemory>(abi: Self::Abi, memory: M) -> Result<Self>;
+    fn from_js_return<M: ReadableMemory>(val: JsValue, memory: M) -> Result<Self>;
 
     fn read_from<M: ReadableMemory>(slice: &[u8], memory: M) -> Result<Self>;
 }
@@ -25,4 +24,8 @@ impl<M: ReadableMemory> ReadableMemory for &M {
     fn read_to_slice(&self, addr: usize, target: &mut [u8]) {
         M::read_to_slice(self, addr, target)
     }
+}
+
+pub trait LiftReturn: SizeDescription + Sized {
+    fn from_js_return<M: ReadableMemory>(val: JsValue, memory: M) -> Result<Self>;
 }

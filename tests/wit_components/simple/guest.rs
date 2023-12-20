@@ -20,4 +20,10 @@ impl Guest for MyGuest {
         numbers.push(b);
         numbers
     }
+
+    fn voider() {}
+
+    fn pairs() -> (i32, i32) {
+        (0, 1)
+    }
 }

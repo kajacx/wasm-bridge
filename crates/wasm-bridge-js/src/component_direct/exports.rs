@@ -29,10 +29,13 @@ pub struct ExportsRoot {
 
 impl ExportsRoot {
     pub(crate) fn new(exports: JsValue) -> Result<Self> {
-        let names = Object::get_own_property_names(&exports.clone().into());
         let mut exported_js_fns = HashMap::<String, Function>::new();
+        let mut post_return_js_fns = HashMap::<String, Function>::new();
         let mut memory = Option::<JsValue>::None;
 
+        const POST_RETURN_PREFIX: &'static str = "cabi_poist_";
+
+        let names = Object::get_own_property_names(&exports.clone().into());
         for i in 0..names.length() {
             let name =
                 Reflect::get_u32(&names, i).map_err(map_js_error("Get name of an export"))?;
@@ -42,7 +45,11 @@ impl ExportsRoot {
                 Reflect::get(&exports, &name).map_err(map_js_error("Get exported value"))?;
 
             if exported.is_function() {
-                exported_js_fns.insert(name_string, exported.into());
+                if name_string.starts_with(POST_RETURN_PREFIX) {
+                    post_return_js_fns.insert(name_string, exported.into());
+                } else {
+                    exported_js_fns.insert(name_string, exported.into());
+                }
             } else if name_string == "memory" {
                 memory = Some(exported);
             }
@@ -59,7 +66,10 @@ impl ExportsRoot {
 
         let mut exported_fns = HashMap::<String, Func>::new();
         for (name, func) in exported_js_fns.into_iter() {
-            exported_fns.insert(name, Func::new(func, memory.clone()));
+            let post_return_name = format!("{POST_RETURN_PREFIX}{name}");
+            let post_return = post_return_js_fns.get(&post_return_name).map(Clone::clone);
+
+            exported_fns.insert(name, Func::new(func, post_return, memory.clone()));
         }
 
         Ok(Self {

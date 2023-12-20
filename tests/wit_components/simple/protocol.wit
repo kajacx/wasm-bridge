@@ -3,4 +3,6 @@ package component-test:wit-protocol;
 world simple {
   export push-s32s: func(nums: list<s32>, a: s32, b: s32) -> list<s32>;
   export push-u32s: func(nums: list<u32>, a: u32, b: u32) -> list<u32>;
+  export voider: func();
+  export pairs: func() -> (a: s32, b: s32);
 }
