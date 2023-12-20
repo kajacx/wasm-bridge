@@ -25,7 +25,3 @@ impl<M: ReadableMemory> ReadableMemory for &M {
         M::read_to_slice(self, addr, target)
     }
 }
-
-// pub trait LiftReturn: SizeDescription + Sized {
-//     fn from_js_return<M: ReadableMemory>(val: &JsValue, memory: M) -> Result<Self>;
-// }

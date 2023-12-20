@@ -72,7 +72,7 @@ impl<T: Lift> Lift for (T,) {
 impl<T: Lift, U: Lift> Lift for (T, U) {
     fn from_js_return<M: ReadableMemory>(val: &JsValue, memory: M) -> Result<Self> {
         let addr = u32::from_js_value(val)? as usize;
-        let len = T::flat_byte_size() + U::flat_byte_size();
+        let len = Self::flat_byte_size();
 
         // TODO: could probably re-use a static byte slice here
         let data = memory.read_to_vec(addr, len);
@@ -83,7 +83,8 @@ impl<T: Lift, U: Lift> Lift for (T, U) {
         let t = T::read_from(&slice[..T::flat_byte_size()], &memory)?;
 
         let u_start = next_multiple_of(T::flat_byte_size(), Self::alignment());
-        let u = U::read_from(&slice[u_start..], memory)?;
+        let u_end = u_start + U::flat_byte_size();
+        let u = U::read_from(&slice[u_start..u_end], memory)?;
 
         Ok((t, u))
     }

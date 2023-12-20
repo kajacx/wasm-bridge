@@ -10,7 +10,7 @@ pub trait SizeDescription {
     /// Alignment in bytes
     fn alignment() -> usize;
 
-    /// How many bytes would a field of this type take in a struct
+    /// How many bytes would a field of this type take in a struct. Must be a multiple of alignment.
     fn flat_byte_size() -> usize;
 }
 
