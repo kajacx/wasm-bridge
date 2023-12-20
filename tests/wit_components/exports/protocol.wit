@@ -1,0 +1,28 @@
+package component-test:wit-protocol;
+
+world example {
+    record xy {
+        x: s16,
+        xx: s8,
+        y: s32,
+    }
+
+    record xyz {
+        xy: xy,
+        z: s8
+    }
+
+    export xy-export: func(d: xy) -> xy;
+    export xy-export-tuple: func(d: tuple<xy, xy>) -> tuple<xy, xy>;
+    export xy-export-pair: func(d: xy, e: xy) -> (d: xy, e: xy);
+    export xy-export-list: func(d: list<xy>) -> list<xy>;
+    
+    export xyz-export: func(d: xyz) -> xyz;
+    export xyz-export-tuple: func(d: tuple<xyz, xyz>) -> tuple<xyz, xyz>;
+    export xyz-export-pair: func(d: xyz, e: xyz) -> (d: xyz, e: xyz);
+    export xyz-export-list: func(d: list<xyz>) -> list<xyz>;
+
+    export void-args-s32: func() -> s32;
+    export void-ret-s32: func(d: s32);
+    export void-both: func();
+}
