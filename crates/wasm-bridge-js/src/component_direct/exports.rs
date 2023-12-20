@@ -5,7 +5,11 @@ use heck::ToLowerCamelCase;
 use js_sys::{Function, Object, Reflect, WebAssembly};
 use wasm_bindgen::JsValue;
 
-use crate::{direct_bytes::ModuleWriteableMemory, helpers::map_js_error, DropHandle, Result};
+use crate::{
+    direct_bytes::ModuleWriteableMemory,
+    helpers::{self, map_js_error},
+    DropHandle, Result,
+};
 
 use super::*;
 
@@ -33,7 +37,7 @@ impl ExportsRoot {
         let mut post_return_js_fns = HashMap::<String, Function>::new();
         let mut memory = Option::<JsValue>::None;
 
-        const POST_RETURN_PREFIX: &'static str = "cabi_poist_";
+        const POST_RETURN_PREFIX: &'static str = "cabi_post_";
 
         let names = Object::get_own_property_names(&exports.clone().into());
         for i in 0..names.length() {
@@ -68,13 +72,10 @@ impl ExportsRoot {
         for (name, func) in exported_js_fns.into_iter() {
             let post_return_name = format!("{POST_RETURN_PREFIX}{name}");
             let post_return = post_return_js_fns.get(&post_return_name).map(Clone::clone);
-
             exported_fns.insert(name, Func::new(func, post_return, memory.clone()));
         }
 
-        Ok(Self {
-            exported_fns: exported_fns,
-        })
+        Ok(Self { exported_fns })
     }
 
     pub fn typed_func<Params, Return>(&self, name: &str) -> Result<TypedFunc<Params, Return>> {

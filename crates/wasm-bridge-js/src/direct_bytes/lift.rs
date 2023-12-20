@@ -26,6 +26,6 @@ impl<M: ReadableMemory> ReadableMemory for &M {
     }
 }
 
-pub trait LiftReturn: SizeDescription + Sized {
-    fn from_js_return<M: ReadableMemory>(val: &JsValue, memory: M) -> Result<Self>;
-}
+// pub trait LiftReturn: SizeDescription + Sized {
+//     fn from_js_return<M: ReadableMemory>(val: &JsValue, memory: M) -> Result<Self>;
+// }

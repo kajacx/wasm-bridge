@@ -4,7 +4,7 @@ use anyhow::Context;
 use wasm_bindgen::JsValue;
 
 use crate::{
-    direct_bytes::{Lift, LiftReturn, LowerArgs, ModuleWriteableMemory},
+    direct_bytes::{Lift, LowerArgs, ModuleWriteableMemory},
     helpers::map_js_error,
     AsContextMut, FromJsValue, Memory, Result, ToJsValue,
 };
@@ -39,7 +39,7 @@ impl<Params, Return> TypedFunc<Params, Return> {
     pub fn call(&self, _store: impl AsContextMut, params: Params) -> Result<Return>
     where
         Params: LowerArgs,
-        Return: LiftReturn,
+        Return: Lift,
     {
         let arguments = params.to_fn_args(&self.func.memory);
 
@@ -60,7 +60,7 @@ impl<Params, Return> TypedFunc<Params, Return> {
     pub fn call_async(&self, store: impl AsContextMut, params: Params) -> Result<Return>
     where
         Params: LowerArgs,
-        Return: LiftReturn,
+        Return: Lift,
     {
         self.call(store, params)
     }
