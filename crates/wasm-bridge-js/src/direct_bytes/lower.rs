@@ -116,7 +116,3 @@ impl WriteableMemorySlice for ModuleWriteableMemorySlice {
         self.data_buffer.extend_from_slice(bytes);
     }
 }
-
-pub trait LowerArgs {
-    fn to_fn_args<M: WriteableMemory>(self, memory: &M) -> Array;
-}

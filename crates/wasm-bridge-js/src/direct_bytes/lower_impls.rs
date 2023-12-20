@@ -58,6 +58,7 @@ fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], memory: &M) -> usize
 
     // Then write the elements to the slice buffer
     for elem in data {
+        // FIXME: fill gaps in memory?
         elem.write_to(memory, &mut slice);
     }
 
@@ -65,35 +66,35 @@ fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], memory: &M) -> usize
     memory.flush(slice)
 }
 
-impl LowerArgs for () {
-    fn to_fn_args<M: WriteableMemory>(self, _memory: &M) -> Array {
-        Array::new()
+impl Lower for () {
+    fn to_abi<M: WriteableMemory>(&self, _memory: &M, _args: &mut Vec<JsValue>) {
+        //no-op
+    }
+
+    fn write_to<M: WriteableMemory>(&self, _memory: &M, _memory_slice: &mut M::Slice) {
+        //no-op
     }
 }
 
-impl<T: Lower> LowerArgs for (T,) {
-    fn to_fn_args<M: WriteableMemory>(self, memory: &M) -> Array {
-        let mut args = vec![];
-        self.0.to_abi(memory, &mut args);
-        args.into_iter().collect()
+impl<T: Lower> Lower for (T,) {
+    fn to_abi<M: WriteableMemory>(&self, memory: &M, args: &mut Vec<JsValue>) {
+        self.0.to_abi(memory, args)
+    }
+
+    fn write_to<M: WriteableMemory>(&self, memory: &M, memory_slice: &mut M::Slice) {
+        self.0.write_to(memory, memory_slice)
     }
 }
 
-impl<T: Lower, U: Lower> LowerArgs for (T, U) {
-    fn to_fn_args<M: WriteableMemory>(self, memory: &M) -> Array {
-        let mut args = vec![];
-        self.0.to_abi(memory, &mut args);
-        self.1.to_abi(memory, &mut args);
-        args.into_iter().collect()
+impl<T: Lower, U: Lower> Lower for (T, U) {
+    fn to_abi<M: WriteableMemory>(&self, memory: &M, args: &mut Vec<JsValue>) {
+        self.0.to_abi(memory, args);
+        self.1.to_abi(memory, args);
     }
-}
 
-impl<T: Lower, U: Lower, V: Lower> LowerArgs for (T, U, V) {
-    fn to_fn_args<M: WriteableMemory>(self, memory: &M) -> Array {
-        let mut args = vec![];
-        self.0.to_abi(memory, &mut args);
-        self.1.to_abi(memory, &mut args);
-        self.2.to_abi(memory, &mut args);
-        args.into_iter().collect()
+    fn write_to<M: WriteableMemory>(&self, memory: &M, memory_slice: &mut M::Slice) {
+        self.0.write_to(memory, memory_slice);
+        // FIXME: possible "gap" between the two values
+        self.1.write_to(memory, memory_slice);
     }
 }
