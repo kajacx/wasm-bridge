@@ -11,6 +11,7 @@ use super::*;
 pub struct Linker<T> {
     fns: Vec<PreparedFn<T>>,
     instances: HashMap<String, Linker<T>>,
+    #[allow(unused)] // TODO: re-enable wasi
     wasi_imports: Option<Object>,
 }
 
