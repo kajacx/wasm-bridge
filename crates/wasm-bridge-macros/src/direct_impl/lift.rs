@@ -1,8 +1,7 @@
 use std::str::FromStr;
 
-use heck::{ToKebabCase, ToLowerCamelCase};
 use proc_macro2::*;
-use quote::{format_ident, quote, TokenStreamExt};
+use quote::{format_ident, quote};
 use syn::{DataEnum, DataStruct};
 
 pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
@@ -61,8 +60,10 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
         read_from_impl.extend(line);
     }
 
+    let name_impl = format_ident!("impl_lift_{}", name);
+
     quote!(
-      mod lift_impls {
+      mod #name_impl {
         use wasm_bridge::direct_bytes::*;
         use wasm_bridge::FromJsValue;
         use super::*;
@@ -102,11 +103,11 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
     )
 }
 
-pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
+pub fn lift_enum(_name: Ident, _data: DataEnum) -> TokenStream {
     todo!()
 }
 
-pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
+pub fn lift_variant(_name: Ident, _data: DataEnum) -> TokenStream {
     todo!()
 }
 

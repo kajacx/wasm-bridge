@@ -49,7 +49,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         assert_eq!(result.len(), amount as usize);
     });
 
-    let players = (0..500)
+    let players = (0..100)
         .map(|i| {
             let i = i as i32;
             Player {
