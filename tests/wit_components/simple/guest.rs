@@ -23,7 +23,7 @@ impl Guest for MyGuest {
 
     fn voider() {}
 
-    fn pairs() -> (i32, i32) {
-        (0, 1)
+    fn pairs12() -> (i32, i32) {
+        (1, 2)
     }
 }

@@ -27,5 +27,10 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance.call_push_u32s(&mut store, &[10, u32::MAX - 10], 3, 4)?;
     assert_eq!(result, vec![10, u32::MAX - 10, 3, 4]);
 
+    instance.call_voider(&mut store).expect("call voider");
+
+    let result = instance.call_pairs12(&mut store)?;
+    assert_eq!(result, (1, 2));
+
     Ok(())
 }
