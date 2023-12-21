@@ -9,30 +9,6 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
     let field_count = data.fields.len();
     let field_count_token = num_to_token(field_count);
 
-    // TODO: what if field count is 0?
-
-    let from_js_return = if field_count == 1 {
-        let field_type = &data.fields.iter().next().unwrap().ty;
-        quote!(<#field_type>::from_js_return(val, memory))
-    } else {
-        quote!(
-            let addr = u32::from_js_value(val)? as usize;
-            let len = Self::flat_byte_size();
-
-            let data = memory.read_to_vec(addr, len);
-            Self::read_from(&data, memory)
-        )
-    };
-
-    let mut read_from_impl = TokenStream::new();
-    for (i, field) in data.fields.iter().enumerate() {
-        let field_type = &field.ty;
-        let start = num_to_token(i * 2);
-        let end = num_to_token(i * 2 + 1);
-        let line = quote!(<#field_type>::read_from(&slice[layout[#start]..layout[#end]], memory)?,);
-        read_from_impl.extend(line);
-    }
-
     let mut alignment_impl = TokenStream::new();
     for field in data.fields.iter() {
         let field_type = &field.ty;
@@ -60,7 +36,37 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
         layout_return.extend(ret);
     }
 
+    // TODO: what if field count is 0?
+
+    let from_js_return = if field_count == 1 {
+        let field_type = &data.fields.iter().next().unwrap().ty;
+        quote!(<#field_type>::from_js_return(val, memory))
+    } else {
+        quote!(
+            let addr = u32::from_js_value(val)? as usize;
+            let len = Self::flat_byte_size();
+
+            let data = memory.read_to_vec(addr, len);
+            Self::read_from(&data, memory)
+        )
+    };
+
+    let mut read_from_impl = TokenStream::new();
+    for (i, field) in data.fields.iter().enumerate() {
+        let field_type = &field.ty;
+        let field_name = &field.ident;
+        let start = num_to_token(i * 2);
+        let end = num_to_token(i * 2 + 1);
+        let line = quote!(#field_name: <#field_type>::read_from(&slice[layout[#start]..layout[#end]], memory)?,);
+        read_from_impl.extend(line);
+    }
+
     quote!(
+      mod lift_impls {
+        use wasm_bridge::direct_bytes::*;
+        use wasm_bridge::FromJsValue;
+        use super::*;
+
         impl wasm_bridge::direct_bytes::SizeDescription for #name {
             type StructLayout = [usize; #field_count_token * 2 + 1];
 
@@ -71,7 +77,7 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
             }
 
             fn flat_byte_size() -> usize {
-                self::layout()[#field_count_token*2]
+                Self::layout()[#field_count_token*2]
             }
 
             fn layout() -> Self::StructLayout {
@@ -89,9 +95,10 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
 
             fn read_from<M: wasm_bridge::direct_bytes::ReadableMemory>(slice: &[u8], memory: &M) -> wasm_bridge::Result<Self> {
                 let layout = Self::layout();
-                Ok((#read_from_impl))
+                Ok(Self {#read_from_impl})
             }
         }
+      }
     )
 }
 
