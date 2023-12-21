@@ -171,13 +171,13 @@ impl<T: SizeDescription, U: SizeDescription, V: SizeDescription> SizeDescription
 }
 
 pub fn next_multiple_of(num: usize, multiple: usize) -> usize {
-    (num + multiple - 1) / multiple
+    ((num + multiple - 1) / multiple) * multiple
 }
 
 #[test]
 fn test_next_multiple_of() {
-    assert_eq!(next_multiple_of(5, 7), 7);
+    assert_eq!(next_multiple_of(5, 8), 8);
     assert_eq!(next_multiple_of(12, 8), 16);
     assert_eq!(next_multiple_of(12, 4), 12);
-    assert_eq!(next_multiple_of(6, 6), 66);
+    assert_eq!(next_multiple_of(8, 8), 8);
 }
