@@ -17,7 +17,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
 
     let component = Component::new(&store.engine(), &component_bytes)?;
 
-    let mut linker = Linker::new(store.engine());
+    let linker = Linker::new(store.engine());
 
     let (instance, _) = Simple::instantiate(&mut store, &component, &linker)?;
 

@@ -1,8 +1,6 @@
 const GUEST_BYTES: &'static [u8] =
     include_bytes!("../../guest/target/wasm32-unknown-unknown/debug/wit_components_guest.wasm");
 
-// wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
-
 mod host;
 
 #[wasm_bindgen_test::wasm_bindgen_test]
@@ -12,9 +10,11 @@ fn main() {
 
 fn bench<T>(name: &str, code: impl FnMut() -> T) {
     let bench = easybench_wasm::bench(code);
-    log(&format!("{name}: {} ns per iteration", bench.ns_per_iter));
+    log(&format!(
+        "OLD CODE: {name}: {} ns per iteration",
+        bench.ns_per_iter
+    ));
     log(&format!("{:?}", bench));
-    // panic!("BENCH: {:?}", bench);
 }
 
 fn log(msg: &str) {

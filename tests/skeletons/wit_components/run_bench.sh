@@ -9,17 +9,32 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# copy the "wit_components" skeleton
-cp -r skeletons/wit_components/host_js_bench instance
+# copy the "old" js bench skeleton
+cp -r skeletons/wit_components/bench_js instance
 
 # copy the host code
-cp $test/bench.rs instance/host_js_bench/src/host.rs
+cp $test/bench.rs instance/bench_js/src/host.rs
 
 # run the js bench test
-cd instance/host_js_bench && wasm-pack test --node && cd ../..
+cd instance/bench_js && wasm-pack test --node && cd ../..
 if [ $? -ne 0 ]; then
   echo
   echo "Oh no, there is an error in the $test js bench."
+  echo "Inspect the instance folder for more detail."
+  exit 1
+fi
+
+# copy the "new" js bench skeleton
+cp -r skeletons/wit_components/bench_js_opt instance
+
+# copy the host code
+cp $test/bench.rs instance/bench_js_opt/src/host.rs
+
+# run the js bench test
+cd instance/bench_js_opt && wasm-pack test --node && cd ../..
+if [ $? -ne 0 ]; then
+  echo
+  echo "Oh no, there is an error in the $test js optimized bench."
   echo "Inspect the instance folder for more detail."
   exit 1
 fi
