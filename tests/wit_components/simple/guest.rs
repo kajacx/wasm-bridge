@@ -30,4 +30,30 @@ impl Guest for MyGuest {
     fn get_vector123() -> Vector {
         Vector { x: 1, y: 2, z: 3 }
     }
+
+    fn get_many_vectors(amount: u32) -> Vec<Vector> {
+        (0..amount as usize)
+            .map(|i| Vector {
+                x: i as _,
+                y: i as _,
+                z: i as _,
+            })
+            .collect()
+    }
+
+    fn heal_players(mut players: Vec<Player>, healing: u32) -> Vec<Player> {
+        players.iter_mut().for_each(|player| {
+            player.health = u32::min(player.health + healing, player.max_health)
+        });
+        players
+    }
+
+    fn move_players(mut players: Vec<Player>, scale: i32) -> Vec<Player> {
+        players.iter_mut().for_each(|player| {
+            player.position.x += player.velocity.x * scale;
+            player.position.y += player.velocity.y * scale;
+            player.position.z += player.velocity.z * scale;
+        });
+        players
+    }
 }

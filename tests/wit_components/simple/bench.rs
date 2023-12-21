@@ -43,5 +43,46 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         assert_eq!((result.x, result.y, result.z), (1, 2, 3));
     });
 
+    super::bench("Call get many vectors", || {
+        let amount = 200;
+        let result = instance.call_get_many_vectors(&mut store, amount).unwrap();
+        assert_eq!(result.len(), amount as usize);
+    });
+
+    let players = (0..500)
+        .map(|i| {
+            let i = i as i32;
+            Player {
+                position: Vector {
+                    x: i,
+                    y: i + 1,
+                    z: i + 2,
+                },
+                velocity: Vector {
+                    x: i,
+                    y: i - 1,
+                    z: i - 2,
+                },
+                looking_at: Vector {
+                    x: i,
+                    y: i + 1,
+                    z: i - 1,
+                },
+                health: (i as u32 % 10) + 10,
+                max_health: 20,
+            }
+        })
+        .collect::<Vec<_>>();
+
+    super::bench("Manipulate with many players", || {
+        let result = instance.call_heal_players(&mut store, &players, 5).unwrap();
+        assert_eq!(result[13].health, 18);
+        assert_eq!(result[18].health, 20);
+
+        let result = instance.call_move_players(&mut store, &players, 2).unwrap();
+        assert_eq!(result[2].position.x, 6);
+        assert_eq!(result[3].position.z, 7);
+    });
+
     Ok(())
 }
