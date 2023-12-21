@@ -84,5 +84,22 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         assert_eq!(result[3].position.z, 7);
     });
 
+    let pos = Vector { x: 1, y: 2, z: 3 };
+    let look = Vector { x: 4, y: 5, z: 6 };
+    let player = Player {
+        position: pos.clone(),
+        velocity: pos.clone(),
+        looking_at: pos,
+        health: 15,
+        max_health: 20,
+    };
+
+    super::bench("Pass around a single player", || {
+        let result = instance
+            .call_player_look_at(&mut store, player, look)
+            .unwrap();
+        assert_eq!(result.looking_at.z, 6);
+    });
+
     Ok(())
 }

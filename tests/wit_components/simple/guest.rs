@@ -56,4 +56,9 @@ impl Guest for MyGuest {
         });
         players
     }
+
+    fn player_look_at(mut player: Player, look: Vector) -> Player {
+        player.looking_at = look;
+        player
+    }
 }

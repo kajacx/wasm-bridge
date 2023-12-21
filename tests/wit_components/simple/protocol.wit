@@ -25,4 +25,6 @@ world simple {
 
   export heal-players: func(players: list<player>, healing: u32) -> list<player>;
   export move-players: func(players: list<player>, scale: s32) -> list<player>;
+
+  export player-look-at: func(player: player, look: vector) -> player;
 }
