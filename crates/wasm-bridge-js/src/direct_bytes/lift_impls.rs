@@ -43,7 +43,7 @@ impl<T: Lift> Lift for Vec<T> {
 
         let mut result = Vec::with_capacity(len);
         for i in 0..len {
-            result.push(T::read_from(&data[i * size..(i + 1) * size], &memory)?);
+            result.push(T::read_from(&data[i * size..(i + 1) * size], memory)?);
         }
         Ok(result)
     }
@@ -80,11 +80,10 @@ impl<T: Lift, U: Lift> Lift for (T, U) {
     }
 
     fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
-        let t = T::read_from(&slice[..T::flat_byte_size()], &memory)?;
+        let layout = Self::layout();
 
-        let u_start = next_multiple_of(T::flat_byte_size(), Self::alignment());
-        let u_end = u_start + U::flat_byte_size();
-        let u = U::read_from(&slice[u_start..u_end], memory)?;
+        let t = T::read_from(&slice[layout[0]..layout[1]], memory)?;
+        let u = U::read_from(&slice[layout[2]..layout[3]], memory)?;
 
         Ok((t, u))
     }

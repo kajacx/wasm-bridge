@@ -164,7 +164,7 @@ impl<T: SizeDescription, U: SizeDescription, V: SizeDescription> SizeDescription
         let start2 = next_multiple_of(end1, align);
         let end2 = start2 + V::flat_byte_size();
 
-        let end = next_multiple_of(end1, align);
+        let end = next_multiple_of(end2, align);
 
         [start0, end0, start1, end1, start2, end2, end]
     }

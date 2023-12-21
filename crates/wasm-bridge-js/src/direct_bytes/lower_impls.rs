@@ -98,10 +98,14 @@ impl<T: Lower, U: Lower> Lower for (T, U) {
         // CAREFUL!!!
         // `write_to` needs to fill the entire byte size of the pair,
         // or there would be unfilled "gaps" and the data would get shifted.
+        let layout = Self::layout();
 
-        let align = Self::alignment();
-        self.0.write_to_aligned(buffer, memory, align)?;
-        self.1.write_to_aligned(buffer, memory, align)?;
+        self.0.write_to(buffer, memory)?;
+        buffer.skip(layout[2] - layout[1]);
+
+        self.1.write_to(buffer, memory)?;
+        buffer.skip(layout[4] - layout[2]);
+
         Ok(())
     }
 }
@@ -115,14 +119,19 @@ impl<T: Lower, U: Lower, V: Lower> Lower for (T, U, V) {
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
         // CAREFUL!!!
-        // `write_to` needs to fill the entire byte size of the pair,
+        // `write_to` needs to fill the entire byte size of the tuple,
         // or there would be unfilled "gaps" and the data would get shifted.
+        let layout = Self::layout();
 
-        // FIXME: this code is flat out wrong, must do proper memory layout calculation
-        let align = Self::alignment();
-        self.0.write_to_aligned(buffer, memory, align)?;
-        self.1.write_to_aligned(buffer, memory, align)?;
-        self.2.write_to_aligned(buffer, memory, align)?;
+        self.0.write_to(buffer, memory)?;
+        buffer.skip(layout[2] - layout[1]);
+
+        self.1.write_to(buffer, memory)?;
+        buffer.skip(layout[4] - layout[2]);
+
+        self.2.write_to(buffer, memory)?;
+        buffer.skip(layout[6] - layout[4]);
+
         Ok(())
     }
 }
