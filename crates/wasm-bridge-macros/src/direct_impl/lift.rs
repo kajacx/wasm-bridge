@@ -1,10 +1,13 @@
+use std::str::FromStr;
+
 use heck::{ToKebabCase, ToLowerCamelCase};
 use proc_macro2::*;
-use quote::{quote, TokenStreamExt};
+use quote::{format_ident, quote, TokenStreamExt};
 use syn::{DataEnum, DataStruct};
 
 pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
     let field_count = data.fields.len();
+    let field_count_token = num_to_token(field_count);
 
     // TODO: what if field count is 0?
 
@@ -24,8 +27,8 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
     let mut read_from_impl = TokenStream::new();
     for (i, field) in data.fields.iter().enumerate() {
         let field_type = &field.ty;
-        let start = i * 2;
-        let end = i * 2 + 1;
+        let start = num_to_token(i * 2);
+        let end = num_to_token(i * 2 + 1);
         let line = quote!(<#field_type>::read_from(&slice[layout[#start]..layout[#end]], memory)?,);
         read_from_impl.extend(line);
     }
@@ -37,9 +40,29 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
         alignment_impl.extend(line);
     }
 
+    let mut layout_impl = TokenStream::new();
+    let mut layout_return = TokenStream::new();
+    for (i, field) in data.fields.iter().enumerate() {
+        let field_type = &field.ty;
+
+        let start_i = format_ident!("start{i}");
+        let end_i = format_ident!("end{i}");
+        let start_next = format_ident!("start{}", i + 1);
+
+        let line = quote!(let #end_i = #start_i + <#field_type>::flat_byte_size(););
+        layout_impl.extend(line);
+
+        let line =
+            quote!(let #start_next = wasm_bridge::direct_bytes::next_multiple_of(#end_i, align););
+        layout_impl.extend(line);
+
+        let ret = quote!(#end_i, #start_next,);
+        layout_return.extend(ret);
+    }
+
     quote!(
         impl wasm_bridge::direct_bytes::SizeDescription for #name {
-            type StructLayout = [usize; #field_count * 2 + 1]
+            type StructLayout = [usize; #field_count_token * 2 + 1];
 
             fn alignment() -> usize {
                 let align = 0;
@@ -48,11 +71,14 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
             }
 
             fn flat_byte_size() -> usize {
-                self::layout()[#field_count*2]
+                self::layout()[#field_count_token*2]
             }
 
             fn layout() -> Self::StructLayout {
-                // TODO
+                let align = Self::alignment();
+                let start0 = 0;
+                #layout_impl
+                [start0, #layout_return]
             }
         }
 
@@ -61,7 +87,7 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
                 #from_js_return
             }
 
-            fn read_from<M: wasm_bridge::direct_bytes::ReadableMemory>(slice: &[u8], memory: &M) -> wasm_bridge::result::Result<Self> {
+            fn read_from<M: wasm_bridge::direct_bytes::ReadableMemory>(slice: &[u8], memory: &M) -> wasm_bridge::Result<Self> {
                 let layout = Self::layout();
                 Ok((#read_from_impl))
             }
@@ -75,4 +101,8 @@ pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
 
 pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
     todo!()
+}
+
+fn num_to_token(num: usize) -> TokenStream {
+    TokenStream::from_str(&num.to_string()).unwrap()
 }

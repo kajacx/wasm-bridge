@@ -126,17 +126,15 @@ impl<T: SizeDescription, U: SizeDescription> SizeDescription for (T, U) {
 
     fn layout() -> Self::StructLayout {
         let align = Self::alignment();
-        let start = 0;
+        let start0 = 0;
 
-        let start0 = next_multiple_of(start, align);
         let end0 = start0 + T::flat_byte_size();
-
         let start1 = next_multiple_of(end0, align);
+
         let end1 = start1 + U::flat_byte_size();
+        let start2 = next_multiple_of(end1, align);
 
-        let end = next_multiple_of(end1, align);
-
-        [start0, end0, start1, end1, end]
+        [start0, end0, start1, end1, start2]
     }
 }
 
