@@ -5,4 +5,11 @@ world simple {
   export push-u32s: func(nums: list<u32>, a: u32, b: u32) -> list<u32>;
   export voider: func();
   export pairs12: func() -> (a: s32, b: s32);
+
+  record vector {
+    x: s32,
+    y: s32,
+    z: s32,
+  }
+  export get-vector123: func() -> vector;
 }

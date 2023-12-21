@@ -26,4 +26,8 @@ impl Guest for MyGuest {
     fn pairs12() -> (i32, i32) {
         (1, 2)
     }
+
+    fn get_vector123() -> Vector {
+        Vector { x: 1, y: 2, z: 3 }
+    }
 }
