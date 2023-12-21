@@ -38,8 +38,10 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance.call_pairs12(&mut store)?;
     assert_eq!(result, (1, 2));
 
-    let result = instance.call_get_vector123(&mut store)?;
-    assert_eq!((result.x, result.y, result.z), (1, 2, 3));
+    super::bench("Call get single vector", || {
+        let result = instance.call_get_vector123(&mut store).unwrap();
+        assert_eq!((result.x, result.y, result.z), (1, 2, 3));
+    });
 
     Ok(())
 }
