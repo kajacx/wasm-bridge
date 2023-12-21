@@ -42,3 +42,11 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
         }
     }
 }
+
+pub fn lower_enum(name: Ident, data: DataEnum) -> TokenStream {
+    todo!()
+}
+
+pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
+    todo!()
+}
