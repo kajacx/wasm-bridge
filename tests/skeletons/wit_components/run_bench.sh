@@ -4,7 +4,7 @@
 test="wit_components/$1"
 
 # Build the guest
-sh skeletons/wit_components/build_guest.sh "$1"
+sh skeletons/wit_components/build_guest.sh "$1" "--release"
 if [ $? -ne 0 ]; then
   exit 1
 fi
@@ -16,7 +16,7 @@ cp -r skeletons/wit_components/bench_js instance
 cp $test/bench.rs instance/bench_js/src/host.rs
 
 # run the js bench test
-cd instance/bench_js && wasm-pack test --node && cd ../..
+cd instance/bench_js && wasm-pack test --release --node && cd ../..
 if [ $? -ne 0 ]; then
   echo
   echo "Oh no, there is an error in the $test js bench."
@@ -31,7 +31,7 @@ cp -r skeletons/wit_components/bench_js_opt instance
 cp $test/bench.rs instance/bench_js_opt/src/host.rs
 
 # run the js bench test
-cd instance/bench_js_opt && wasm-pack test --node && cd ../..
+cd instance/bench_js_opt && wasm-pack test --release --node && cd ../..
 if [ $? -ne 0 ]; then
   echo
   echo "Oh no, there is an error in the $test js optimized bench."

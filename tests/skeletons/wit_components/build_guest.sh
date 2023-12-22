@@ -20,7 +20,7 @@ fi
 cp $test/guest.rs instance/guest/src/lib.rs
 
 # build the guest
-cd instance/guest && cargo component build --target wasm32-unknown-unknown && cd ../..
+cd instance/guest && cargo component build $2 --target wasm32-unknown-unknown && cd ../..
 if [ $? -ne 0 ]; then
   echo
   echo "Oh no, there is an error in the $test guest."
