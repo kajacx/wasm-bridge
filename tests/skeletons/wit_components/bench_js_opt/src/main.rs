@@ -10,12 +10,7 @@ fn main() {
 
 fn bench<T>(name: &str, code: impl FnMut() -> T) {
     let bench = easybench_wasm::bench(code);
-    log(&format!(
-        "NEW CODE: {name}: {} ns per iteration",
-        bench.ns_per_iter
-    ));
-    log(&format!("{:?}", bench));
-    // panic!("BENCH: {:?}", bench);
+    log(&format!("NEW BENCH: {name}: {bench:?}",));
 }
 
 fn log(msg: &str) {

@@ -9,6 +9,23 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+
+# copy the sys bench skeleton
+cp -r skeletons/wit_components/bench_sys instance
+
+# copy the host code
+cp $test/bench.rs instance/bench_sys/src/host.rs
+
+# run the sys host test
+cd instance/bench_sys && cargo run --release && cd ../..
+if [ $? -ne 0 ]; then
+  echo
+  echo "Oh no, there is an error in the $test sys bench."
+  echo "Inspect the instance folder for more detail."
+  exit 1
+fi
+
+
 # copy the "old" js bench skeleton
 cp -r skeletons/wit_components/bench_js instance
 
@@ -23,6 +40,7 @@ if [ $? -ne 0 ]; then
   echo "Inspect the instance folder for more detail."
   exit 1
 fi
+
 
 # copy the "new" js bench skeleton
 cp -r skeletons/wit_components/bench_js_opt instance
