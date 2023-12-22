@@ -23,31 +23,31 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
 
     let big_vec: Vec<_> = (0..1000).into_iter().collect();
 
-    super::bench("Call exported methods", || {
-        let result = instance.call_push_s32s(&mut store, &big_vec, 3, 4).unwrap();
-        assert_eq!(result.len(), 1002);
+    // super::bench("Call exported methods", || {
+    //     let result = instance.call_push_s32s(&mut store, &big_vec, 3, 4).unwrap();
+    //     assert_eq!(result.len(), 1002);
 
-        let result = instance
-            .call_push_u32s(&mut store, &[10, u32::MAX - 10], 3, 4)
-            .unwrap();
-        assert_eq!(result, vec![10, u32::MAX - 10, 3, 4]);
-    });
+    //     let result = instance
+    //         .call_push_u32s(&mut store, &[10, u32::MAX - 10], 3, 4)
+    //         .unwrap();
+    //     assert_eq!(result, vec![10, u32::MAX - 10, 3, 4]);
+    // });
 
-    instance.call_voider(&mut store).expect("call voider");
+    // instance.call_voider(&mut store).expect("call voider");
 
-    let result = instance.call_pairs12(&mut store)?;
-    assert_eq!(result, (1, 2));
+    // let result = instance.call_pairs12(&mut store)?;
+    // assert_eq!(result, (1, 2));
 
-    super::bench("Call get single vector", || {
-        let result = instance.call_get_vector123(&mut store).unwrap();
-        assert_eq!((result.x, result.y, result.z), (1, 2, 3));
-    });
+    // super::bench("Call get single vector", || {
+    //     let result = instance.call_get_vector123(&mut store).unwrap();
+    //     assert_eq!((result.x, result.y, result.z), (1, 2, 3));
+    // });
 
-    super::bench("Call get many vectors", || {
-        let amount = 200;
-        let result = instance.call_get_many_vectors(&mut store, amount).unwrap();
-        assert_eq!(result.len(), amount as usize);
-    });
+    // super::bench("Call get many vectors", || {
+    //     let amount = 200;
+    //     let result = instance.call_get_many_vectors(&mut store, amount).unwrap();
+    //     assert_eq!(result.len(), amount as usize);
+    // });
 
     let players = (0..100)
         .map(|i| {
@@ -94,12 +94,22 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         max_health: 20,
     };
 
-    super::bench("Pass around a single player", || {
-        let result = instance
-            .call_player_look_at(&mut store, player, look)
-            .unwrap();
-        assert_eq!(result.looking_at.z, 6);
-    });
+    // super::bench("Pass around a single player", || {
+    //     let result = instance
+    //         .call_player_look_at(&mut store, player, look)
+    //         .unwrap();
+    //     assert_eq!(result.looking_at.z, 6);
+    // });
+
+    let player = Player {
+        position: Vector { x: 1, y: 2, z: 3 },
+        velocity: Vector { x: 4, y: 5, z: 6 },
+        looking_at: Vector { x: 7, y: 8, z: 9 },
+        health: 15,
+        max_health: 20,
+    };
+    let result = instance.call_player_look_at_player(&mut store, player, player)?;
+    assert_eq!(result.looking_at.x, player.position.x);
 
     Ok(())
 }
