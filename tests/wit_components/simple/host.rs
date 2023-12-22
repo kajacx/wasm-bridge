@@ -35,5 +35,15 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance.call_get_vector123(&mut store)?;
     assert_eq!((result.x, result.y, result.z), (1, 2, 3));
 
+    let player = Player {
+        position: Vector { x: 1, y: 2, z: 3 },
+        velocity: Vector { x: 4, y: 5, z: 6 },
+        looking_at: Vector { x: 7, y: 8, z: 9 },
+        health: 15,
+        max_health: 20,
+    };
+    let result = instance.call_player_look_at_player(&mut store, player, player)?;
+    assert_eq!(result.looking_at.x, player.position.x);
+
     Ok(())
 }

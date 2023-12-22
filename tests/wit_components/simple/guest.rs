@@ -61,4 +61,9 @@ impl Guest for MyGuest {
         player.looking_at = look;
         player
     }
+
+    fn player_look_at_player(mut player: Player, look_at: Player) -> Player {
+        player.looking_at = look_at.position;
+        player
+    }
 }

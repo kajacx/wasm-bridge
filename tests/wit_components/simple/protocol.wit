@@ -27,4 +27,5 @@ world simple {
   export move-players: func(players: list<player>, scale: s32) -> list<player>;
 
   export player-look-at: func(player: player, look: vector) -> player;
+  export player-look-at-player: func(player: player, look-at: player) -> player;
 }
