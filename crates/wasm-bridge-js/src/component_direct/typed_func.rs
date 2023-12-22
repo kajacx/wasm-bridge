@@ -5,7 +5,7 @@ use js_sys::Array;
 use wasm_bindgen::JsValue;
 
 use crate::{
-    direct_bytes::{Lift, Lower},
+    direct_bytes::{Lift, Lower, WriteableMemory},
     helpers::map_js_error,
     AsContextMut, Result,
 };
@@ -44,11 +44,19 @@ impl<Params, Return> TypedFunc<Params, Return> {
     {
         // TODO: re-use same vec and JS array?
         // Local static variable should be different for each monomorphization?
+        let memory = &self.func.memory;
+        let num_args = Params::num_args();
 
-        let mut args = Vec::<JsValue>::new();
-        params.to_abi(&mut args, &self.func.memory);
-
-        let arguments: Array = args.into_iter().collect();
+        let arguments = if num_args <= 16 {
+            let mut args = Vec::<JsValue>::new();
+            params.to_abi(&mut args, &memory);
+            args.into_iter().collect()
+        } else {
+            let mut buffer = memory.allocate(Params::alignment(), Params::flat_byte_size())?;
+            params.write_to(&mut buffer, memory)?;
+            let addr = memory.flush(buffer) as u32;
+            Array::of1(&addr.into())
+        };
 
         let result_js = self
             .func
