@@ -7,8 +7,9 @@ impl Lower for i32 {
         1
     }
 
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, _memory: &M) {
+    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, _memory: &M) -> Result<()> {
         args.push((*self).into());
+        Ok(())
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, _memory: &M) -> Result<()> {
@@ -22,8 +23,9 @@ impl Lower for u32 {
         1
     }
 
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, _memory: &M) {
+    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, _memory: &M) -> Result<()> {
         args.push((*self).into());
+        Ok(())
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, _memory: &M) -> Result<()> {
@@ -37,13 +39,15 @@ impl<T: Lower> Lower for &[T] {
         2
     }
 
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) {
-        let addr = write_vec_data(self, memory).expect("TODO: user error write vec data") as u32;
+    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        let addr = write_vec_data(self, memory)? as u32;
         let len = self.len() as u32;
 
         // First address, then element count
         args.push(addr.into());
         args.push(len.into());
+
+        Ok(())
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
@@ -62,7 +66,7 @@ impl<T: Lower> Lower for Vec<T> {
         2
     }
 
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) {
+    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
         self.as_slice().to_abi(args, memory)
     }
 
@@ -71,6 +75,7 @@ impl<T: Lower> Lower for Vec<T> {
     }
 }
 
+// Writes the data to the memory, returning the starting address of the data
 fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], memory: &M) -> Result<usize> {
     // Allocate space for all the elements
     let mut buffer = memory.allocate(T::alignment(), T::flat_byte_size() * data.len())?;
@@ -89,8 +94,8 @@ impl Lower for () {
         0 // TODO: verify this
     }
 
-    fn to_abi<M: WriteableMemory>(&self, _args: &mut Vec<JsValue>, _memory: &M) {
-        //no-op
+    fn to_abi<M: WriteableMemory>(&self, _args: &mut Vec<JsValue>, _memory: &M) -> Result<()> {
+        Ok(())
     }
 
     fn write_to<M: WriteableMemory>(&self, _buffer: &mut ByteBuffer, _memory: &M) -> Result<()> {
@@ -103,7 +108,7 @@ impl<T: Lower> Lower for (T,) {
         T::num_args()
     }
 
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) {
+    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
         self.0.to_abi(args, memory)
     }
 
@@ -117,9 +122,10 @@ impl<T: Lower, U: Lower> Lower for (T, U) {
         T::num_args() + U::num_args()
     }
 
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) {
-        self.0.to_abi(args, memory);
-        self.1.to_abi(args, memory);
+    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        self.0.to_abi(args, memory)?;
+        self.1.to_abi(args, memory)?;
+        Ok(())
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
@@ -143,10 +149,11 @@ impl<T: Lower, U: Lower, V: Lower> Lower for (T, U, V) {
         T::num_args() + U::num_args() + V::num_args()
     }
 
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) {
-        self.0.to_abi(args, memory);
-        self.1.to_abi(args, memory);
-        self.2.to_abi(args, memory);
+    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        self.0.to_abi(args, memory)?;
+        self.1.to_abi(args, memory)?;
+        self.2.to_abi(args, memory)?;
+        Ok(())
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {

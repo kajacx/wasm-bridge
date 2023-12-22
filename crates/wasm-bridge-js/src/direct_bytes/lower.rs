@@ -7,7 +7,7 @@ pub trait Lower: SizeDescription {
     fn num_args() -> usize;
 
     /// Gets the "final" thing that is passed into the wasm function call
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M);
+    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()>;
 
     /// Writes itself and all children into the memory buffer. Caller flushes the buffer.
     /// This MUST write (or skip) exactly `Self::flat_byte_size()` bytes into the buffer.

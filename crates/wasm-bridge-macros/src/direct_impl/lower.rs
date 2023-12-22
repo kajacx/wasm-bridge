@@ -14,7 +14,7 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
     let mut to_abi_impl = TokenStream::new();
     for field in data.fields.iter() {
         let field_name = &field.ident;
-        let line = quote!(self.#field_name.to_abi(args, memory););
+        let line = quote!(self.#field_name.to_abi(args, memory)?;);
         to_abi_impl.extend(line);
     }
 
@@ -44,8 +44,9 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
                 0 #num_args
             }
 
-            fn to_abi<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, args: &mut Vec<wasm_bridge::wasm_bindgen::JsValue>, memory: &M) {
+            fn to_abi<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, args: &mut Vec<wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<()> {
                 #to_abi_impl
+                Ok(())
             }
 
             fn write_to<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, buffer: &mut wasm_bridge::direct_bytes::ByteBuffer, memory: &M) -> wasm_bridge::Result<()> {
