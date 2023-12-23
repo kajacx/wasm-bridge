@@ -50,21 +50,8 @@ size_description_primitive!(i64, 8);
 size_description_primitive!(f32, 4);
 size_description_primitive!(f64, 8);
 
-impl SizeDescription for char {
-    type StructLayout = SimpleStructLayout;
-
-    fn alignment() -> usize {
-        4
-    }
-
-    fn flat_byte_size() -> usize {
-        4
-    }
-
-    fn layout() -> Self::StructLayout {
-        simple_layout(Self::flat_byte_size())
-    }
-}
+size_description_primitive!(bool, 1);
+size_description_primitive!(char, 4);
 
 macro_rules! size_description_fat_ptr_gen {
     ($ty: ty) => {

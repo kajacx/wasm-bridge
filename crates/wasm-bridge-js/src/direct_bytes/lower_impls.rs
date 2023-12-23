@@ -44,6 +44,20 @@ lower_primitive!(i64);
 lower_primitive!(f32);
 lower_primitive!(f64);
 
+impl Lower for bool {
+    fn num_args() -> usize {
+        1
+    }
+
+    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        (*self as u8).to_abi(args, memory)
+    }
+
+    fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
+        (*self as u8).write_to(buffer, memory)
+    }
+}
+
 impl Lower for char {
     fn num_args() -> usize {
         1

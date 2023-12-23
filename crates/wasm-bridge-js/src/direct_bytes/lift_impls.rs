@@ -1,6 +1,6 @@
 use crate::conversions::FromJsValue;
 use crate::Result;
-use anyhow::Context;
+use anyhow::{bail, Context};
 use wasm_bindgen::JsValue;
 
 use super::*;
@@ -32,13 +32,33 @@ lift_primitive!(i64);
 lift_primitive!(f32);
 lift_primitive!(f64);
 
+impl Lift for bool {
+    fn from_js_return<M: ReadableMemory>(value: &JsValue, _memory: &M) -> Result<Self> {
+        let value = u8::from_js_value(value)?;
+        u8_to_bool(value)
+    }
+
+    fn read_from<M: ReadableMemory>(slice: &[u8], _memory: &M) -> Result<Self> {
+        let value = slice[0];
+        u8_to_bool(value)
+    }
+}
+
+fn u8_to_bool(value: u8) -> Result<bool> {
+    match value {
+        0 => Ok(false),
+        1 => Ok(true),
+        n => bail!("Invalid boolean value: {n}"),
+    }
+}
+
 impl Lift for char {
-    fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> anyhow::Result<Self> {
+    fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
         let code = u32::from_js_return(value, memory)?;
         char::from_u32(code).context("Invalid character bytes")
     }
 
-    fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> anyhow::Result<Self> {
+    fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
         let code = u32::read_from(slice, memory)?;
         char::from_u32(code).context("Invalid character bytes")
     }
@@ -70,7 +90,7 @@ impl<T: Lift> Lift for Vec<T> {
 }
 
 impl Lift for String {
-    fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> anyhow::Result<Self> {
+    fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
         let addr = u32::from_js_value(value)? as usize;
 
         let mut addr_and_len = [0u8; 8];
@@ -79,7 +99,7 @@ impl Lift for String {
         Self::read_from(&addr_and_len, memory)
     }
 
-    fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> anyhow::Result<Self> {
+    fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
         let bytes = Vec::read_from(slice, memory)?;
         Ok(String::from_utf8(bytes)?)
     }
