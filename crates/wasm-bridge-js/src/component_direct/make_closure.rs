@@ -3,14 +3,51 @@ use std::rc::Rc;
 
 use wasm_bindgen::{convert::ReturnWasmAbi, prelude::*, JsValue};
 
-use crate::direct_bytes::{Lift, Lower};
-use crate::{DataHandle, DropHandle, FromJsValue, Result, StoreContextMut, ToJsValue};
+use crate::direct_bytes::{Lift, Lower, ModuleMemory};
+use crate::{DataHandle, DropHandle, FromJsValue, Memory, Result, StoreContextMut, ToJsValue};
 use js_sys::{Array, Function};
 
 pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>) -> (JsValue, DropHandle)>;
 
 pub trait IntoMakeClosure<T, Params, Results> {
     fn into_make_closure(self) -> MakeClosure<T>;
+}
+
+impl<T, P0, P1, R, F> IntoMakeClosure<T, (P0, P1), R> for F
+where
+    T: 'static,
+    P0: Lift + 'static,
+    P1: Lift + 'static,
+    R: Lower + 'static,
+    F: Fn(StoreContextMut<T>, (P0, P1)) -> Result<R> + 'static,
+{
+    fn into_make_closure(self) -> MakeClosure<T> {
+        let self_rc = Rc::new(self);
+
+        let make_closure = move |handle: DataHandle<T>, memory: ModuleMemory| {
+            let self_clone = self_rc.clone();
+
+            let closure =
+                Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
+                    let args = args.to_vec();
+                    let args = <(P0, P1)>::from_js_args(&args, &memory)
+                        .map_err(|err| "conversion of imported fn arguments: {err:?}")?;
+
+                    let result = self_clone(&mut handle.borrow_mut(), args)
+                        .map_err(|err| format!("host imported fn returned error: {err:?}"))?;
+
+                    let result = result
+                        .to_js_return(&memory)
+                        .map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
+                    Ok(result)
+                });
+
+            let (function, drop_handle) = DropHandle::from_closure(&closure);
+            (inflate_js_fn_args(&function), drop_handle)
+        };
+
+        Box::new(make_closure)
+    }
 }
 
 macro_rules! make_closure {
@@ -25,25 +62,25 @@ macro_rules! make_closure {
             fn into_make_closure(self) -> MakeClosure<T> {
                 let self_rc = Rc::new(self);
 
-                let make_closure = move |handle: DataHandle<T>| {
+                let make_closure = move |handle: DataHandle<T>, memory: ModuleMemory| {
                     let self_clone = self_rc.clone();
 
                     let closure =
                         Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
                             let args = args.to_vec();
-                            let args = <($($name),*)>::from_js_args(&args).map_err(|err| "conversion of imported fn arguments: {err:?}")?;
+                            let args = <($($name),*)>::from_js_args(&args, &memory).map_err(|err| "conversion of imported fn arguments: {err:?}")?;
 
                             let result = self_clone(
                                 &mut handle.borrow_mut(),
                                 args
                             ).map_err(|err| format!("host imported fn returned error: {err:?}"))?;
 
-                            let result = result.to_js_return().map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
+                            let result = result.to_js_return(&memory).map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
                             Ok(result)
                         });
 
                     let (function, drop_handle) = DropHandle::from_closure(&closure);
-                    (inflate_js_fn_args(function), drop_handle)
+                    (inflate_js_fn_args(&function), drop_handle)
                 };
 
                 Box::new(make_closure)
@@ -72,7 +109,7 @@ make_closure!();
 #[rustfmt::skip]
 make_closure!((p0, P0));
 #[rustfmt::skip]
-make_closure!((p0, P0), (p1, P1));
+// make_closure!((p0, P0), (p1, P1));
 #[rustfmt::skip]
 make_closure!((p0, P0), (p1, P1), (p2, P2));
 #[rustfmt::skip]

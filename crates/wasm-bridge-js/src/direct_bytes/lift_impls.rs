@@ -42,8 +42,8 @@ impl Lift for bool {
         u8_to_bool(value)
     }
 
-    fn from_js_args<M: ReadableMemory>(args: &[JsValue], _memory: &M) -> Result<Self> {
-        Self::from_js_return(args.get(0).context("Lift bool with from_js_args")?)
+    fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
+        Self::from_js_return(args.get(0).context("Lift bool with from_js_args"), memory)
     }
 
     fn read_from<M: ReadableMemory>(slice: &[u8], _memory: &M) -> Result<Self> {
@@ -66,8 +66,8 @@ impl Lift for char {
         char::from_u32(code).context("Invalid character bytes")
     }
 
-    fn from_js_args<M: ReadableMemory>(args: &[JsValue], _memory: &M) -> Result<Self> {
-        Self::from_js_return(args.get(0).context("Lift char with from_js_args")?)
+    fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
+        Self::from_js_return(args.get(0).context("Lift char with from_js_args"), memory)
     }
 
     fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
@@ -98,7 +98,10 @@ impl<T: Lift> Lift for Vec<T> {
 
     fn read_from<M: ReadableMemory>(addr_and_len: &[u8], memory: &M) -> Result<Self> {
         if addr_and_len.len() != 8 {
-            bail!("Lift vec: addr_and_len have length {} instead of 8", addr_and_len.len());
+            bail!(
+                "Lift vec: addr_and_len have length {} instead of 8",
+                addr_and_len.len()
+            );
         }
 
         let addr = u32::from_le_bytes(addr_and_len[0..4].try_into().unwrap()) as usize;
@@ -108,7 +111,11 @@ impl<T: Lift> Lift for Vec<T> {
     }
 }
 
-fn read_vec_from<T: Lift, M: ReadableMemory>(addr: usize, len: usize, memory: &M) -> Result<Vec> {
+fn read_vec_from<T: Lift, M: ReadableMemory>(
+    addr: usize,
+    len: usize,
+    memory: &M,
+) -> Result<Vec<T>> {
     let size = T::flat_byte_size();
     let data = memory.read_to_vec(addr, size * len);
 
