@@ -5,8 +5,9 @@ use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
 use crate::{
-    direct_bytes::ModuleMemory, helpers::static_str_to_js, AsContextMut, DataHandle, DropHandle,
-    DropHandles, Engine, Result,
+    direct_bytes::ModuleMemory,
+    helpers::{self, static_str_to_js},
+    AsContextMut, DataHandle, DropHandle, DropHandles, Engine, Result,
 };
 
 use super::*;
@@ -36,7 +37,6 @@ impl<T> Linker<T> {
         component.instantiate(&imports, drop_handles, memory)
     }
 
-    // TODO: async was removed thanks to the macro
     pub async fn instantiate_async(
         &self,
         store: impl AsContextMut<Data = T>,
@@ -62,18 +62,6 @@ impl<T> Linker<T> {
             let drop_handle = function.add_to_imports(&root, data_handle.clone(), memory.clone());
             closures.push(drop_handle);
         }
-
-        // for (instance_name, instance_linker) in self.instances.iter() {
-        //     let instance_obj = Object::new();
-
-        //     for function in instance_linker.fns.iter() {
-        //         let drop_handle =
-        //             function.add_to_instance_imports(&instance_obj, data_handle.clone());
-        //         closures.push(drop_handle);
-        //     }
-
-        //     Reflect::set(&import_object, &instance_name.into(), &instance_obj).unwrap();
-        // }
 
         let imports = Object::new();
         Reflect::set(&imports, static_str_to_js("$root"), &root).expect("imports is object");

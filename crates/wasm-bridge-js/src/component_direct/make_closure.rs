@@ -3,7 +3,8 @@ use std::rc::Rc;
 
 use wasm_bindgen::{prelude::*, JsValue};
 
-use crate::direct_bytes::{Lift, Lower, ModuleMemory};
+use crate::conversions::FromJsValue;
+use crate::direct_bytes::{ByteBuffer, Lift, Lower, ModuleMemory, WriteableMemory};
 use crate::{DataHandle, DropHandle, Result, StoreContextMut};
 use js_sys::{Array, Function};
 
@@ -29,17 +30,34 @@ where
 
             let closure =
                 Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
-                    let args = args.to_vec();
-                    let args = <(P0, P1)>::from_js_args(&args, &memory)
+                    // FIXME: if "flat" argument size is > 16 values, args will contain a pointer to the data instead
+                    let args_vec = args.to_vec();
+                    let args = <(P0, P1)>::from_js_args(&args_vec, &memory)
                         .map_err(|err| format!("conversion of imported fn arguments: {err:?}"))?;
 
                     let result = self_clone(&mut handle.borrow_mut(), args)
                         .map_err(|err| format!("host imported fn returned error: {err:?}"))?;
 
-                    let result = result
-                        .to_js_return(&memory)
-                        .map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
-                    Ok(result)
+                    if R::num_args() <= 1 {
+                        let result = result
+                            .to_js_return(&memory)
+                            .map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
+                        Ok(result)
+                    } else {
+                        let addr = args_vec.last().ok_or("missing last mem address argument")?;
+                        let addr = u32::from_js_value(addr)
+                            .map_err(|err| format!("return address is not a number: {err:?}"))?
+                            as usize;
+
+                        // Buffer is already allocated, we just write there
+                        let mut buffer = ByteBuffer::new(addr, R::flat_byte_size());
+                        result.write_to(&mut buffer, &memory).map_err(|err| {
+                            format!("failed to write result of an imported function: {err:?}")
+                        })?;
+                        memory.flush(buffer);
+
+                        Ok(JsValue::UNDEFINED)
+                    }
                 });
 
             let (function, drop_handle) = DropHandle::from_closure(closure);
@@ -66,17 +84,33 @@ macro_rules! make_closure {
                     let self_clone = self_rc.clone();
 
                     let closure =
-                        Closure::<dyn Fn(Array) -> Result<JsValue, JsValue> >::new(move |args: Array| {
-                            let args = args.to_vec();
-                            let args = <($($name,)*)>::from_js_args(&args, &memory).map_err(|err| format!("conversion of imported fn arguments: {err:?}"))?;
+                        Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
+                            let args_vec = args.to_vec();
+                            let args = <($($name,)*)>::from_js_args(&args_vec, &memory).map_err(|err| format!("conversion of imported fn arguments: {err:?}"))?;
 
                             let result = self_clone(
                                 &mut handle.borrow_mut(),
                                 args
                             ).map_err(|err| format!("host imported fn returned error: {err:?}"))?;
 
-                            let result = result.to_js_return(&memory).map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
-                            Ok(result)
+                            if R::num_args() <= 1 {
+                                let result = result
+                                    .to_js_return(&memory)
+                                    .map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
+                                Ok(result)
+                            } else {
+                                let addr = args_vec.last().ok_or("missing last mem address argument")?;
+                                let addr = u32::from_js_value(addr).map_err(|err| format!("return address is not a number: {err:?}"))? as usize;
+
+                                // Buffer is already allocated, we just write there
+                                let mut buffer = ByteBuffer::new(addr, R::flat_byte_size());
+                                result.write_to(&mut buffer, &memory).map_err(|err| {
+                                    format!("failed to write result of an imported function: {err:?}")
+                                })?;
+                                memory.flush(buffer);
+
+                                Ok(JsValue::UNDEFINED)
+                            }
                         });
 
                     let (function, drop_handle) = DropHandle::from_closure(closure);

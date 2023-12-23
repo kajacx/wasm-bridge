@@ -88,7 +88,7 @@ pub struct ByteBuffer {
 }
 
 impl ByteBuffer {
-    fn new(address: usize, size: usize) -> Self {
+    pub fn new(address: usize, size: usize) -> Self {
         Self {
             address,
             data: Vec::with_capacity(size as _),
