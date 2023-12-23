@@ -1,4 +1,4 @@
-use super::{next_multiple_of, ByteBuffer, SizeDescription};
+use super::{ByteBuffer, SizeDescription};
 use crate::Result;
 use wasm_bindgen::JsValue;
 
