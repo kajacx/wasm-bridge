@@ -3,9 +3,6 @@ use crate::Result;
 use wasm_bindgen::JsValue;
 
 pub trait Lower: SizeDescription {
-    /// How many "flatten" arguments would this create for the exported fn called
-    fn num_args() -> usize;
-
     /// Gets the "final" thing that is passed into the wasm function call
     fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()>;
 

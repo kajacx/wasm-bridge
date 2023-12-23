@@ -5,11 +5,7 @@ use quote::{format_ident, quote};
 use syn::{DataEnum, DataStruct};
 
 pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
-    let mut num_args = TokenStream::new();
-    for field in data.fields.iter() {
-        let field_type = &field.ty;
-        num_args.extend(quote!( + <#field_type>::num_args()));
-    }
+
 
     let mut to_abi_impl = TokenStream::new();
     for field in data.fields.iter() {
@@ -40,10 +36,6 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
         use super::*;
 
         impl wasm_bridge::direct_bytes::Lower for #name {
-            fn num_args() -> usize {
-                0 #num_args
-            }
-
             fn to_abi<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, args: &mut Vec<wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<()> {
                 #to_abi_impl
                 Ok(())

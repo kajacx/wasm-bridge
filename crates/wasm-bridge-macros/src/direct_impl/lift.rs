@@ -15,6 +15,12 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
         alignment_impl.extend(line);
     }
 
+    let mut num_args = TokenStream::new();
+    for field in data.fields.iter() {
+        let field_type = &field.ty;
+        num_args.extend(quote!( + <#field_type>::num_args()));
+    }
+
     let mut layout_impl = TokenStream::new();
     let mut layout_return = TokenStream::new();
     for (i, field) in data.fields.iter().enumerate() {
@@ -79,6 +85,10 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
 
             fn flat_byte_size() -> usize {
                 Self::layout()[#field_count_token*2]
+            }
+
+            fn num_args() -> usize {
+                0 #num_args
             }
 
             fn layout() -> Self::StructLayout {

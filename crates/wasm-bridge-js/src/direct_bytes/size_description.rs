@@ -8,6 +8,12 @@ pub trait SizeDescription {
     /// Must be a multiple of alignment.
     fn flat_byte_size() -> usize;
 
+    /// How many "flatten" arguments would this create for the exported fn called
+    fn num_args() -> usize;
+
+    /// Layout of this struct in memory.
+    /// 2*n is start n-th field, 2*n + 1 is end n-th field.
+    /// 2*field_count is end on the entire struct.
     fn layout() -> Self::StructLayout;
 }
 
@@ -28,6 +34,10 @@ macro_rules! size_description_primitive {
 
             fn flat_byte_size() -> usize {
                 $bytes
+            }
+
+            fn num_args() -> usize {
+                1
             }
 
             fn layout() -> Self::StructLayout {
@@ -66,6 +76,10 @@ macro_rules! size_description_fat_ptr_gen {
                 8
             }
 
+            fn num_args() -> usize {
+                2
+            }
+
             fn layout() -> Self::StructLayout {
                 simple_layout(Self::flat_byte_size())
             }
@@ -89,6 +103,10 @@ macro_rules! size_description_fat_ptr {
                 8
             }
 
+            fn num_args() -> usize {
+                2
+            }
+
             fn layout() -> Self::StructLayout {
                 simple_layout(Self::flat_byte_size())
             }
@@ -110,6 +128,10 @@ impl SizeDescription for () {
         0
     }
 
+    fn num_args() -> usize {
+        0
+    }
+
     fn layout() -> Self::StructLayout {
         [0]
     }
@@ -126,8 +148,22 @@ impl<T: SizeDescription> SizeDescription for (T,) {
         T::flat_byte_size()
     }
 
+    fn num_args() -> usize {
+        T::num_args()
+    }
+
     fn layout() -> Self::StructLayout {
         T::layout()
+    }
+}
+
+macro_rules! max_alignment {
+    ($($ty: ty),*) => {
+        {
+            let align = 1;
+            $(let align = usize::max(align, <$ty>::alignment());)*
+            align
+        }
     }
 }
 
@@ -135,11 +171,15 @@ impl<T: SizeDescription, U: SizeDescription> SizeDescription for (T, U) {
     type StructLayout = [usize; 5];
 
     fn alignment() -> usize {
-        usize::max(T::alignment(), U::alignment())
+        max_alignment!(T, U)
     }
 
     fn flat_byte_size() -> usize {
         Self::layout()[4]
+    }
+
+    fn num_args() -> usize {
+        T::num_args() + U::num_args()
     }
 
     fn layout() -> Self::StructLayout {
@@ -160,11 +200,15 @@ impl<T: SizeDescription, U: SizeDescription, V: SizeDescription> SizeDescription
     type StructLayout = [usize; 7];
 
     fn alignment() -> usize {
-        usize::max(usize::max(T::alignment(), U::alignment()), V::alignment())
+        max_alignment!(T, U, V)
     }
 
     fn flat_byte_size() -> usize {
         Self::layout()[6]
+    }
+
+    fn num_args() -> usize {
+        T::num_args() + U::num_args() + V::num_args()
     }
 
     fn layout() -> Self::StructLayout {

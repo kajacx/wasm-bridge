@@ -6,10 +6,6 @@ use wasm_bindgen::JsValue;
 macro_rules! lower_primitive {
     ($ty: ty) => {
         impl Lower for $ty {
-            fn num_args() -> usize {
-                1
-            }
-
             fn to_abi<M: WriteableMemory>(
                 &self,
                 args: &mut Vec<JsValue>,
@@ -45,10 +41,6 @@ lower_primitive!(f32);
 lower_primitive!(f64);
 
 impl Lower for bool {
-    fn num_args() -> usize {
-        1
-    }
-
     fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
         (*self as u8).to_abi(args, memory)
     }
@@ -59,10 +51,6 @@ impl Lower for bool {
 }
 
 impl Lower for char {
-    fn num_args() -> usize {
-        1
-    }
-
     fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
         (*self as u32).to_abi(args, memory)
     }
@@ -73,10 +61,6 @@ impl Lower for char {
 }
 
 impl<T: Lower> Lower for &[T] {
-    fn num_args() -> usize {
-        2
-    }
-
     fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
         let addr = write_vec_data(self, memory)? as u32;
         let len = self.len() as u32;
@@ -100,10 +84,6 @@ impl<T: Lower> Lower for &[T] {
 }
 
 impl<T: Lower> Lower for Vec<T> {
-    fn num_args() -> usize {
-        2
-    }
-
     fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
         self.as_slice().to_abi(args, memory)
     }
@@ -114,10 +94,6 @@ impl<T: Lower> Lower for Vec<T> {
 }
 
 impl Lower for &str {
-    fn num_args() -> usize {
-        2
-    }
-
     fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
         self.as_bytes().to_abi(args, memory)
     }
@@ -128,10 +104,6 @@ impl Lower for &str {
 }
 
 impl Lower for String {
-    fn num_args() -> usize {
-        2
-    }
-
     fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
         self.as_bytes().to_abi(args, memory)
     }
@@ -156,10 +128,6 @@ fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], memory: &M) -> Resul
 }
 
 impl Lower for () {
-    fn num_args() -> usize {
-        0 // TODO: verify this
-    }
-
     fn to_abi<M: WriteableMemory>(&self, _args: &mut Vec<JsValue>, _memory: &M) -> Result<()> {
         Ok(())
     }
@@ -170,10 +138,6 @@ impl Lower for () {
 }
 
 impl<T: Lower> Lower for (T,) {
-    fn num_args() -> usize {
-        T::num_args()
-    }
-
     fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
         self.0.to_abi(args, memory)
     }
@@ -184,10 +148,6 @@ impl<T: Lower> Lower for (T,) {
 }
 
 impl<T: Lower, U: Lower> Lower for (T, U) {
-    fn num_args() -> usize {
-        T::num_args() + U::num_args()
-    }
-
     fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
         self.0.to_abi(args, memory)?;
         self.1.to_abi(args, memory)?;
@@ -211,10 +171,6 @@ impl<T: Lower, U: Lower> Lower for (T, U) {
 }
 
 impl<T: Lower, U: Lower, V: Lower> Lower for (T, U, V) {
-    fn num_args() -> usize {
-        T::num_args() + U::num_args() + V::num_args()
-    }
-
     fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
         self.0.to_abi(args, memory)?;
         self.1.to_abi(args, memory)?;
