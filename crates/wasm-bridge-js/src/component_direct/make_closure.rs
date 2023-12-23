@@ -7,7 +7,7 @@ use crate::direct_bytes::{Lift, Lower, ModuleMemory};
 use crate::{DataHandle, DropHandle, FromJsValue, Memory, Result, StoreContextMut, ToJsValue};
 use js_sys::{Array, Function};
 
-pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>) -> (JsValue, DropHandle)>;
+pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>, ModuleMemory) -> (JsValue, DropHandle)>;
 
 pub trait IntoMakeClosure<T, Params, Results> {
     fn into_make_closure(self) -> MakeClosure<T>;
@@ -27,11 +27,11 @@ where
         let make_closure = move |handle: DataHandle<T>, memory: ModuleMemory| {
             let self_clone = self_rc.clone();
 
-            let closure =
-                Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
+            let closure = Closure::<dyn Fn(Array) -> Result<JsValue, JsValue> + 'static>::new(
+                move |args: Array| {
                     let args = args.to_vec();
                     let args = <(P0, P1)>::from_js_args(&args, &memory)
-                        .map_err(|err| "conversion of imported fn arguments: {err:?}")?;
+                        .map_err(|err| format!("conversion of imported fn arguments: {err:?}"))?;
 
                     let result = self_clone(&mut handle.borrow_mut(), args)
                         .map_err(|err| format!("host imported fn returned error: {err:?}"))?;
@@ -40,9 +40,10 @@ where
                         .to_js_return(&memory)
                         .map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
                     Ok(result)
-                });
+                },
+            );
 
-            let (function, drop_handle) = DropHandle::from_closure(&closure);
+            let (function, drop_handle) = DropHandle::from_closure(closure);
             (inflate_js_fn_args(&function), drop_handle)
         };
 
@@ -66,9 +67,9 @@ macro_rules! make_closure {
                     let self_clone = self_rc.clone();
 
                     let closure =
-                        Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
+                        Closure::<dyn Fn(Array) -> Result<JsValue, JsValue> + 'static>::new(move |args: Array| {
                             let args = args.to_vec();
-                            let args = <($($name),*)>::from_js_args(&args, &memory).map_err(|err| "conversion of imported fn arguments: {err:?}")?;
+                            let args = <($($name,)*)>::from_js_args(&args, &memory).map_err(|err| format!("conversion of imported fn arguments: {err:?}"))?;
 
                             let result = self_clone(
                                 &mut handle.borrow_mut(),
@@ -79,7 +80,7 @@ macro_rules! make_closure {
                             Ok(result)
                         });
 
-                    let (function, drop_handle) = DropHandle::from_closure(&closure);
+                    let (function, drop_handle) = DropHandle::from_closure(closure);
                     (inflate_js_fn_args(&function), drop_handle)
                 };
 
@@ -96,8 +97,8 @@ macro_rules! make_closure {
  */
 fn inflate_js_fn_args(function: &JsValue) -> JsValue {
     let converter: Function = js_sys::eval("(inner_fn) => (...outer_args) => inner_fn(outer_args)")
-        .unwrap()
-        .expect("eval converter");
+        .expect("eval converter")
+        .into();
 
     converter
         .call1(&JsValue::UNDEFINED, function)
@@ -112,16 +113,16 @@ make_closure!((p0, P0));
 // make_closure!((p0, P0), (p1, P1));
 #[rustfmt::skip]
 make_closure!((p0, P0), (p1, P1), (p2, P2));
-#[rustfmt::skip]
-make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3));
-#[rustfmt::skip]
-make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4));
-#[rustfmt::skip]
-make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5));
-#[rustfmt::skip]
-make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6));
-#[rustfmt::skip]
-make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7));
+// #[rustfmt::skip]
+// make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3));
+// #[rustfmt::skip]
+// make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4));
+// #[rustfmt::skip]
+// make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5));
+// #[rustfmt::skip]
+// make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6));
+// #[rustfmt::skip]
+// make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7));
 
 // TODO: closured with more that 8 arguments are not supported. Bother with a workaround?
 

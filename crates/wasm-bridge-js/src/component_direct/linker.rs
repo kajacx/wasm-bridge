@@ -4,7 +4,10 @@ use heck::ToLowerCamelCase;
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
-use crate::{helpers::static_str_to_js, AsContextMut, DataHandle, DropHandle, Engine, Result};
+use crate::{
+    direct_bytes::ModuleMemory, helpers::static_str_to_js, AsContextMut, DataHandle, DropHandle,
+    Engine, Result,
+};
 
 use super::*;
 
@@ -123,8 +126,13 @@ impl<T> PreparedFn<T> {
     }
 
     #[must_use]
-    fn add_to_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandle {
-        let (js_val, handler) = (self.creator)(handle);
+    fn add_to_imports(
+        &self,
+        imports: &JsValue,
+        handle: DataHandle<T>,
+        memory: ModuleMemory,
+    ) -> DropHandle {
+        let (js_val, handler) = (self.creator)(handle, memory);
 
         let object: JsValue = Object::new().into();
         Reflect::set(&object, static_str_to_js("default"), &js_val).expect("object is object");
@@ -135,8 +143,13 @@ impl<T> PreparedFn<T> {
     }
 
     #[must_use]
-    fn add_to_instance_imports(&self, imports: &JsValue, handle: DataHandle<T>) -> DropHandle {
-        let (js_val, handler) = (self.creator)(handle);
+    fn add_to_instance_imports(
+        &self,
+        imports: &JsValue,
+        handle: DataHandle<T>,
+        memory: ModuleMemory,
+    ) -> DropHandle {
+        let (js_val, handler) = (self.creator)(handle, memory);
 
         Reflect::set(imports, &self.name.to_lower_camel_case().into(), &js_val)
             .expect("imports is object");

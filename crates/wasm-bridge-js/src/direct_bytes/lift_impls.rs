@@ -43,7 +43,7 @@ impl Lift for bool {
     }
 
     fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
-        Self::from_js_return(args.get(0).context("Lift bool with from_js_args"), memory)
+        Self::from_js_return(args.get(0).context("Lift bool with from_js_args")?, memory)
     }
 
     fn read_from<M: ReadableMemory>(slice: &[u8], _memory: &M) -> Result<Self> {
@@ -67,7 +67,7 @@ impl Lift for char {
     }
 
     fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
-        Self::from_js_return(args.get(0).context("Lift char with from_js_args"), memory)
+        Self::from_js_return(args.get(0).context("Lift char with from_js_args")?, memory)
     }
 
     fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
@@ -148,7 +148,7 @@ impl Lift for () {
         Ok(())
     }
 
-    fn from_js_args<M: ReadableMemory>(_args: &JsValue, _memory: &M) -> Result<Self> {
+    fn from_js_args<M: ReadableMemory>(_args: &[JsValue], _memory: &M) -> Result<Self> {
         Ok(())
     }
 
@@ -184,7 +184,7 @@ impl<T: Lift, U: Lift> Lift for (T, U) {
     fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
         let split = T::num_args();
         let t = T::from_js_args(&args[..split], memory)?;
-        let u = T::from_js_args(&args[split..], memory)?;
+        let u = U::from_js_args(&args[split..], memory)?;
         Ok((t, u))
     }
 
@@ -195,5 +195,35 @@ impl<T: Lift, U: Lift> Lift for (T, U) {
         let u = U::read_from(&slice[layout[2]..layout[3]], memory)?;
 
         Ok((t, u))
+    }
+}
+
+impl<T: Lift, U: Lift, V: Lift> Lift for (T, U, V) {
+    fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
+        let addr = u32::from_js_value(value)? as usize;
+        let len = Self::flat_byte_size();
+
+        // TODO: could probably re-use a static byte slice here
+        let data = memory.read_to_vec(addr, len);
+        Self::read_from(&data, memory)
+    }
+
+    fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
+        let split = T::num_args();
+        let split2 = split + U::num_args();
+        let t = T::from_js_args(&args[..split], memory)?;
+        let u = U::from_js_args(&args[split..split2], memory)?;
+        let v = V::from_js_args(&args[split2..], memory)?;
+        Ok((t, u, v))
+    }
+
+    fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
+        let layout = Self::layout();
+
+        let t = T::read_from(&slice[layout[0]..layout[1]], memory)?;
+        let u = U::read_from(&slice[layout[2]..layout[3]], memory)?;
+        let v = V::read_from(&slice[layout[4]..layout[5]], memory)?;
+
+        Ok((t, u, v))
     }
 }

@@ -85,7 +85,7 @@ impl<T: Lower> Lower for &[T] {
     }
 
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
-        let mut buffer = memory.allocate(T::alignment(), T::flat_byte_size() * self.len());
+        let mut buffer = memory.allocate(T::alignment(), T::flat_byte_size() * self.len())?;
         self.write_to(&mut buffer, memory)?;
 
         let addr = memory.flush(buffer) as u32;
@@ -164,7 +164,7 @@ impl Lower for () {
         Ok(())
     }
 
-    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+    fn to_js_return<M: WriteableMemory>(&self, _memory: &M) -> Result<JsValue> {
         Ok(JsValue::UNDEFINED)
     }
 
@@ -195,7 +195,7 @@ impl<T: Lower, U: Lower> Lower for (T, U) {
     }
 
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
-        let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size());
+        let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
         self.0.write_to(&mut buffer, memory)?;
         self.1.write_to(&mut buffer, memory)?;
 
@@ -228,7 +228,7 @@ impl<T: Lower, U: Lower, V: Lower> Lower for (T, U, V) {
     }
 
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
-        let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size());
+        let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
         self.0.write_to(&mut buffer, memory)?;
         self.1.write_to(&mut buffer, memory)?;
         self.2.write_to(&mut buffer, memory)?;
