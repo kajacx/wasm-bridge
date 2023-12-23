@@ -1,5 +1,6 @@
 use crate::conversions::FromJsValue;
 use crate::Result;
+use anyhow::Context;
 use wasm_bindgen::JsValue;
 
 use super::*;
@@ -30,6 +31,18 @@ lift_primitive!(i64);
 
 lift_primitive!(f32);
 lift_primitive!(f64);
+
+impl Lift for char {
+    fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> anyhow::Result<Self> {
+        let code = u32::from_js_return(value, memory)?;
+        char::from_u32(code).context("Invalid character bytes")
+    }
+
+    fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> anyhow::Result<Self> {
+        let code = u32::read_from(slice, memory)?;
+        char::from_u32(code).context("Invalid character bytes")
+    }
+}
 
 impl<T: Lift> Lift for Vec<T> {
     fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {

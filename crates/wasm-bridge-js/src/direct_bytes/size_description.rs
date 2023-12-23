@@ -50,7 +50,7 @@ size_description_primitive!(i64, 8);
 size_description_primitive!(f32, 4);
 size_description_primitive!(f64, 8);
 
-impl<T: SizeDescription> SizeDescription for &[T] {
+impl SizeDescription for char {
     type StructLayout = SimpleStructLayout;
 
     fn alignment() -> usize {
@@ -58,45 +58,59 @@ impl<T: SizeDescription> SizeDescription for &[T] {
     }
 
     fn flat_byte_size() -> usize {
-        8
-    }
-
-    fn layout() -> Self::StructLayout {
-        simple_layout(Self::flat_byte_size())
-    }
-}
-
-impl<T: SizeDescription> SizeDescription for Vec<T> {
-    type StructLayout = SimpleStructLayout;
-
-    fn alignment() -> usize {
         4
     }
 
-    fn flat_byte_size() -> usize {
-        8
-    }
-
     fn layout() -> Self::StructLayout {
         simple_layout(Self::flat_byte_size())
     }
 }
 
-impl SizeDescription for String {
-    type StructLayout = SimpleStructLayout;
+macro_rules! size_description_fat_ptr_gen {
+    ($ty: ty) => {
+        impl<T: SizeDescription> SizeDescription for $ty {
+            type StructLayout = SimpleStructLayout;
 
-    fn alignment() -> usize {
-        4
-    }
+            fn alignment() -> usize {
+                4
+            }
 
-    fn flat_byte_size() -> usize {
-        8
-    }
+            fn flat_byte_size() -> usize {
+                8
+            }
 
-    fn layout() -> Self::StructLayout {
-        simple_layout(Self::flat_byte_size())
-    }
+            fn layout() -> Self::StructLayout {
+                simple_layout(Self::flat_byte_size())
+            }
+        }
+    };
 }
+
+size_description_fat_ptr_gen!(&[T]);
+size_description_fat_ptr_gen!(Vec<T>);
+
+macro_rules! size_description_fat_ptr {
+    ($ty: ty) => {
+        impl SizeDescription for $ty {
+            type StructLayout = SimpleStructLayout;
+
+            fn alignment() -> usize {
+                4
+            }
+
+            fn flat_byte_size() -> usize {
+                8
+            }
+
+            fn layout() -> Self::StructLayout {
+                simple_layout(Self::flat_byte_size())
+            }
+        }
+    };
+}
+
+size_description_fat_ptr!(&str);
+size_description_fat_ptr!(String);
 
 impl SizeDescription for () {
     type StructLayout = [usize; 1];

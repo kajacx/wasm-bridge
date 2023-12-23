@@ -1,36 +1,60 @@
 use super::*;
+use crate::conversions::ToJsValue;
 use crate::Result;
 use wasm_bindgen::JsValue;
 
-impl Lower for i32 {
-    fn num_args() -> usize {
-        1
-    }
+macro_rules! lower_primitive {
+    ($ty: ty) => {
+        impl Lower for $ty {
+            fn num_args() -> usize {
+                1
+            }
 
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, _memory: &M) -> Result<()> {
-        args.push((*self).into());
-        Ok(())
-    }
+            fn to_abi<M: WriteableMemory>(
+                &self,
+                args: &mut Vec<JsValue>,
+                _memory: &M,
+            ) -> Result<()> {
+                args.push(self.to_js_value());
+                Ok(())
+            }
 
-    fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, _memory: &M) -> Result<()> {
-        buffer.write(&self.to_le_bytes());
-        Ok(())
-    }
+            fn write_to<M: WriteableMemory>(
+                &self,
+                buffer: &mut ByteBuffer,
+                _memory: &M,
+            ) -> Result<()> {
+                buffer.write(&self.to_le_bytes());
+                Ok(())
+            }
+        }
+    };
 }
 
-impl Lower for u32 {
+lower_primitive!(u8);
+lower_primitive!(u16);
+lower_primitive!(u32);
+lower_primitive!(u64);
+
+lower_primitive!(i8);
+lower_primitive!(i16);
+lower_primitive!(i32);
+lower_primitive!(i64);
+
+lower_primitive!(f32);
+lower_primitive!(f64);
+
+impl Lower for char {
     fn num_args() -> usize {
         1
     }
 
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, _memory: &M) -> Result<()> {
-        args.push((*self).into());
-        Ok(())
+    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        (*self as u32).to_abi(args, memory)
     }
 
-    fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, _memory: &M) -> Result<()> {
-        buffer.write(&self.to_le_bytes());
-        Ok(())
+    fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
+        (*self as u32).write_to(buffer, memory)
     }
 }
 
@@ -72,6 +96,34 @@ impl<T: Lower> Lower for Vec<T> {
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
         self.as_slice().write_to(buffer, memory)
+    }
+}
+
+impl Lower for &str {
+    fn num_args() -> usize {
+        2
+    }
+
+    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        self.as_bytes().to_abi(args, memory)
+    }
+
+    fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
+        self.as_bytes().write_to(buffer, memory)
+    }
+}
+
+impl Lower for String {
+    fn num_args() -> usize {
+        2
+    }
+
+    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        self.as_bytes().to_abi(args, memory)
+    }
+
+    fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
+        self.as_bytes().write_to(buffer, memory)
     }
 }
 
