@@ -17,7 +17,7 @@ cp -r skeletons/wit_components/bench_sys instance
 cp $test/bench.rs instance/bench_sys/src/host.rs
 
 # run the sys host test
-cd instance/bench_sys && cargo run --release && cd ../..
+cd instance/bench_sys && cargo test --lib --release -- --nocapture && cd ../..
 if [ $? -ne 0 ]; then
   echo
   echo "Oh no, there is an error in the $test sys bench."
