@@ -1,10 +1,10 @@
 // use std::future::Future;
 use std::rc::Rc;
 
-use wasm_bindgen::{convert::ReturnWasmAbi, prelude::*, JsValue};
+use wasm_bindgen::{prelude::*, JsValue};
 
 use crate::direct_bytes::{Lift, Lower, ModuleMemory};
-use crate::{DataHandle, DropHandle, FromJsValue, Memory, Result, StoreContextMut, ToJsValue};
+use crate::{DataHandle, DropHandle, Result, StoreContextMut};
 use js_sys::{Array, Function};
 
 pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>, ModuleMemory) -> (JsValue, DropHandle)>;
@@ -27,8 +27,8 @@ where
         let make_closure = move |handle: DataHandle<T>, memory: ModuleMemory| {
             let self_clone = self_rc.clone();
 
-            let closure = Closure::<dyn Fn(Array) -> Result<JsValue, JsValue> + 'static>::new(
-                move |args: Array| {
+            let closure =
+                Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
                     let args = args.to_vec();
                     let args = <(P0, P1)>::from_js_args(&args, &memory)
                         .map_err(|err| format!("conversion of imported fn arguments: {err:?}"))?;
@@ -40,8 +40,7 @@ where
                         .to_js_return(&memory)
                         .map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
                     Ok(result)
-                },
-            );
+                });
 
             let (function, drop_handle) = DropHandle::from_closure(closure);
             (inflate_js_fn_args(&function), drop_handle)
@@ -67,7 +66,7 @@ macro_rules! make_closure {
                     let self_clone = self_rc.clone();
 
                     let closure =
-                        Closure::<dyn Fn(Array) -> Result<JsValue, JsValue> + 'static>::new(move |args: Array| {
+                        Closure::<dyn Fn(Array) -> Result<JsValue, JsValue> >::new(move |args: Array| {
                             let args = args.to_vec();
                             let args = <($($name,)*)>::from_js_args(&args, &memory).map_err(|err| format!("conversion of imported fn arguments: {err:?}"))?;
 

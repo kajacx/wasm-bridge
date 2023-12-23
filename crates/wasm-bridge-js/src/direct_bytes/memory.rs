@@ -1,3 +1,5 @@
+use std::{cell::RefCell, ops::Deref, rc::Rc};
+
 use anyhow::Context;
 use js_sys::{Array, Function};
 use wasm_bindgen::JsValue;
@@ -12,7 +14,22 @@ pub struct ModuleMemoryInner {
     realloc: Function,
 }
 
-pub type ModuleMemory = ModuleMemoryInner;
+#[derive(Debug, Clone)]
+pub struct ModuleMemory(Rc<RefCell<Option<ModuleMemoryInner>>>);
+
+impl ModuleMemory {
+    pub fn new() -> Self {
+        Self(Rc::new(RefCell::new(Option::None)))
+    }
+
+    pub fn get(&self) -> impl Deref<Target = Option<ModuleMemoryInner>> + '_ {
+        self.0.borrow()
+    }
+
+    pub fn set(&self, memory: crate::Memory, realloc: Function) {
+        *self.0.borrow_mut() = Option::Some(ModuleMemoryInner::new(memory, realloc));
+    }
+}
 
 impl ModuleMemoryInner {
     pub(crate) fn new(memory: crate::Memory, realloc: Function) -> Self {
@@ -35,12 +52,17 @@ impl ModuleMemoryInner {
 
 impl WriteableMemory for ModuleMemory {
     fn allocate(&self, align: usize, size: usize) -> Result<ByteBuffer> {
-        let address = self.malloc(align, size)?;
+        let borrow = self.get();
+        let address = borrow.as_ref().unwrap().malloc(align, size)?;
         Ok(ByteBuffer::new(address, size))
     }
 
     fn flush(&self, slice: ByteBuffer) -> usize {
-        self.memory
+        let borrow = self.get();
+        borrow
+            .as_ref()
+            .unwrap()
+            .memory
             .write_impl(slice.address, &slice.data)
             .expect("write bytes to buffer"); // TODO: Can this fail? If so, why?
 
@@ -50,7 +72,11 @@ impl WriteableMemory for ModuleMemory {
 
 impl ReadableMemory for ModuleMemory {
     fn read_to_slice(&self, addr: usize, target: &mut [u8]) {
-        self.memory
+        let borrow = self.get();
+        borrow
+            .as_ref()
+            .unwrap()
+            .memory
             .read_impl(addr, target)
             .expect("Read memory should work")
     }

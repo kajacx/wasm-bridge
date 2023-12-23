@@ -27,10 +27,10 @@ pub struct ExportsRoot {
 }
 
 impl ExportsRoot {
-    pub(crate) fn new(exports: JsValue) -> Result<Self> {
+    pub(crate) fn new(exports: JsValue, memory: ModuleMemory) -> Result<Self> {
         let mut exported_js_fns = HashMap::<String, Function>::new();
         let mut post_return_js_fns = HashMap::<String, Function>::new();
-        let mut memory = Option::<JsValue>::None;
+        let mut inner_memory = Option::<JsValue>::None;
 
         const POST_RETURN_PREFIX: &'static str = "cabi_post_";
 
@@ -50,18 +50,19 @@ impl ExportsRoot {
                     exported_js_fns.insert(name_string, exported.into());
                 }
             } else if name_string == "memory" {
-                memory = Some(exported);
+                inner_memory = Some(exported);
             }
         }
 
-        let memory: WebAssembly::Memory = memory.context("Did not find memory export")?.into();
-        let memory = crate::Memory::new(memory);
+        let inner_memory: WebAssembly::Memory =
+            inner_memory.context("Did not find memory export")?.into();
+        let inner_memory = crate::Memory::new(inner_memory);
 
         let realloc = exported_js_fns
             .get("cabi_realloc")
             .context("Cannot find cabi_realloc exported fn")?;
 
-        let memory = ModuleMemory::new(memory, realloc.clone());
+        memory.set(inner_memory, realloc.clone());
 
         let mut exported_fns = HashMap::<String, Func>::new();
         for (name, func) in exported_js_fns.into_iter() {

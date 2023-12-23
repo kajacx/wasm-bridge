@@ -113,6 +113,7 @@ impl<T> Linker<T> {
 
 #[derive(Debug)]
 pub struct DropHandle(Box<dyn std::fmt::Debug>);
+pub type DropHandles = Rc<Vec<DropHandle>>;
 
 impl DropHandle {
     pub(crate) fn new<T: std::fmt::Debug + 'static>(value: T) -> Self {

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 use heck::ToLowerCamelCase;
 use js_sys::{Object, Reflect};
@@ -6,7 +6,7 @@ use wasm_bindgen::JsValue;
 
 use crate::{
     direct_bytes::ModuleMemory, helpers::static_str_to_js, AsContextMut, DataHandle, DropHandle,
-    Engine, Result,
+    DropHandles, Engine, Result,
 };
 
 use super::*;
@@ -29,22 +29,39 @@ impl<T> Linker<T> {
 
     pub fn instantiate(
         &self,
-        _store: impl AsContextMut<Data = T>,
+        store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
-        // let import_object = js_sys::Object::new();
-        // if let Some(imports) = &self.wasi_imports {
-        //     js_sys::Object::assign(&import_object, imports);
-        // }
-        // let import_object: JsValue = import_object.into();
+        let (imports, drop_handles, memory) = self.prepare_imports(store);
+        component.instantiate(&imports, drop_handles, memory)
+    }
 
-        // let mut closures = Vec::with_capacity(self.fns.len());
-        // let data_handle = store.as_context_mut().data_handle();
+    // TODO: async was removed thanks to the macro
+    pub async fn instantiate_async(
+        &self,
+        store: impl AsContextMut<Data = T>,
+        component: &Component,
+    ) -> Result<Instance> {
+        let (imports, drop_handles, memory) = self.prepare_imports(store);
+        component
+            .instantiate_async(&imports, drop_handles, memory)
+            .await
+    }
 
-        // for function in self.fns.iter() {
-        //     let drop_handle = function.add_to_imports(&import_object, data_handle.clone());
-        //     closures.push(drop_handle);
-        // }
+    fn prepare_imports(
+        &self,
+        mut store: impl AsContextMut<Data = T>,
+    ) -> (Object, DropHandles, ModuleMemory) {
+        let root: JsValue = js_sys::Object::new().into();
+
+        let mut closures = Vec::with_capacity(self.fns.len());
+        let data_handle = store.as_context_mut().data_handle();
+        let memory = ModuleMemory::new();
+
+        for function in self.fns.iter() {
+            let drop_handle = function.add_to_imports(&root, data_handle.clone(), memory.clone());
+            closures.push(drop_handle);
+        }
 
         // for (instance_name, instance_linker) in self.instances.iter() {
         //     let instance_obj = Object::new();
@@ -58,18 +75,10 @@ impl<T> Linker<T> {
         //     Reflect::set(&import_object, &instance_name.into(), &instance_obj).unwrap();
         // }
 
-        // let closures = Rc::from(closures);
-        // component.instantiate(store, &import_object, closures)
-        component.instantiate()
-    }
+        let imports = Object::new();
+        Reflect::set(&imports, static_str_to_js("$root"), &root).expect("imports is object");
 
-    // TODO: async was removed thanks to the macro
-    pub async fn instantiate_async(
-        &self,
-        _store: impl AsContextMut<Data = T>,
-        component: &Component,
-    ) -> Result<Instance> {
-        component.instantiate_async().await
+        (imports, Rc::new(closures), memory)
     }
 
     pub fn root(&mut self) -> &mut Self {
@@ -134,10 +143,7 @@ impl<T> PreparedFn<T> {
     ) -> DropHandle {
         let (js_val, handler) = (self.creator)(handle, memory);
 
-        let object: JsValue = Object::new().into();
-        Reflect::set(&object, static_str_to_js("default"), &js_val).expect("object is object");
-
-        Reflect::set(imports, &self.name.as_str().into(), &object).expect("imports is object");
+        Reflect::set(imports, &self.name.as_str().into(), &js_val).expect("imports is object");
 
         handler
     }

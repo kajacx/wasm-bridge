@@ -1,7 +1,9 @@
 use js_sys::{Object, WebAssembly};
 use wasm_bindgen_futures::JsFuture;
 
-use crate::{helpers::map_js_error, Engine, Result, ToJsValue};
+use crate::{
+    direct_bytes::ModuleMemory, helpers::map_js_error, DropHandles, Engine, Result, ToJsValue,
+};
 
 use super::*;
 
@@ -37,25 +39,30 @@ impl Component {
 
     pub(crate) fn instantiate(
         &self,
-        // _store: impl AsContextMut,
-        // import_object: &JsValue,
-        // closures: Rc<[DropHandle]>,
+        imports: &Object,
+        drop_handles: DropHandles,
+        memory: ModuleMemory,
     ) -> Result<Instance> {
-        let instance_core = WebAssembly::Instance::new(&self.module_core, &Object::new())
+        let instance_core = WebAssembly::Instance::new(&self.module_core, imports)
             .map_err(map_js_error("Synchronously instantiate main core"))?;
 
-        Instance::new(instance_core)
+        Instance::new(instance_core, drop_handles, memory)
     }
 
-    pub(crate) async fn instantiate_async(&self) -> Result<Instance> {
-        let promise = WebAssembly::instantiate_module(&&self.module_core, &Object::new());
+    pub(crate) async fn instantiate_async(
+        &self,
+        imports: &Object,
+        drop_handles: DropHandles,
+        memory: ModuleMemory,
+    ) -> Result<Instance> {
+        let promise = WebAssembly::instantiate_module(&self.module_core, imports);
         let instance = JsFuture::from(promise)
             .await
             .map_err(map_js_error("Asynchronously instantiate main core"))?;
 
         let instance_core = instance.into();
 
-        Instance::new(instance_core)
+        Instance::new(instance_core, drop_handles, memory)
     }
 
     // fn make_compile_core(wasm_cores: Vec<(String, Vec<u8>)>) -> (JsValue, DropHandle) {
