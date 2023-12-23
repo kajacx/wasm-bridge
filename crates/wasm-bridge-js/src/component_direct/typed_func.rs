@@ -49,7 +49,7 @@ impl<Params, Return> TypedFunc<Params, Return> {
 
         let arguments = if num_args <= 16 {
             let mut args = Vec::<JsValue>::new();
-            params.to_abi(&mut args, &memory)?;
+            params.to_js_args(&mut args, &memory)?;
             args.into_iter().collect()
         } else {
             let mut buffer = memory.allocate(Params::alignment(), Params::flat_byte_size())?;

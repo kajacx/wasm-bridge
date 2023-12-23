@@ -3,8 +3,11 @@ use crate::Result;
 use wasm_bindgen::JsValue;
 
 pub trait Lower: SizeDescription {
-    /// Gets the "final" thing that is passed into the wasm function call
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()>;
+    /// Serializes self to JS arguments to be passes to an exported method.
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()>;
+
+    /// Converts self from a return from an imported function to a JS return value.
+    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue>;
 
     /// Writes itself and all children into the memory buffer. Caller flushes the buffer.
     /// This MUST write (or skip) exactly `Self::flat_byte_size()` bytes into the buffer.

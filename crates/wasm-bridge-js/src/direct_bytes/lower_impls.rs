@@ -6,13 +6,17 @@ use wasm_bindgen::JsValue;
 macro_rules! lower_primitive {
     ($ty: ty) => {
         impl Lower for $ty {
-            fn to_abi<M: WriteableMemory>(
+            fn to_js_args<M: WriteableMemory>(
                 &self,
                 args: &mut Vec<JsValue>,
                 _memory: &M,
             ) -> Result<()> {
                 args.push(self.to_js_value());
                 Ok(())
+            }
+
+            fn to_js_return<M: WriteableMemory>(&self, _memory: &M) -> Result<JsValue> {
+                Ok(self.to_js_value())
             }
 
             fn write_to<M: WriteableMemory>(
@@ -41,8 +45,12 @@ lower_primitive!(f32);
 lower_primitive!(f64);
 
 impl Lower for bool {
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
-        (*self as u8).to_abi(args, memory)
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        (*self as u8).to_js_args(args, memory)
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        (*self as u8).to_js_return(memory)
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
@@ -51,8 +59,12 @@ impl Lower for bool {
 }
 
 impl Lower for char {
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
-        (*self as u32).to_abi(args, memory)
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        (*self as u32).to_js_args(args, memory)
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        (*self as u32).to_js_return(memory)
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
@@ -61,7 +73,7 @@ impl Lower for char {
 }
 
 impl<T: Lower> Lower for &[T] {
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
         let addr = write_vec_data(self, memory)? as u32;
         let len = self.len() as u32;
 
@@ -70,6 +82,14 @@ impl<T: Lower> Lower for &[T] {
         args.push(len.into());
 
         Ok(())
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        let mut buffer = memory.allocate(T::alignment(), T::flat_byte_size() * self.len());
+        self.write_to(&mut buffer, memory)?;
+
+        let addr = memory.flush(buffer) as u32;
+        Ok(addr.to_js_value())
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
@@ -84,8 +104,12 @@ impl<T: Lower> Lower for &[T] {
 }
 
 impl<T: Lower> Lower for Vec<T> {
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
-        self.as_slice().to_abi(args, memory)
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        self.as_slice().to_js_args(args, memory)
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        self.as_slice().to_js_return(memory)
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
@@ -94,8 +118,12 @@ impl<T: Lower> Lower for Vec<T> {
 }
 
 impl Lower for &str {
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
-        self.as_bytes().to_abi(args, memory)
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        self.as_bytes().to_js_args(args, memory)
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        self.as_bytes().to_js_return(memory)
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
@@ -104,8 +132,12 @@ impl Lower for &str {
 }
 
 impl Lower for String {
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
-        self.as_bytes().to_abi(args, memory)
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        self.as_bytes().to_js_args(args, memory)
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        self.as_bytes().to_js_return(memory)
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
@@ -128,8 +160,12 @@ fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], memory: &M) -> Resul
 }
 
 impl Lower for () {
-    fn to_abi<M: WriteableMemory>(&self, _args: &mut Vec<JsValue>, _memory: &M) -> Result<()> {
+    fn to_js_args<M: WriteableMemory>(&self, _args: &mut Vec<JsValue>, _memory: &M) -> Result<()> {
         Ok(())
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        Ok(JsValue::UNDEFINED)
     }
 
     fn write_to<M: WriteableMemory>(&self, _buffer: &mut ByteBuffer, _memory: &M) -> Result<()> {
@@ -138,8 +174,12 @@ impl Lower for () {
 }
 
 impl<T: Lower> Lower for (T,) {
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
-        self.0.to_abi(args, memory)
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        self.0.to_js_args(args, memory)
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        self.0.to_js_return(memory)
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
@@ -148,10 +188,19 @@ impl<T: Lower> Lower for (T,) {
 }
 
 impl<T: Lower, U: Lower> Lower for (T, U) {
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
-        self.0.to_abi(args, memory)?;
-        self.1.to_abi(args, memory)?;
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        self.0.to_js_args(args, memory)?;
+        self.1.to_js_args(args, memory)?;
         Ok(())
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size());
+        self.0.write_to(&mut buffer, memory)?;
+        self.1.write_to(&mut buffer, memory)?;
+
+        let addr = memory.flush(buffer) as u32;
+        Ok(addr.to_js_value())
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
@@ -171,11 +220,21 @@ impl<T: Lower, U: Lower> Lower for (T, U) {
 }
 
 impl<T: Lower, U: Lower, V: Lower> Lower for (T, U, V) {
-    fn to_abi<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
-        self.0.to_abi(args, memory)?;
-        self.1.to_abi(args, memory)?;
-        self.2.to_abi(args, memory)?;
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        self.0.to_js_args(args, memory)?;
+        self.1.to_js_args(args, memory)?;
+        self.2.to_js_args(args, memory)?;
         Ok(())
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size());
+        self.0.write_to(&mut buffer, memory)?;
+        self.1.write_to(&mut buffer, memory)?;
+        self.2.write_to(&mut buffer, memory)?;
+
+        let addr = memory.flush(buffer) as u32;
+        Ok(addr.to_js_value())
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {

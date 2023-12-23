@@ -12,6 +12,10 @@ macro_rules! lift_primitive {
                 Self::from_js_value(value)
             }
 
+            fn from_js_args<M: ReadableMemory>(args: &[JsValue], _memory: &M) -> Result<Self> {
+                Self::from_js_value(args.get(0).context("Lift primitive with from_js_args")?)
+            }
+
             fn read_from<M: ReadableMemory>(slice: &[u8], _memory: &M) -> Result<Self> {
                 Ok(Self::from_le_bytes(slice.try_into()?))
             }
@@ -38,6 +42,10 @@ impl Lift for bool {
         u8_to_bool(value)
     }
 
+    fn from_js_args<M: ReadableMemory>(args: &[JsValue], _memory: &M) -> Result<Self> {
+        Self::from_js_return(args.get(0).context("Lift bool with from_js_args")?)
+    }
+
     fn read_from<M: ReadableMemory>(slice: &[u8], _memory: &M) -> Result<Self> {
         let value = slice[0];
         u8_to_bool(value)
@@ -58,6 +66,10 @@ impl Lift for char {
         char::from_u32(code).context("Invalid character bytes")
     }
 
+    fn from_js_args<M: ReadableMemory>(args: &[JsValue], _memory: &M) -> Result<Self> {
+        Self::from_js_return(args.get(0).context("Lift char with from_js_args")?)
+    }
+
     fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
         let code = u32::read_from(slice, memory)?;
         char::from_u32(code).context("Invalid character bytes")
@@ -74,29 +86,48 @@ impl<T: Lift> Lift for Vec<T> {
         Self::read_from(&addr_and_len, memory)
     }
 
+    fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
+        let addr = args.get(0).context("Get addr in from_js_args for Vec")?;
+        let len = args.get(1).context("Get len in from_js_args for Vec")?;
+
+        let addr = u32::from_js_value(addr)? as usize;
+        let len = u32::from_js_value(len)? as usize;
+
+        read_vec_from(addr, len, memory)
+    }
+
     fn read_from<M: ReadableMemory>(addr_and_len: &[u8], memory: &M) -> Result<Self> {
+        if addr_and_len.len() != 8 {
+            bail!("Lift vec: addr_and_len have length {} instead of 8", addr_and_len.len());
+        }
+
         let addr = u32::from_le_bytes(addr_and_len[0..4].try_into().unwrap()) as usize;
         let len = u32::from_le_bytes(addr_and_len[4..8].try_into().unwrap()) as usize;
 
-        let size = T::flat_byte_size();
-        let data = memory.read_to_vec(addr, size * len);
-
-        let mut result = Vec::with_capacity(len);
-        for i in 0..len {
-            result.push(T::read_from(&data[i * size..(i + 1) * size], memory)?);
-        }
-        Ok(result)
+        read_vec_from(addr, len, memory)
     }
+}
+
+fn read_vec_from<T: Lift, M: ReadableMemory>(addr: usize, len: usize, memory: &M) -> Result<Vec> {
+    let size = T::flat_byte_size();
+    let data = memory.read_to_vec(addr, size * len);
+
+    let mut result = Vec::with_capacity(len);
+    for i in 0..len {
+        result.push(T::read_from(&data[i * size..(i + 1) * size], memory)?);
+    }
+    Ok(result)
 }
 
 impl Lift for String {
     fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
-        let addr = u32::from_js_value(value)? as usize;
+        let bytes = Vec::from_js_return(value, memory)?;
+        Ok(String::from_utf8(bytes)?)
+    }
 
-        let mut addr_and_len = [0u8; 8];
-        memory.read_to_slice(addr, &mut addr_and_len);
-
-        Self::read_from(&addr_and_len, memory)
+    fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
+        let bytes = Vec::from_js_args(args, memory)?;
+        Ok(String::from_utf8(bytes)?)
     }
 
     fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
@@ -110,6 +141,10 @@ impl Lift for () {
         Ok(())
     }
 
+    fn from_js_args<M: ReadableMemory>(_args: &JsValue, _memory: &M) -> Result<Self> {
+        Ok(())
+    }
+
     fn read_from<M: ReadableMemory>(_slice: &[u8], _memory: &M) -> Result<Self> {
         Ok(())
     }
@@ -118,6 +153,10 @@ impl Lift for () {
 impl<T: Lift> Lift for (T,) {
     fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
         Ok((T::from_js_return(value, memory)?,))
+    }
+
+    fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
+        Ok((T::from_js_args(args, memory)?,))
     }
 
     fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
@@ -133,6 +172,13 @@ impl<T: Lift, U: Lift> Lift for (T, U) {
         // TODO: could probably re-use a static byte slice here
         let data = memory.read_to_vec(addr, len);
         Self::read_from(&data, memory)
+    }
+
+    fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
+        let split = T::num_args();
+        let t = T::from_js_args(&args[..split], memory)?;
+        let u = T::from_js_args(&args[split..], memory)?;
+        Ok((t, u))
     }
 
     fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
