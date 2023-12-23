@@ -4,7 +4,7 @@ use anyhow::Context;
 use js_sys::{Function, Object, Reflect, WebAssembly};
 use wasm_bindgen::JsValue;
 
-use crate::{direct_bytes::ModuleMemory, helpers::map_js_error, Result};
+use crate::{direct_bytes::ModuleMemory, helpers::map_js_error, DropHandles, Result};
 
 use super::*;
 
@@ -27,7 +27,11 @@ pub struct ExportsRoot {
 }
 
 impl ExportsRoot {
-    pub(crate) fn new(exports: JsValue, memory: ModuleMemory) -> Result<Self> {
+    pub(crate) fn new(
+        exports: JsValue,
+        memory: ModuleMemory,
+        drop_handles: DropHandles,
+    ) -> Result<Self> {
         let mut exported_js_fns = HashMap::<String, Function>::new();
         let mut post_return_js_fns = HashMap::<String, Function>::new();
         let mut inner_memory = Option::<JsValue>::None;
@@ -68,7 +72,10 @@ impl ExportsRoot {
         for (name, func) in exported_js_fns.into_iter() {
             let post_return_name = format!("{POST_RETURN_PREFIX}{name}");
             let post_return = post_return_js_fns.get(&post_return_name).map(Clone::clone);
-            exported_fns.insert(name, Func::new(func, post_return, memory.clone()));
+            exported_fns.insert(
+                name,
+                Func::new(func, post_return, memory.clone(), drop_handles.clone()),
+            );
         }
 
         Ok(Self { exported_fns })
