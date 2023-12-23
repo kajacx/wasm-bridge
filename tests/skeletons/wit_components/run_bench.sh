@@ -4,7 +4,7 @@
 test="wit_components/$1"
 
 # Build the guest
-sh skeletons/wit_components/build_guest.sh "$1" "--release"
+sh skeletons/wit_components/build_guest.sh "$1"
 if [ $? -ne 0 ]; then
   exit 1
 fi
