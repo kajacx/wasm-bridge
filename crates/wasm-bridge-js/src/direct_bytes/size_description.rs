@@ -17,37 +17,38 @@ fn simple_layout(flat_byte_size: usize) -> SimpleStructLayout {
     [0, flat_byte_size, flat_byte_size]
 }
 
-impl SizeDescription for i32 {
-    type StructLayout = SimpleStructLayout;
+macro_rules! size_description_primitive {
+    ($ty: ty, $bytes: literal) => {
+        impl SizeDescription for $ty {
+            type StructLayout = SimpleStructLayout;
 
-    fn alignment() -> usize {
-        4
-    }
+            fn alignment() -> usize {
+                $bytes
+            }
 
-    fn flat_byte_size() -> usize {
-        4
-    }
+            fn flat_byte_size() -> usize {
+                $bytes
+            }
 
-    fn layout() -> Self::StructLayout {
-        simple_layout(Self::flat_byte_size())
-    }
+            fn layout() -> Self::StructLayout {
+                simple_layout(Self::flat_byte_size())
+            }
+        }
+    };
 }
 
-impl SizeDescription for u32 {
-    type StructLayout = SimpleStructLayout;
+size_description_primitive!(u8, 1);
+size_description_primitive!(u16, 2);
+size_description_primitive!(u32, 4);
+size_description_primitive!(u64, 8);
 
-    fn alignment() -> usize {
-        4
-    }
+size_description_primitive!(i8, 1);
+size_description_primitive!(i16, 2);
+size_description_primitive!(i32, 4);
+size_description_primitive!(i64, 8);
 
-    fn flat_byte_size() -> usize {
-        4
-    }
-
-    fn layout() -> Self::StructLayout {
-        simple_layout(Self::flat_byte_size())
-    }
-}
+size_description_primitive!(f32, 4);
+size_description_primitive!(f64, 8);
 
 impl<T: SizeDescription> SizeDescription for &[T] {
     type StructLayout = SimpleStructLayout;
@@ -66,6 +67,22 @@ impl<T: SizeDescription> SizeDescription for &[T] {
 }
 
 impl<T: SizeDescription> SizeDescription for Vec<T> {
+    type StructLayout = SimpleStructLayout;
+
+    fn alignment() -> usize {
+        4
+    }
+
+    fn flat_byte_size() -> usize {
+        8
+    }
+
+    fn layout() -> Self::StructLayout {
+        simple_layout(Self::flat_byte_size())
+    }
+}
+
+impl SizeDescription for String {
     type StructLayout = SimpleStructLayout;
 
     fn alignment() -> usize {

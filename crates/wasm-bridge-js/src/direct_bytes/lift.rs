@@ -4,7 +4,7 @@ use wasm_bindgen::JsValue;
 use super::SizeDescription;
 
 pub trait Lift: SizeDescription + Sized {
-    fn from_js_return<M: ReadableMemory>(val: &JsValue, memory: &M) -> Result<Self>;
+    fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self>;
 
     fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self>;
 }

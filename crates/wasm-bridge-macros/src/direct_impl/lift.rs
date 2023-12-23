@@ -90,7 +90,7 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
         }
 
         impl wasm_bridge::direct_bytes::Lift for #name {
-            fn from_js_return<M: wasm_bridge::direct_bytes::ReadableMemory>(val: &wasm_bridge::wasm_bindgen::JsValue, memory: &M) -> wasm_bridge::Result<Self> {
+            fn from_js_return<M: wasm_bridge::direct_bytes::ReadableMemory>(value: &wasm_bridge::wasm_bindgen::JsValue, memory: &M) -> wasm_bridge::Result<Self> {
                 #from_js_return
             }
 

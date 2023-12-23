@@ -4,25 +4,32 @@ use wasm_bindgen::JsValue;
 
 use super::*;
 
-impl Lift for i32 {
-    fn from_js_return<M: ReadableMemory>(value: &JsValue, _memory: &M) -> Result<Self> {
-        Self::from_js_value(value)
-    }
+macro_rules! lift_primitive {
+    ($ty: ty) => {
+        impl Lift for $ty {
+            fn from_js_return<M: ReadableMemory>(value: &JsValue, _memory: &M) -> Result<Self> {
+                Self::from_js_value(value)
+            }
 
-    fn read_from<M: ReadableMemory>(slice: &[u8], _memory: &M) -> Result<Self> {
-        Ok(i32::from_le_bytes(slice.try_into()?))
-    }
+            fn read_from<M: ReadableMemory>(slice: &[u8], _memory: &M) -> Result<Self> {
+                Ok(Self::from_le_bytes(slice.try_into()?))
+            }
+        }
+    };
 }
 
-impl Lift for u32 {
-    fn from_js_return<M: ReadableMemory>(value: &JsValue, _memory: &M) -> Result<Self> {
-        Self::from_js_value(value)
-    }
+lift_primitive!(u8);
+lift_primitive!(u16);
+lift_primitive!(u32);
+lift_primitive!(u64);
 
-    fn read_from<M: ReadableMemory>(slice: &[u8], _memory: &M) -> Result<Self> {
-        Ok(u32::from_le_bytes(slice.try_into()?))
-    }
-}
+lift_primitive!(i8);
+lift_primitive!(i16);
+lift_primitive!(i32);
+lift_primitive!(i64);
+
+lift_primitive!(f32);
+lift_primitive!(f64);
 
 impl<T: Lift> Lift for Vec<T> {
     fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
@@ -49,6 +56,22 @@ impl<T: Lift> Lift for Vec<T> {
     }
 }
 
+impl Lift for String {
+    fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> anyhow::Result<Self> {
+        let addr = u32::from_js_value(value)? as usize;
+
+        let mut addr_and_len = [0u8; 8];
+        memory.read_to_slice(addr, &mut addr_and_len);
+
+        Self::read_from(&addr_and_len, memory)
+    }
+
+    fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> anyhow::Result<Self> {
+        let bytes = Vec::read_from(slice, memory)?;
+        Ok(String::from_utf8(bytes)?)
+    }
+}
+
 impl Lift for () {
     fn from_js_return<M: ReadableMemory>(_val: &JsValue, _memory: &M) -> Result<Self> {
         Ok(())
@@ -60,8 +83,8 @@ impl Lift for () {
 }
 
 impl<T: Lift> Lift for (T,) {
-    fn from_js_return<M: ReadableMemory>(val: &JsValue, memory: &M) -> Result<Self> {
-        Ok((T::from_js_return(val, memory)?,))
+    fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
+        Ok((T::from_js_return(value, memory)?,))
     }
 
     fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
@@ -70,8 +93,8 @@ impl<T: Lift> Lift for (T,) {
 }
 
 impl<T: Lift, U: Lift> Lift for (T, U) {
-    fn from_js_return<M: ReadableMemory>(val: &JsValue, memory: &M) -> Result<Self> {
-        let addr = u32::from_js_value(val)? as usize;
+    fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
+        let addr = u32::from_js_value(value)? as usize;
         let len = Self::flat_byte_size();
 
         // TODO: could probably re-use a static byte slice here
