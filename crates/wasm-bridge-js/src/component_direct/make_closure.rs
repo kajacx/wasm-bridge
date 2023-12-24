@@ -31,8 +31,8 @@ where
             let closure =
                 Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
                     // FIXME: if "flat" argument size is > 16 values, args will contain a pointer to the data instead
-                    let args_vec = args.to_vec();
-                    let args = <(P0, P1)>::from_js_args(&args_vec, &memory)
+                    let mut args_iter = args.to_vec().into_iter();
+                    let args = <(P0, P1)>::from_js_args(&mut args_iter, &memory)
                         .map_err(|err| format!("conversion of imported fn arguments: {err:?}"))?;
 
                     let result = self_clone(&mut handle.borrow_mut(), args)
@@ -44,8 +44,10 @@ where
                             .map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
                         Ok(result)
                     } else {
-                        let addr = args_vec.last().ok_or("missing last mem address argument")?;
-                        let addr = u32::from_js_value(addr)
+                        let addr = args_iter
+                            .next()
+                            .ok_or("missing last mem address argument")?;
+                        let addr = u32::from_js_value(&addr)
                             .map_err(|err| format!("return address is not a number: {err:?}"))?
                             as usize;
 

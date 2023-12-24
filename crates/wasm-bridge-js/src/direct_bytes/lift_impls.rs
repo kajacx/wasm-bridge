@@ -12,8 +12,11 @@ macro_rules! lift_primitive {
                 Self::from_js_value(value)
             }
 
-            fn from_js_args<M: ReadableMemory>(args: &[JsValue], _memory: &M) -> Result<Self> {
-                Self::from_js_value(args.get(0).context("Lift primitive with from_js_args")?)
+            fn from_js_args<M: ReadableMemory>(
+                mut args: impl Iterator<Item = JsValue>,
+                _memory: &M,
+            ) -> Result<Self> {
+                Self::from_js_value(&args.next().context("Lift primitive with from_js_args")?)
             }
 
             fn read_from<M: ReadableMemory>(slice: &[u8], _memory: &M) -> Result<Self> {
@@ -42,8 +45,11 @@ impl Lift for bool {
         u8_to_bool(value)
     }
 
-    fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
-        Self::from_js_return(args.get(0).context("Lift bool with from_js_args")?, memory)
+    fn from_js_args<M: ReadableMemory>(
+        mut args: impl Iterator<Item = JsValue>,
+        memory: &M,
+    ) -> Result<Self> {
+        Self::from_js_return(&args.next().context("Lift bool with from_js_args")?, memory)
     }
 
     fn read_from<M: ReadableMemory>(slice: &[u8], _memory: &M) -> Result<Self> {
@@ -66,8 +72,11 @@ impl Lift for char {
         char::from_u32(code).context("Invalid character bytes")
     }
 
-    fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
-        Self::from_js_return(args.get(0).context("Lift char with from_js_args")?, memory)
+    fn from_js_args<M: ReadableMemory>(
+        mut args: impl Iterator<Item = JsValue>,
+        memory: &M,
+    ) -> Result<Self> {
+        Self::from_js_return(&args.next().context("Lift char with from_js_args")?, memory)
     }
 
     fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
@@ -86,12 +95,15 @@ impl<T: Lift> Lift for Vec<T> {
         Self::read_from(&addr_and_len, memory)
     }
 
-    fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
-        let addr = args.get(0).context("Get addr in from_js_args for Vec")?;
-        let len = args.get(1).context("Get len in from_js_args for Vec")?;
+    fn from_js_args<M: ReadableMemory>(
+        mut args: impl Iterator<Item = JsValue>,
+        memory: &M,
+    ) -> Result<Self> {
+        let addr = args.next().context("Get addr in from_js_args for Vec")?;
+        let len = args.next().context("Get len in from_js_args for Vec")?;
 
-        let addr = u32::from_js_value(addr)? as usize;
-        let len = u32::from_js_value(len)? as usize;
+        let addr = u32::from_js_value(&addr)? as usize;
+        let len = u32::from_js_value(&len)? as usize;
 
         read_vec_from(addr, len, memory)
     }
@@ -132,7 +144,10 @@ impl Lift for String {
         Ok(String::from_utf8(bytes)?)
     }
 
-    fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
+    fn from_js_args<M: ReadableMemory>(
+        args: impl Iterator<Item = JsValue>,
+        memory: &M,
+    ) -> Result<Self> {
         let bytes = Vec::from_js_args(args, memory)?;
         Ok(String::from_utf8(bytes)?)
     }
@@ -148,7 +163,10 @@ impl Lift for () {
         Ok(())
     }
 
-    fn from_js_args<M: ReadableMemory>(_args: &[JsValue], _memory: &M) -> Result<Self> {
+    fn from_js_args<M: ReadableMemory>(
+        _args: impl Iterator<Item = JsValue>,
+        _memory: &M,
+    ) -> Result<Self> {
         Ok(())
     }
 
@@ -162,7 +180,10 @@ impl<T: Lift> Lift for (T,) {
         Ok((T::from_js_return(value, memory)?,))
     }
 
-    fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
+    fn from_js_args<M: ReadableMemory>(
+        args: impl Iterator<Item = JsValue>,
+        memory: &M,
+    ) -> Result<Self> {
         Ok((T::from_js_args(args, memory)?,))
     }
 
@@ -181,10 +202,12 @@ impl<T: Lift, U: Lift> Lift for (T, U) {
         Self::read_from(&data, memory)
     }
 
-    fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
-        let split = T::num_args();
-        let t = T::from_js_args(&args[..split], memory)?;
-        let u = U::from_js_args(&args[split..], memory)?;
+    fn from_js_args<M: ReadableMemory>(
+        mut args: impl Iterator<Item = JsValue>,
+        memory: &M,
+    ) -> Result<Self> {
+        let t = T::from_js_args(&mut args, memory)?;
+        let u = U::from_js_args(&mut args, memory)?;
         Ok((t, u))
     }
 
@@ -208,12 +231,13 @@ impl<T: Lift, U: Lift, V: Lift> Lift for (T, U, V) {
         Self::read_from(&data, memory)
     }
 
-    fn from_js_args<M: ReadableMemory>(args: &[JsValue], memory: &M) -> Result<Self> {
-        let split = T::num_args();
-        let split2 = split + U::num_args();
-        let t = T::from_js_args(&args[..split], memory)?;
-        let u = U::from_js_args(&args[split..split2], memory)?;
-        let v = V::from_js_args(&args[split2..], memory)?;
+    fn from_js_args<M: ReadableMemory>(
+        mut args: impl Iterator<Item = JsValue>,
+        memory: &M,
+    ) -> Result<Self> {
+        let t = T::from_js_args(&mut args, memory)?;
+        let u = U::from_js_args(&mut args, memory)?;
+        let v = V::from_js_args(&mut args, memory)?;
         Ok((t, u, v))
     }
 

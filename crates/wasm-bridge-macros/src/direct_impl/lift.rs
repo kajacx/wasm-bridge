@@ -5,11 +5,12 @@ use quote::{format_ident, quote};
 use syn::{DataEnum, DataStruct};
 
 pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
-    let field_count = data.fields.len();
+    let fields = data.fields;
+    let field_count = fields.len();
 
     // TODO: what if field count is 0?
     let from_js_return = if field_count == 1 {
-        let field_type = &data.fields.iter().next().unwrap().ty;
+        let field_type = &fields.iter().next().unwrap().ty;
         quote!(<#field_type>::from_js_return(val, memory))
     } else {
         quote!(
@@ -21,8 +22,15 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
         )
     };
 
+    let mut from_js_args = TokenStream::new();
+    for field in fields.iter() {
+        let field_type = &field.ty;
+        let line = quote!(<#field_type>::from_js_args(&mut args, memory)?,);
+        from_js_args.extend(line);
+    }
+
     let mut read_from_impl = TokenStream::new();
-    for (i, field) in data.fields.iter().enumerate() {
+    for (i, field) in fields.iter().enumerate() {
         let field_type = &field.ty;
         let field_name = &field.ident;
         let start = num_to_token(i * 2);
@@ -43,7 +51,9 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
                 #from_js_return
             }
 
-            fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(args: &[JsValue] )
+            fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(mut args: impl Iterator<Item = JsValue>) -> wasm_bridge::Result<Self> {
+                Ok((#from_js_args))
+            }
 
             fn read_from<M: wasm_bridge::direct_bytes::ReadableMemory>(slice: &[u8], memory: &M) -> wasm_bridge::Result<Self> {
                 let layout = Self::layout();
