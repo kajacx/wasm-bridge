@@ -65,8 +65,48 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
     )
 }
 
-pub fn lift_enum(_name: Ident, _data: DataEnum) -> TokenStream {
-    todo!()
+pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
+    let variants = data.variants;
+
+    let mut from_js_return = TokenStream::new();
+    for (i, variant) in variants.iter().enumerate() {
+        let i_u8 = i as u8;
+        let name = &variant.ident;
+        let line = quote!(#i_u8 => Self::#name,);
+        from_js_return.extend(line);
+    }
+
+    let name_impl = format_ident!("impl_lift_{}", name);
+    quote!(
+      mod #name_impl {
+        use wasm_bridge::direct_bytes::*;
+        use wasm_bridge::FromJsValue;
+        use super::*;
+
+        impl wasm_bridge::direct_bytes::Lift for #name {
+            fn from_js_return<M: wasm_bridge::direct_bytes::ReadableMemory>(value: &wasm_bridge::wasm_bindgen::JsValue, memory: &M) -> wasm_bridge::Result<Self> {
+                let tag = u8::from_js_value(value)?;
+                Ok(match tag {
+                    #from_js_return
+                    other => wasm_bridge::bail!("Invalid tag {other} for enum {}", format_ident!(#name))
+                })
+            }
+
+            fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(mut args: impl Iterator<Item = wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<Self> {
+                let value = args.next().context("Get enum tag")?;
+                Self::from_js_return(&value, memory)
+            }
+
+            fn read_from<M: wasm_bridge::direct_bytes::ReadableMemory>(slice: &[u8], memory: &M) -> wasm_bridge::Result<Self> {
+                let tag = slice[0];
+                Ok(match tag {
+                    #from_js_return
+                    other => wasm_bridge::bail!("Invalid tag {other} for enum {}", format_ident!(#name))
+                })
+            }
+        }
+      }
+    )
 }
 
 pub fn lift_variant(_name: Ident, _data: DataEnum) -> TokenStream {

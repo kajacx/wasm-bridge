@@ -59,8 +59,47 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
     )
 }
 
-pub fn lower_enum(_name: Ident, _data: DataEnum) -> TokenStream {
-    todo!()
+pub fn lower_enum(name: Ident, data: DataEnum) -> TokenStream {
+    let variants = data.variants;
+
+    let mut match_arms = TokenStream::new();
+    for (i, variant) in variants.iter().enumerate() {
+        let i_u8 = i as u8;
+        let name = &variant.ident;
+        let line = quote!(Self::#name => #i_u8,);
+        match_arms.extend(line);
+    }
+
+    let name_impl = format_ident!("impl_lower_{}", name);
+    quote!(
+      mod #name_impl {
+        use wasm_bridge::direct_bytes::*;
+        use wasm_bridge::ToJsValue;
+        use super::*;
+
+        impl wasm_bridge::direct_bytes::Lower for #name {
+            fn to_js_args<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, args: &mut Vec<wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<()> {
+                args.push(Self::to_js_return(memory)?);
+                Ok(())
+            }
+
+            fn to_js_return<M: WriteableMemory>(&self, _memory: &M) -> Result<wasm_bridge::wasm_bindgen::JsValue> {
+                let value = match self {
+                    #match_arms
+                };
+                Ok(value.to_js_value())
+            }
+
+            fn write_to<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, buffer: &mut wasm_bridge::direct_bytes::ByteBuffer, memory: &M) -> wasm_bridge::Result<()> {
+                let value = match self {
+                    #match_arms
+                };
+                value.write_to(&mut buffer, memory);
+                Ok(())
+            }
+        }
+      }
+    )
 }
 
 pub fn lower_variant(_name: Ident, _data: DataEnum) -> TokenStream {

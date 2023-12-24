@@ -76,8 +76,34 @@ pub fn size_description_struct(name: Ident, data: DataStruct) -> TokenStream {
     )
 }
 
-pub fn size_description_enum(_name: Ident, _data: DataEnum) -> TokenStream {
-    todo!()
+pub fn size_description_enum(name: Ident, data: DataEnum) -> TokenStream {
+    if data.variants.len() > 256 {
+        return quote!(compile_error!(
+            "Enums with more than 256 values are not yet supported."
+        ));
+    }
+
+    quote!(
+        impl wasm_bridge::direct_bytes::SizeDescription for #name {
+            type StructLayout = [usize; 3];
+
+            fn alignment() -> usize {
+                1
+            }
+
+            fn flat_byte_size() -> usize {
+                1
+            }
+
+            fn num_args() -> usize {
+                1
+            }
+
+            fn layout() -> Self::StructLayout {
+                [0, 1, 1]
+            }
+        }
+    )
 }
 
 pub fn size_description_variant(_name: Ident, _data: DataEnum) -> TokenStream {
