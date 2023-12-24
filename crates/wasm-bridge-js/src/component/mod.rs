@@ -25,9 +25,9 @@ pub(crate) use component_loader::*;
 
 pub use wasm_bridge_macros::bindgen_js as bindgen;
 
-// Backward compatibility
-pub use wasm_bridge_macros::LiftJs as FromJsValue;
-pub use wasm_bridge_macros::LowerJs as ToJsValue;
+pub use wasm_bridge_macros::LiftJs;
+pub use wasm_bridge_macros::LowerJs;
+pub use wasm_bridge_macros::SizeDescription;
 
 pub mod __internal {
     pub use anyhow;

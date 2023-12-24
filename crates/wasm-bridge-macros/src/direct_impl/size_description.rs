@@ -41,10 +41,7 @@ pub fn size_description_struct(name: Ident, data: DataStruct) -> TokenStream {
         layout_return.extend(ret);
     }
 
-    // TODO: what if field count is 0?
-
-    let name_impl = format_ident!("impl_lift_{}", name);
-
+    let name_impl = format_ident!("impl_size_description_{}", name);
     quote!(
       mod #name_impl {
         use wasm_bridge::direct_bytes::*;

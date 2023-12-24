@@ -32,7 +32,6 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
     }
 
     let name_impl = format_ident!("impl_lift_{}", name);
-
     quote!(
       mod #name_impl {
         use wasm_bridge::direct_bytes::*;
@@ -43,6 +42,8 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
             fn from_js_return<M: wasm_bridge::direct_bytes::ReadableMemory>(value: &wasm_bridge::wasm_bindgen::JsValue, memory: &M) -> wasm_bridge::Result<Self> {
                 #from_js_return
             }
+
+            fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(args: &[JsValue] )
 
             fn read_from<M: wasm_bridge::direct_bytes::ReadableMemory>(slice: &[u8], memory: &M) -> wasm_bridge::Result<Self> {
                 let layout = Self::layout();

@@ -5,17 +5,17 @@ use quote::{format_ident, quote};
 use syn::{DataEnum, DataStruct};
 
 pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
-
+    let fields = data.fields;
 
     let mut to_abi_impl = TokenStream::new();
-    for field in data.fields.iter() {
+    for field in fields.iter() {
         let field_name = &field.ident;
         let line = quote!(self.#field_name.to_js_args(args, memory)?;);
         to_abi_impl.extend(line);
     }
 
     let mut write_to_impl = TokenStream::new();
-    for (i, field) in data.fields.iter().enumerate() {
+    for (i, field) in fields.iter().enumerate() {
         let field_name = &field.ident;
 
         let end = num_to_token(i * 2 + 1);
@@ -29,7 +29,6 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
     }
 
     let name_impl = format_ident!("impl_lower_{}", name);
-
     quote!(
       mod #name_impl {
         use wasm_bridge::direct_bytes::*;
@@ -39,6 +38,14 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
             fn to_js_args<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, args: &mut Vec<wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<()> {
                 #to_abi_impl
                 Ok(())
+            }
+
+            fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+                let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
+                self.write_to(&mut buffer, memory)?;
+
+                let addr = memory.flush(buffer) as u32;
+                Ok(addr.to_js_value())
             }
 
             fn write_to<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, buffer: &mut wasm_bridge::direct_bytes::ByteBuffer, memory: &M) -> wasm_bridge::Result<()> {
