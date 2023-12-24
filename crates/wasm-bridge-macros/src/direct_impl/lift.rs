@@ -26,7 +26,7 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
     for field in fields.iter() {
         let field_name = &field.ident;
         let field_type = &field.ty;
-        let line = quote!(#field_name: <#field_type>::from_js_args(&mut args, memory)?,);
+        let line = quote!(#field_name: <#field_type>::from_js_args(args, memory)?,);
         from_js_args.extend(line);
     }
 
@@ -52,7 +52,7 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
                 #from_js_return
             }
 
-            fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(mut args: impl Iterator<Item = wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<Self> {
+            fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(args: &mut wasm_bridge::direct_bytes::JsArgsReader, memory: &M) -> wasm_bridge::Result<Self> {
                 Ok(Self { #from_js_args })
             }
 
@@ -92,7 +92,7 @@ pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
                 })
             }
 
-            fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(mut args: impl Iterator<Item = wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<Self> {
+            fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(args: &mut wasm_bridge::direct_bytes::JsArgsReader, memory: &M) -> wasm_bridge::Result<Self> {
                 let value = args.next().context("Get enum tag")?;
                 Self::from_js_return(&value, memory)
             }

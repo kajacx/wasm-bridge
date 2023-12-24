@@ -232,12 +232,12 @@ impl<T: Lower, E: Lower> Lower for Result<T, E> {
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
         let bytes_written = match self {
             Ok(value) => {
-                buffer.write(&1u8, memory);
+                buffer.write(&1u8, memory)?;
                 value.write_to(buffer, memory)?;
                 T::flat_byte_size()
             }
             Err(error) => {
-                buffer.write(&0u8, memory);
+                buffer.write(&0u8, memory)?;
                 error.write_to(buffer, memory)?;
                 E::flat_byte_size()
             }
