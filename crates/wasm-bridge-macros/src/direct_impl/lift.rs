@@ -6,43 +6,8 @@ use syn::{DataEnum, DataStruct};
 
 pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
     let field_count = data.fields.len();
-    let field_count_token = num_to_token(field_count);
-
-    let mut alignment_impl = TokenStream::new();
-    for field in data.fields.iter() {
-        let field_type = &field.ty;
-        let line = quote!(let align = usize::max(align, <#field_type>::alignment()););
-        alignment_impl.extend(line);
-    }
-
-    let mut num_args = TokenStream::new();
-    for field in data.fields.iter() {
-        let field_type = &field.ty;
-        num_args.extend(quote!( + <#field_type>::num_args()));
-    }
-
-    let mut layout_impl = TokenStream::new();
-    let mut layout_return = TokenStream::new();
-    for (i, field) in data.fields.iter().enumerate() {
-        let field_type = &field.ty;
-
-        let start_i = format_ident!("start{i}");
-        let end_i = format_ident!("end{i}");
-        let start_next = format_ident!("start{}", i + 1);
-
-        let line = quote!(let #end_i = #start_i + <#field_type>::flat_byte_size(););
-        layout_impl.extend(line);
-
-        let line =
-            quote!(let #start_next = wasm_bridge::direct_bytes::next_multiple_of(#end_i, align););
-        layout_impl.extend(line);
-
-        let ret = quote!(#end_i, #start_next,);
-        layout_return.extend(ret);
-    }
 
     // TODO: what if field count is 0?
-
     let from_js_return = if field_count == 1 {
         let field_type = &data.fields.iter().next().unwrap().ty;
         quote!(<#field_type>::from_js_return(val, memory))
@@ -73,31 +38,6 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
         use wasm_bridge::direct_bytes::*;
         use wasm_bridge::FromJsValue;
         use super::*;
-
-        impl wasm_bridge::direct_bytes::SizeDescription for #name {
-            type StructLayout = [usize; #field_count_token * 2 + 1];
-
-            fn alignment() -> usize {
-                let align = 0;
-                #alignment_impl
-                align
-            }
-
-            fn flat_byte_size() -> usize {
-                Self::layout()[#field_count_token*2]
-            }
-
-            fn num_args() -> usize {
-                0 #num_args
-            }
-
-            fn layout() -> Self::StructLayout {
-                let align = Self::alignment();
-                let start0 = 0;
-                #layout_impl
-                [start0, #layout_return]
-            }
-        }
 
         impl wasm_bridge::direct_bytes::Lift for #name {
             fn from_js_return<M: wasm_bridge::direct_bytes::ReadableMemory>(value: &wasm_bridge::wasm_bindgen::JsValue, memory: &M) -> wasm_bridge::Result<Self> {

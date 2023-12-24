@@ -5,9 +5,8 @@ use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
 use crate::{
-    direct_bytes::ModuleMemory,
-    helpers::{self, static_str_to_js},
-    AsContextMut, DataHandle, DropHandle, DropHandles, Engine, Result,
+    direct_bytes::ModuleMemory, helpers::static_str_to_js, AsContextMut, DataHandle, DropHandle,
+    DropHandles, Engine, Result,
 };
 
 use super::*;
