@@ -54,7 +54,7 @@ impl Lower for bool {
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
-        (*self as u8).write_to(buffer, memory)
+        buffer.write(&(*self as u8), memory)
     }
 }
 
@@ -68,7 +68,7 @@ impl Lower for char {
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
-        (*self as u32).write_to(buffer, memory)
+        buffer.write(&(*self as u32), memory)
     }
 }
 
@@ -96,8 +96,8 @@ impl<T: Lower> Lower for &[T] {
         let addr = write_vec_data(self, memory)? as u32;
         let len = self.len() as u32;
 
-        addr.write_to(buffer, memory)?;
-        len.write_to(buffer, memory)?;
+        buffer.write(&addr, memory)?;
+        buffer.write(&len, memory)?;
 
         Ok(())
     }
