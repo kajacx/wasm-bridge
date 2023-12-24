@@ -117,6 +117,26 @@ macro_rules! size_description_fat_ptr {
 size_description_fat_ptr!(&str);
 size_description_fat_ptr!(String);
 
+impl<T: SizeDescription> SizeDescription for Option<T> {
+    type StructLayout = SimpleStructLayout;
+
+    fn alignment() -> usize {
+        T::alignment()
+    }
+
+    fn flat_byte_size() -> usize {
+        T::flat_byte_size() + Self::alignment()
+    }
+
+    fn num_args() -> usize {
+        T::num_args() + 1
+    }
+
+    fn layout() -> Self::StructLayout {
+        simple_layout(Self::flat_byte_size())
+    }
+}
+
 impl SizeDescription for () {
     type StructLayout = [usize; 1];
 

@@ -24,7 +24,7 @@ macro_rules! lower_primitive {
                 buffer: &mut ByteBuffer,
                 _memory: &M,
             ) -> Result<()> {
-                buffer.write(&self.to_le_bytes());
+                buffer.write_bytes(&self.to_le_bytes());
                 Ok(())
             }
         }
@@ -157,6 +157,46 @@ fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], memory: &M) -> Resul
 
     // Then actually write the slice buffer to memory and return the address
     Ok(memory.flush(buffer))
+}
+
+impl<T: Lower> Lower for Option<T> {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        match self {
+            Some(value) => {
+                args.push(1u8.to_js_value());
+                value.to_js_args(args, memory)?;
+            }
+            None => {
+                args.push(0u8.to_js_value());
+                for _ in 0..T::num_args() {
+                    args.push(JsValue::UNDEFINED);
+                }
+            }
+        };
+        Ok(())
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        // TODO: this must be duplicated somewhere ... move to a separate helper fn?
+        let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
+        self.write_to(&mut buffer, memory)?;
+        let addr = memory.flush(buffer) as u32;
+        Ok(addr.to_js_value())
+    }
+
+    fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
+        match self {
+            Some(value) => {
+                buffer.write(&0u8, memory)?;
+                buffer.write(value, memory)?;
+            }
+            None => {
+                buffer.write(&0u8, memory)?;
+                buffer.skip(T::flat_byte_size());
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Lower for () {

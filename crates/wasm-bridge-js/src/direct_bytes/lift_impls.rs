@@ -158,6 +158,41 @@ impl Lift for String {
     }
 }
 
+impl<T: Lift> Lift for Option<T> {
+    fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> anyhow::Result<Self> {
+        let addr = u32::from_js_value(value)? as usize;
+        let data = memory.read_to_vec(addr, Self::flat_byte_size());
+        Self::read_from(&data, memory)
+    }
+
+    fn from_js_args<M: ReadableMemory>(
+        mut args: impl Iterator<Item = JsValue>,
+        memory: &M,
+    ) -> anyhow::Result<Self> {
+        let variant = args.next().context("Get option variant tag")?;
+        let variant = u8::from_js_value(&variant)?;
+        match variant {
+            0 => {
+                for _ in 0..T::num_args() {
+                    args.next().context("Skipping unused option::none args")?;
+                }
+                Ok(Self::None)
+            }
+            1 => Ok(Self::Some(T::from_js_args(args, memory)?)),
+            other => bail!("Invalid option variant tag: {other}"),
+        }
+    }
+
+    fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> anyhow::Result<Self> {
+        let variant = slice[0];
+        match variant {
+            0 => Ok(Self::None),
+            1 => Ok(Some(T::read_from(&slice[1..], memory)?)),
+            other => bail!("Invalid option variant tag: {other}"),
+        }
+    }
+}
+
 impl Lift for () {
     fn from_js_return<M: ReadableMemory>(_val: &JsValue, _memory: &M) -> Result<Self> {
         Ok(())

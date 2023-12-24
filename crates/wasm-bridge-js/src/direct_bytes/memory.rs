@@ -6,7 +6,7 @@ use wasm_bindgen::JsValue;
 
 use crate::{helpers::map_js_error, Result};
 
-use super::{ReadableMemory, WriteableMemory};
+use super::{Lower, ReadableMemory, WriteableMemory};
 
 #[derive(Debug, Clone)]
 pub struct ModuleMemoryInner {
@@ -95,12 +95,16 @@ impl ByteBuffer {
         }
     }
 
-    pub fn write(&mut self, bytes: &[u8]) {
+    pub fn write_bytes(&mut self, bytes: &[u8]) {
         self.data.extend_from_slice(bytes);
     }
 
     pub fn skip(&mut self, num_bytes: usize) {
         // TODO: could just skip instead of writing 0s with some unsafe magic
         self.data.extend((0..num_bytes).map(|_| 0));
+    }
+
+    pub fn write<T: Lower, M: WriteableMemory>(&mut self, value: &T, memory: &M) -> Result<()> {
+        value.write_to(self, memory)
     }
 }
