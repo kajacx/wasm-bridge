@@ -4,7 +4,7 @@ use std::rc::Rc;
 use wasm_bindgen::{prelude::*, JsValue};
 
 use crate::conversions::FromJsValue;
-use crate::direct_bytes::{ByteBuffer, Lift, Lower, ModuleMemory, WriteableMemory};
+use crate::direct_bytes::{ByteBuffer, JsArgsReader, Lift, Lower, ModuleMemory, WriteableMemory};
 use crate::{DataHandle, DropHandle, Result, StoreContextMut};
 use js_sys::{Array, Function};
 
@@ -31,7 +31,7 @@ where
             let closure =
                 Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
                     // FIXME: if "flat" argument size is > 16 values, args will contain a pointer to the data instead
-                    let mut args_iter = args.to_vec().into_iter();
+                    let mut args_iter = JsArgsReader::new(args);
                     let args = <(P0, P1)>::from_js_args(&mut args_iter, &memory)
                         .map_err(|err| format!("conversion of imported fn arguments: {err:?}"))?;
 
@@ -87,7 +87,7 @@ macro_rules! make_closure {
 
                     let closure =
                         Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
-                            let mut args_iter = args.to_vec().into_iter();
+                            let mut args_iter = JsArgsReader::new(args);
                             let args = <($($name,)*)>::from_js_args(&mut args_iter, &memory).map_err(|err| format!("conversion of imported fn arguments: {err:?}"))?;
 
                             let result = self_clone(

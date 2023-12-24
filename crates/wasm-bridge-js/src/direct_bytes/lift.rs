@@ -1,4 +1,5 @@
 use anyhow::Result;
+use js_sys::Array;
 use wasm_bindgen::JsValue;
 
 use super::SizeDescription;
@@ -31,5 +32,36 @@ pub trait ReadableMemory {
 impl<M: ReadableMemory> ReadableMemory for &M {
     fn read_to_slice(&self, addr: usize, target: &mut [u8]) {
         M::read_to_slice(self, addr, target)
+    }
+}
+
+pub(crate) struct JsArgsReader {
+    args: Array,
+    index: u32,
+    length: u32,
+}
+
+impl JsArgsReader {
+    pub(crate) fn new(args: Array) -> Self {
+        let length = args.length();
+        Self {
+            args,
+            index: 0,
+            length,
+        }
+    }
+}
+
+impl Iterator for JsArgsReader {
+    type Item = JsValue;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.length {
+            let value = self.args.get(self.index);
+            self.index += 1;
+            Some(value)
+        } else {
+            Option::None
+        }
     }
 }
