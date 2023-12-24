@@ -11,10 +11,10 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
     // TODO: what if field count is 0?
     let from_js_return = if field_count == 1 {
         let field_type = &fields.iter().next().unwrap().ty;
-        quote!(<#field_type>::from_js_return(val, memory))
+        quote!(<#field_type>::from_js_return(value, memory))
     } else {
         quote!(
-            let addr = u32::from_js_value(val)? as usize;
+            let addr = u32::from_js_value(value)? as usize;
             let len = Self::flat_byte_size();
 
             let data = memory.read_to_vec(addr, len);
@@ -24,15 +24,16 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
 
     let mut from_js_args = TokenStream::new();
     for field in fields.iter() {
+        let field_name = &field.ident;
         let field_type = &field.ty;
-        let line = quote!(<#field_type>::from_js_args(&mut args, memory)?,);
+        let line = quote!(#field_name: <#field_type>::from_js_args(&mut args, memory)?,);
         from_js_args.extend(line);
     }
 
     let mut read_from_impl = TokenStream::new();
     for (i, field) in fields.iter().enumerate() {
-        let field_type = &field.ty;
         let field_name = &field.ident;
+        let field_type = &field.ty;
         let start = num_to_token(i * 2);
         let end = num_to_token(i * 2 + 1);
         let line = quote!(#field_name: <#field_type>::read_from(&slice[layout[#start]..layout[#end]], memory)?,);
@@ -51,13 +52,13 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
                 #from_js_return
             }
 
-            fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(mut args: impl Iterator<Item = JsValue>) -> wasm_bridge::Result<Self> {
-                Ok((#from_js_args))
+            fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(mut args: impl Iterator<Item = wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<Self> {
+                Ok(Self { #from_js_args })
             }
 
             fn read_from<M: wasm_bridge::direct_bytes::ReadableMemory>(slice: &[u8], memory: &M) -> wasm_bridge::Result<Self> {
                 let layout = Self::layout();
-                Ok(Self {#read_from_impl})
+                Ok(Self { #read_from_impl })
             }
         }
       }

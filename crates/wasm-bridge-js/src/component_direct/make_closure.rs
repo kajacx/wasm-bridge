@@ -87,8 +87,8 @@ macro_rules! make_closure {
 
                     let closure =
                         Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
-                            let args_vec = args.to_vec();
-                            let args = <($($name,)*)>::from_js_args(&args_vec, &memory).map_err(|err| format!("conversion of imported fn arguments: {err:?}"))?;
+                            let mut args_iter = args.to_vec().into_iter();
+                            let args = <($($name,)*)>::from_js_args(&mut args_iter, &memory).map_err(|err| format!("conversion of imported fn arguments: {err:?}"))?;
 
                             let result = self_clone(
                                 &mut handle.borrow_mut(),
@@ -101,8 +101,8 @@ macro_rules! make_closure {
                                     .map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
                                 Ok(result)
                             } else {
-                                let addr = args_vec.last().ok_or("missing last mem address argument")?;
-                                let addr = u32::from_js_value(addr).map_err(|err| format!("return address is not a number: {err:?}"))? as usize;
+                                let addr = args_iter.next().ok_or("missing last mem address argument")?;
+                                let addr = u32::from_js_value(&addr).map_err(|err| format!("return address is not a number: {err:?}"))? as usize;
 
                                 // Buffer is already allocated, we just write there
                                 let mut buffer = ByteBuffer::new(addr, R::flat_byte_size());

@@ -32,6 +32,7 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
     quote!(
       mod #name_impl {
         use wasm_bridge::direct_bytes::*;
+        use wasm_bridge::ToJsValue;
         use super::*;
 
         impl wasm_bridge::direct_bytes::Lower for #name {
@@ -40,7 +41,7 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
                 Ok(())
             }
 
-            fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+            fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<wasm_bridge::wasm_bindgen::JsValue> {
                 let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
                 self.write_to(&mut buffer, memory)?;
 
