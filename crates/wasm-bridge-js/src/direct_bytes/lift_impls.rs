@@ -160,6 +160,7 @@ impl Lift for String {
 
 impl<T: Lift> Lift for Option<T> {
     fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> anyhow::Result<Self> {
+        // TODO: also repeated probably
         let addr = u32::from_js_value(value)? as usize;
         let data = memory.read_to_vec(addr, Self::flat_byte_size());
         Self::read_from(&data, memory)
@@ -189,6 +190,50 @@ impl<T: Lift> Lift for Option<T> {
             0 => Ok(Self::None),
             1 => Ok(Some(T::read_from(&slice[1..], memory)?)),
             other => bail!("Invalid option variant tag: {other}"),
+        }
+    }
+}
+
+impl<T: Lift, E: Lift> Lift for Result<T, E> {
+    fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> anyhow::Result<Self> {
+        let addr = u32::from_js_value(value)? as usize;
+        let data = memory.read_to_vec(addr, Self::flat_byte_size());
+        Self::read_from(&data, memory)
+    }
+
+    fn from_js_args<M: ReadableMemory>(
+        mut args: impl Iterator<Item = JsValue>,
+        memory: &M,
+    ) -> anyhow::Result<Self> {
+        let variant = args.next().context("Get result variant tag")?;
+        let variant = u8::from_js_value(&variant)?;
+
+        let (result, args_read) = match variant {
+            0 => (Self::Err(E::from_js_args(args, memory)?), E::num_args()),
+            1 => (Self::Ok(T::from_js_args(args, memory)?), T::num_args()),
+            other => bail!("Invalid result variant tag: {other}"),
+        };
+
+        // Start from 1 to account for the initial variant tag
+        for _ in 1..(Self::num_args() - args_read) {
+            args.next().context("Skipping unused result args")?;
+        }
+
+        Ok(result)
+    }
+
+    fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> anyhow::Result<Self> {
+        let variant = slice[0];
+        match variant {
+            0 => Ok(Self::Err(E::read_from(
+                &slice[1..=(E::flat_byte_size())],
+                memory,
+            )?)),
+            1 => Ok(Self::Ok(T::read_from(
+                &slice[1..=(T::flat_byte_size())],
+                memory,
+            )?)),
+            other => bail!("Invalid result variant tag: {other}"),
         }
     }
 }

@@ -137,6 +137,26 @@ impl<T: SizeDescription> SizeDescription for Option<T> {
     }
 }
 
+impl<T: SizeDescription, E: SizeDescription> SizeDescription for Result<T, E> {
+    type StructLayout = SimpleStructLayout;
+
+    fn alignment() -> usize {
+        usize::max(T::alignment(), E::alignment())
+    }
+
+    fn flat_byte_size() -> usize {
+        usize::max(T::flat_byte_size(), E::flat_byte_size()) + Self::alignment()
+    }
+
+    fn num_args() -> usize {
+        usize::max(T::num_args(), E::num_args()) + 1
+    }
+
+    fn layout() -> Self::StructLayout {
+        simple_layout(Self::flat_byte_size())
+    }
+}
+
 impl SizeDescription for () {
     type StructLayout = [usize; 1];
 

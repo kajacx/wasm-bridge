@@ -199,6 +199,57 @@ impl<T: Lower> Lower for Option<T> {
     }
 }
 
+impl<T: Lower, E: Lower> Lower for Result<T, E> {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        let args_written = match self {
+            Ok(value) => {
+                args.push(1u8.to_js_value());
+                value.to_js_args(args, memory)?;
+                T::num_args()
+            }
+            Err(error) => {
+                args.push(0u8.to_js_value());
+                error.to_js_args(args, memory)?;
+                E::num_args()
+            }
+        };
+
+        // Start from 1 to account for the initial variant tag
+        for _ in 1..(Self::num_args() - args_written) {
+            args.push(JsValue::UNDEFINED);
+        }
+
+        Ok(())
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
+        self.write_to(&mut buffer, memory)?;
+        let addr = memory.flush(buffer) as u32;
+        Ok(addr.to_js_value())
+    }
+
+    fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
+        let bytes_written = match self {
+            Ok(value) => {
+                buffer.write(&1u8, memory);
+                value.write_to(buffer, memory)?;
+                T::flat_byte_size()
+            }
+            Err(error) => {
+                buffer.write(&0u8, memory);
+                error.write_to(buffer, memory)?;
+                E::flat_byte_size()
+            }
+        };
+
+        // Variant tag takes 1 whole alignment
+        buffer.skip(Self::flat_byte_size() - bytes_written - Self::alignment());
+
+        Ok(())
+    }
+}
+
 impl Lower for () {
     fn to_js_args<M: WriteableMemory>(&self, _args: &mut Vec<JsValue>, _memory: &M) -> Result<()> {
         Ok(())
