@@ -184,10 +184,20 @@ impl<T: Lift> Lift for Option<T> {
 
 impl<T: Lift, E: Lift> Lift for Result<T, E> {
     fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> anyhow::Result<Self> {
-        // FIXME: WAIT, Result<(), ()> is a single value !!!
-        let addr = u32::from_js_value(value)? as usize;
-        let data = memory.read_to_vec(addr, Self::flat_byte_size());
-        Self::read_from(&data, memory)
+        if Self::num_args() == 1 {
+            let variant = u8::from_js_value(&value)?;
+            match variant {
+                // TODO: The (T/E)::from_js_return are not really needed,
+                // since we know both T and E are the unit.
+                0 => Ok(Self::Ok(T::from_js_return(value, memory)?)),
+                1 => Ok(Self::Err(E::from_js_return(value, memory)?)),
+                other => bail!("Invalid result variant tag: {other}"),
+            }
+        } else {
+            let addr = u32::from_js_value(value)? as usize;
+            let data = memory.read_to_vec(addr, Self::flat_byte_size());
+            Self::read_from(&data, memory)
+        }
     }
 
     fn from_js_args<M: ReadableMemory>(

@@ -225,11 +225,17 @@ impl<T: Lower, E: Lower> Lower for Result<T, E> {
     }
 
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
-        // FIXME: What about a Result<(), ()>, isn't that a single value?
-        let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
-        self.write_to(&mut buffer, memory)?;
-        let addr = memory.flush(buffer) as u32;
-        Ok(addr.to_js_value())
+        if Self::num_args() == 1 {
+            match self {
+                Ok(_) => Ok(0u8.to_js_value()),
+                Err(_) => Ok(1u8.to_js_value()),
+            }
+        } else {
+            let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
+            self.write_to(&mut buffer, memory)?;
+            let addr = memory.flush(buffer) as u32;
+            Ok(addr.to_js_value())
+        }
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
