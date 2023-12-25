@@ -52,7 +52,7 @@ pub fn size_description_struct(name: Ident, data: DataStruct) -> TokenStream {
             type StructLayout = [usize; #field_count_token * 2 + 1];
 
             fn alignment() -> usize {
-                let align = 0;
+                let align = 1;
                 #alignment_impl
                 align
             }
@@ -106,8 +106,77 @@ pub fn size_description_enum(name: Ident, data: DataEnum) -> TokenStream {
     )
 }
 
-pub fn size_description_variant(_name: Ident, _data: DataEnum) -> TokenStream {
-    todo!()
+pub fn size_description_variant(name: Ident, data: DataEnum) -> TokenStream {
+    let variants = data.variants;
+    if variants.len() > 256 {
+        return quote!(compile_error!(
+            "Variants with more than 256 values are not yet supported."
+        ));
+    }
+
+    let mut alignment_impl = TokenStream::new();
+    for variant in variants.iter() {
+        let field = variant.fields.iter().next();
+        if let Some(field) = field {
+            let field_type = &field.ty;
+            let line = quote!(let align = usize::max(align, <#field_type>::alignment()););
+            alignment_impl.extend(line);
+        }
+    }
+
+    let flat_byte_size: TokenStream =
+        variants
+            .iter()
+            .map(|variant| {
+                variant.fields.iter().next().map(|field| {
+                let field_type = &field.ty;
+                quote!(let max_size = usize::max(max_size, <#field_type>::flat_byte_size());)
+             }).unwrap_or_else(TokenStream::new)
+            })
+            .collect();
+
+    let num_args: TokenStream = variants
+        .iter()
+        .map(|variant| {
+            variant
+                .fields
+                .iter()
+                .next()
+                .map(|field| {
+                    let field_type = &field.ty;
+                    quote!(let num_args = usize::max(num_args, <#field_type>::num_args());)
+                })
+                .unwrap_or_else(TokenStream::new)
+        })
+        .collect();
+
+    quote!(
+        impl wasm_bridge::direct_bytes::SizeDescription for #name {
+            type StructLayout = [usize; 3];
+
+            fn alignment() -> usize {
+                let align = 1;
+                #alignment_impl
+                align
+            }
+
+            fn flat_byte_size() -> usize {
+                let max_size = 0;
+                #flat_byte_size
+                Self::alignment() + max_size
+            }
+
+            fn num_args() -> usize {
+                let num_args = 0;
+                #num_args
+                1 + num_args;
+            }
+
+            fn layout() -> Self::StructLayout {
+                [0, 1, 1]
+            }
+        }
+    )
 }
 
 fn num_to_token(num: usize) -> TokenStream {

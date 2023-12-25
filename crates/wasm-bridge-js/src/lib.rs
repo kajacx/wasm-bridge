@@ -21,6 +21,8 @@ pub use context::*;
 
 pub type Error = anyhow::Error;
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
+pub use anyhow::bail;
+pub use anyhow::Context;
 
 pub mod helpers;
 
