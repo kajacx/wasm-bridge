@@ -169,7 +169,7 @@ pub fn size_description_variant(name: Ident, data: DataEnum) -> TokenStream {
             fn num_args() -> usize {
                 let num_args = 0;
                 #num_args
-                1 + num_args;
+                1 + num_args
             }
 
             fn layout() -> Self::StructLayout {

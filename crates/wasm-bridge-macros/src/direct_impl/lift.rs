@@ -66,6 +66,7 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
 }
 
 pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
+    let name_str = format_ident!("{}", name).to_string();
     let variants = data.variants;
 
     let mut from_js_return = TokenStream::new();
@@ -81,6 +82,7 @@ pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
       mod #name_impl {
         use wasm_bridge::direct_bytes::*;
         use wasm_bridge::FromJsValue;
+        use wasm_bridge::Context;
         use super::*;
 
         impl wasm_bridge::direct_bytes::Lift for #name {
@@ -88,7 +90,7 @@ pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
                 let tag = u8::from_js_value(value)?;
                 Ok(match tag {
                     #from_js_return
-                    other => wasm_bridge::bail!("Invalid tag {other} for enum {}", format_ident!(#name))
+                    other => wasm_bridge::bail!("Invalid tag {other} for enum {}", #name_str)
                 })
             }
 
@@ -101,7 +103,7 @@ pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
                 let tag = slice[0];
                 Ok(match tag {
                     #from_js_return
-                    other => wasm_bridge::bail!("Invalid tag {other} for enum {}", format_ident!(#name))
+                    other => wasm_bridge::bail!("Invalid tag {other} for enum {}", #name_str)
                 })
             }
         }
@@ -110,6 +112,7 @@ pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
 }
 
 pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
+    let name_str = format_ident!("{}", name).to_string();
     let variants = data.variants;
     let all_empty = variants.iter().all(|variant| variant.fields.len() == 0);
 
@@ -119,8 +122,8 @@ pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
             .enumerate()
             .map(|(i, variant)| {
                 let tag = i as u8;
-                let name = &variant.ident;
-                quote!(#tag => Self::#name(),)
+                let variant_name = &variant.ident;
+                quote!(#tag => Self::#variant_name,)
             })
             .collect();
 
@@ -128,7 +131,7 @@ pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
             let tag = u8::from_js_value(value)?;
             Ok(match tag {
                 #match_arms
-                other => wasm_bridge::bail!("Invalid tag {other} for variant {}", format_ident!(#name))
+                other => wasm_bridge::bail!("Invalid tag {other} for variant {}", #name_str)
             })
         )
     } else {
@@ -141,23 +144,23 @@ pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
 
     let from_js_args: TokenStream = variants.iter().enumerate().map(|(i, variant)| {
         let tag = i as u8;
-        let name = &variant.ident;
+        let variant_name = &variant.ident;
         if let Some(field) = variant.fields.iter().next() {
             let field_type = &field.ty;
-            quote!(#tag => (Self::#name(<#field_type>::from_js_args(args, memory)?, <#field_type>::num_args())),)
+            quote!(#tag => (Self::#variant_name(<#field_type>::from_js_args(args, memory)?), <#field_type>::num_args()),)
         } else {
-            quote!(#tag => (Self::#name(), 0),)
+            quote!(#tag => (Self::#variant_name, 0),)
         }
     }).collect();
 
     let read_from: TokenStream = variants.iter().enumerate().map(|(i, variant)| {
         let tag = i as u8;
-        let name = &variant.ident;
+        let variant_name = &variant.ident;
         if let Some(field) = variant.fields.iter().next() {
             let field_type = &field.ty;
-            quote!(#tag => Self::#name(<#field_type>::read_from(slice[1..=(<#field_type>::flat_byte_size())], memory)?),)
+            quote!(#tag => Self::#variant_name(<#field_type>::read_from(&slice[1..=(<#field_type>::flat_byte_size())], memory)?),)
         } else {
-            quote!(#tag => Self::#name(),)
+            quote!(#tag => Self::#variant_name,)
         }
     }).collect();
 
@@ -166,6 +169,7 @@ pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
       mod #name_impl {
         use wasm_bridge::direct_bytes::*;
         use wasm_bridge::FromJsValue;
+        use wasm_bridge::Context;
         use super::*;
 
         impl wasm_bridge::direct_bytes::Lift for #name {
@@ -175,11 +179,11 @@ pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
 
             fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(args: &mut wasm_bridge::direct_bytes::JsArgsReader, memory: &M) -> wasm_bridge::Result<Self> {
                 let tag = args.next().context("Get variant tag")?;
-                let tag = u32::from_js_value(tag);
+                let tag = u8::from_js_value(&tag)?;
 
                 let (result, args_read) = match tag {
                     #from_js_args
-                    other => wasm_bridge::bail!("Invalid tag {other} for variant {}", format_ident!(#name))
+                    other => wasm_bridge::bail!("Invalid tag {other} for variant {}", #name_str)
                 };
 
                 // Start from 1 to account for the initial variant tag
@@ -193,7 +197,7 @@ pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
                 let tag = slice[0];
                 Ok(match tag {
                     #read_from
-                    other => wasm_bridge::bail!("Invalid tag {other} for enum {}", format_ident!(#name))
+                    other => wasm_bridge::bail!("Invalid tag {other} for variant {}", #name_str)
                 })
             }
         }
