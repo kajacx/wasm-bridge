@@ -176,7 +176,7 @@ impl<T: Lift> Lift for Option<T> {
         let variant = slice[0];
         match variant {
             0 => Ok(Self::None),
-            1 => Ok(Some(T::read_from(&slice[1..], memory)?)),
+            1 => Ok(Some(T::read_from(&slice[(Self::alignment())..], memory)?)),
             other => bail!("Invalid option variant tag: {other}"),
         }
     }
