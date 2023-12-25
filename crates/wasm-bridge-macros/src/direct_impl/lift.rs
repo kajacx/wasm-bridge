@@ -109,8 +109,97 @@ pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
     )
 }
 
-pub fn lift_variant(_name: Ident, _data: DataEnum) -> TokenStream {
-    todo!()
+pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
+    let variants = data.variants;
+
+    let all_empty = variants.iter().all(|variant| variant.fields.len() == 0);
+
+    let from_js_return = if all_empty {
+        let match_arms: TokenStream = variants
+            .iter()
+            .enumerate()
+            .map(|(i, variant)| {
+                let tag = i as u8;
+                let name = &variant.ident;
+                quote!(#tag => Self::#name(),)
+            })
+            .collect();
+
+        quote!(
+            let tag = u8::from_js_value(value)?;
+            Ok(match tag {
+                #match_arms
+                other => wasm_bridge::bail!("Invalid tag {other} for variant {}", format_ident!(#name))
+            })
+        )
+    } else {
+        quote!(
+            let addr = u32::from_js_value(value)? as usize;
+            let data = memory.read_to_vec(addr, Self::flat_byte_size());
+            Self::read_from(&data, memory)
+        )
+    };
+
+    let from_js_args: TokenStream = variants.iter().enumerate().map(|(i, variant)| {
+        let tag = i as u8;
+        let name = &variant.ident;
+        if let Some(field) = variant.fields.iter().next() {
+            let field_type = &field.ty;
+            quote!(#tag => (Self::#name(<#field_type>::from_js_args(args, memory)?, <#field_type>::num_args())),)
+        } else {
+            quote!(#tag => (Self::#name(), 0),)
+        }
+    }).collect();
+
+    let read_from: TokenStream = variants.iter().enumerate().map(|(i, variant)| {
+        let tag = i as u8;
+        let name = &variant.ident;
+        if let Some(field) = variant.fields.iter().next() {
+            let field_type = &field.ty;
+            quote!(#tag => Self::#name(<#field_type>::read_from(slice[1..=(<#field_type>::flat_byte_size())], memory)?),)
+        } else {
+            quote!(#tag => Self::#name(),)
+        }
+    }).collect();
+
+    let name_impl = format_ident!("impl_lift_{}", name);
+    quote!(
+      mod #name_impl {
+        use wasm_bridge::direct_bytes::*;
+        use wasm_bridge::FromJsValue;
+        use super::*;
+
+        impl wasm_bridge::direct_bytes::Lift for #name {
+            fn from_js_return<M: wasm_bridge::direct_bytes::ReadableMemory>(value: &wasm_bridge::wasm_bindgen::JsValue, memory: &M) -> wasm_bridge::Result<Self> {
+                #from_js_return
+            }
+
+            fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(args: &mut wasm_bridge::direct_bytes::JsArgsReader, memory: &M) -> wasm_bridge::Result<Self> {
+                let tag = args.next().context("Get variant tag")?;
+                let tag = u32::from_js_value(tag);
+
+                let (result, args_read) = match tag {
+                    #from_js_args
+                    other => wasm_bridge::bail!("Invalid tag {other} for variant {}", format_ident!(#name))
+                };
+
+                // Start from 1 to account for the initial variant tag
+                for _ in 1..(Self::num_args() - args_read) {
+                    args.next().context("Skipping unused result args")?;
+                }
+                Ok(result)
+            }
+
+            fn read_from<M: wasm_bridge::direct_bytes::ReadableMemory>(slice: &[u8], memory: &M) -> wasm_bridge::Result<Self> {
+                let tag = slice[0];
+                Ok(match tag {
+                    #read_from
+                    other => wasm_bridge::bail!("Invalid tag {other} for enum {}", format_ident!(#name))
+                })
+            }
+        }
+      }
+    )
 }
 
 fn num_to_token(num: usize) -> TokenStream {
