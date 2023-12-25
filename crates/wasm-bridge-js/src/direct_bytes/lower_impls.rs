@@ -187,12 +187,14 @@ impl<T: Lower> Lower for Option<T> {
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
         match self {
             Some(value) => {
-                buffer.write(&0u8, memory)?;
+                buffer.write(&1u8, memory)?;
+                buffer.skip(Self::alignment() - 1);
+
                 buffer.write(value, memory)?;
             }
             None => {
                 buffer.write(&0u8, memory)?;
-                buffer.skip(T::flat_byte_size());
+                buffer.skip(Self::flat_byte_size() - 1);
             }
         }
         Ok(())

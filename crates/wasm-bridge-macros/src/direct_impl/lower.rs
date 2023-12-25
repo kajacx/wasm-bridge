@@ -95,8 +95,7 @@ pub fn lower_enum(name: Ident, data: DataEnum) -> TokenStream {
                 let value = match self {
                     #match_arms
                 };
-                value.write_to(buffer, memory);
-                Ok(())
+                value.write_to(buffer, memory)
             }
         }
       }
