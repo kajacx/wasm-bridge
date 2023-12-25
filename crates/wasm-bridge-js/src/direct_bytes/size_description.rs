@@ -207,6 +207,16 @@ macro_rules! max_alignment {
     }
 }
 
+macro_rules! num_args {
+    ($($ty: ty),*) => {
+        {
+            let args = 0;
+            $(let args = args + <$ty>::num_args();)*
+            args
+        }
+    };
+}
+
 impl<T: SizeDescription, U: SizeDescription> SizeDescription for (T, U) {
     type StructLayout = [usize; 5];
 
@@ -219,7 +229,7 @@ impl<T: SizeDescription, U: SizeDescription> SizeDescription for (T, U) {
     }
 
     fn num_args() -> usize {
-        T::num_args() + U::num_args()
+        num_args!(T, U)
     }
 
     fn layout() -> Self::StructLayout {
@@ -248,25 +258,24 @@ impl<T: SizeDescription, U: SizeDescription, V: SizeDescription> SizeDescription
     }
 
     fn num_args() -> usize {
-        T::num_args() + U::num_args() + V::num_args()
+        num_args!(T, U, V)
     }
 
     fn layout() -> Self::StructLayout {
         let align = Self::alignment();
-        let start = 0;
 
-        let start0 = next_multiple_of(start, align);
+        let start0 = 0;
+
         let end0 = start0 + T::flat_byte_size();
-
         let start1 = next_multiple_of(end0, align);
+
         let end1 = start1 + U::flat_byte_size();
-
         let start2 = next_multiple_of(end1, align);
+
         let end2 = start2 + V::flat_byte_size();
+        let start3 = next_multiple_of(end2, align);
 
-        let end = next_multiple_of(end2, align);
-
-        [start0, end0, start1, end1, start2, end2, end]
+        [start0, end0, start1, end1, start2, end2, start3]
     }
 }
 
