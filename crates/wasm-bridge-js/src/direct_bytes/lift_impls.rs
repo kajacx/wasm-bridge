@@ -215,11 +215,11 @@ impl<T: Lift, E: Lift> Lift for Result<T, E> {
         let variant = slice[0];
         match variant {
             0 => Ok(Self::Ok(T::read_from(
-                &slice[1..=(T::flat_byte_size())],
+                &slice[(Self::alignment())..(Self::alignment() + T::flat_byte_size())],
                 memory,
             )?)),
             1 => Ok(Self::Err(E::read_from(
-                &slice[1..=(E::flat_byte_size())],
+                &slice[(Self::alignment())..(Self::alignment() + E::flat_byte_size())],
                 memory,
             )?)),
             other => bail!("Invalid result variant tag: {other}"),
