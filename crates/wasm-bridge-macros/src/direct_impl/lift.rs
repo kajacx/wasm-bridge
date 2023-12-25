@@ -111,7 +111,6 @@ pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
 
 pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
     let variants = data.variants;
-
     let all_empty = variants.iter().all(|variant| variant.fields.len() == 0);
 
     let from_js_return = if all_empty {
