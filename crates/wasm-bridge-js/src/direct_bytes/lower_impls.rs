@@ -203,12 +203,12 @@ impl<T: Lower, E: Lower> Lower for Result<T, E> {
     fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
         let args_written = match self {
             Ok(value) => {
-                args.push(1u8.to_js_value());
+                args.push(0u8.to_js_value());
                 value.to_js_args(args, memory)?;
                 T::num_args()
             }
             Err(error) => {
-                args.push(0u8.to_js_value());
+                args.push(1u8.to_js_value());
                 error.to_js_args(args, memory)?;
                 E::num_args()
             }
@@ -223,6 +223,7 @@ impl<T: Lower, E: Lower> Lower for Result<T, E> {
     }
 
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        // FIXME: What about a Result<(), ()>, isn't that a single value?
         let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
         self.write_to(&mut buffer, memory)?;
         let addr = memory.flush(buffer) as u32;
@@ -232,14 +233,14 @@ impl<T: Lower, E: Lower> Lower for Result<T, E> {
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
         let bytes_written = match self {
             Ok(value) => {
-                buffer.write(&1u8, memory)?;
+                buffer.write(&0u8, memory)?;
                 buffer.skip(Self::alignment() - 1);
 
                 value.write_to(buffer, memory)?;
                 T::flat_byte_size()
             }
             Err(error) => {
-                buffer.write(&0u8, memory)?;
+                buffer.write(&1u8, memory)?;
                 buffer.skip(Self::alignment() - 1);
 
                 error.write_to(buffer, memory)?;
