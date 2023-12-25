@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use proc_macro2::*;
 use quote::{format_ident, quote};
-use syn::{DataEnum, DataStruct, Field};
+use syn::{DataEnum, DataStruct};
 
 pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
     let fields = data.fields;
@@ -176,13 +176,31 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
         )
     };
 
-    let mut match_arms = TokenStream::new();
-    for (i, variant) in variants.iter().enumerate() {
-        let i_u8 = i as u8;
-        let name = &variant.ident;
-        let line = quote!(Self::#name => #i_u8,);
-        match_arms.extend(line);
-    }
+    let write_to = variants
+        .iter()
+        .enumerate()
+        .map(|(i, variant)| {
+            let i_u8 = i as u8;
+            let variant_name = &variant.ident;
+            if let Some(field) = variant.fields.iter().next() {
+                let field_type = &field.ty;
+                quote!(Self::#variant_name(value) => {
+                    buffer.write(&#i_u8, memory)?;
+                    buffer.skip(Self::alignment() - 1);
+
+                    buffer.write(value, memory)?;
+                    <#field_type>::flat_byte_size();
+                },)
+            } else {
+                quote!(Self::#variant_name => {
+                    buffer.write(&#i_u8, memory)?;
+                    buffer.skip(Self::alignment() - 1);
+
+                    0
+                },)
+            }
+        })
+        .collect::<TokenStream>();
 
     let name_impl = format_ident!("impl_lower_{}", name);
     quote!(
@@ -201,10 +219,12 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
             }
 
             fn write_to<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, buffer: &mut wasm_bridge::direct_bytes::ByteBuffer, memory: &M) -> wasm_bridge::Result<()> {
-                let value = match self {
-                    #match_arms
+                let bytes_written = match self {
+                    #write_to
                 };
-                value.write_to(&mut buffer, memory);
+
+                // Variant tag takes 1 whole alignment
+                buffer.skip(Self::flat_byte_size() - bytes_written - Self::alignment());
                 Ok(())
             }
         }
