@@ -145,16 +145,11 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
             .map(|(i, variant)| {
                 let tag = i as u8;
                 let variant_name = &variant.ident;
-                quote!(
-                    Self::#variant_name => {
-                       #tag.to_js_value();
-                    }
-                )
+                quote!(Self::#variant_name => #tag.to_js_value(),)
             })
             .collect::<TokenStream>();
 
         quote!(
-            let tag = args.next().context("Get variant tag")?;
             Ok(match self {
                 #match_arms
             })
