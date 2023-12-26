@@ -168,7 +168,7 @@ impl<T: Lower> Lower for Option<T> {
             }
             None => {
                 args.push(0u8.to_js_value());
-                for _ in 0..T::num_args() {
+                for _ in 0..T::NUM_ARGS {
                     args.push(JsValue::UNDEFINED);
                 }
             }
@@ -207,17 +207,17 @@ impl<T: Lower, E: Lower> Lower for Result<T, E> {
             Ok(value) => {
                 args.push(0u8.to_js_value());
                 value.to_js_args(args, memory)?;
-                T::num_args()
+                T::NUM_ARGS
             }
             Err(error) => {
                 args.push(1u8.to_js_value());
                 error.to_js_args(args, memory)?;
-                E::num_args()
+                E::NUM_ARGS
             }
         };
 
         // Start from 1 to account for the initial variant tag
-        for _ in 1..(Self::num_args() - args_written) {
+        for _ in 1..(Self::NUM_ARGS - args_written) {
             args.push(JsValue::UNDEFINED);
         }
 
@@ -225,7 +225,7 @@ impl<T: Lower, E: Lower> Lower for Result<T, E> {
     }
 
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
-        if Self::num_args() == 1 {
+        if Self::NUM_ARGS == 1 {
             match self {
                 Ok(_) => Ok(0u8.to_js_value()),
                 Err(_) => Ok(1u8.to_js_value()),

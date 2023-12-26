@@ -45,7 +45,7 @@ impl<Params, Return> TypedFunc<Params, Return> {
         // TODO: re-use same vec and JS array?
         // Local static variable should be different for each monomorphization?
         let memory = &self.func.memory;
-        let num_args = Params::num_args();
+        let num_args = Params::NUM_ARGS;
 
         let arguments = if num_args <= 16 {
             let mut args = Vec::<JsValue>::new();

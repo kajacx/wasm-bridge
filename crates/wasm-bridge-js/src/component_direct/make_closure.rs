@@ -38,7 +38,7 @@ where
                     let result = self_clone(&mut handle.borrow_mut(), args)
                         .map_err(|err| format!("host imported fn returned error: {err:?}"))?;
 
-                    if R::num_args() <= 1 {
+                    if R::NUM_ARGS <= 1 {
                         let result = result
                             .to_js_return(&memory)
                             .map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
@@ -95,7 +95,7 @@ macro_rules! make_closure {
                                 args
                             ).map_err(|err| format!("host imported fn returned error: {err:?}"))?;
 
-                            if R::num_args() <= 1 {
+                            if R::NUM_ARGS <= 1 {
                                 let result = result
                                     .to_js_return(&memory)
                                     .map_err(|err| format!("conversion of imported fn result: {err:?}"))?;

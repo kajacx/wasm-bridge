@@ -159,7 +159,7 @@ impl<T: Lift> Lift for Option<T> {
         let variant = u8::from_js_value(&variant)?;
         match variant {
             0 => {
-                for _ in 0..T::num_args() {
+                for _ in 0..T::NUM_ARGS {
                     args.next().context("Skipping unused option::none args")?;
                 }
                 Ok(Self::None)
@@ -181,7 +181,7 @@ impl<T: Lift> Lift for Option<T> {
 
 impl<T: Lift, E: Lift> Lift for Result<T, E> {
     fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> anyhow::Result<Self> {
-        if Self::num_args() == 1 {
+        if Self::NUM_ARGS == 1 {
             let variant = u8::from_js_value(&value)?;
             match variant {
                 // TODO: The (T/E)::from_js_return are not really needed,
@@ -203,13 +203,13 @@ impl<T: Lift, E: Lift> Lift for Result<T, E> {
         let variant = u8::from_js_value(&variant)?;
 
         let (result, args_read) = match variant {
-            0 => (Self::Ok(T::from_js_args(args, memory)?), T::num_args()),
-            1 => (Self::Err(E::from_js_args(args, memory)?), E::num_args()),
+            0 => (Self::Ok(T::from_js_args(args, memory)?), T::NUM_ARGS),
+            1 => (Self::Err(E::from_js_args(args, memory)?), E::NUM_ARGS),
             other => bail!("Invalid result variant tag: {other}"),
         };
 
         // Start from 1 to account for the initial variant tag
-        for _ in 1..(Self::num_args() - args_read) {
+        for _ in 1..(Self::NUM_ARGS - args_read) {
             args.next().context("Skipping unused result args")?;
         }
 
