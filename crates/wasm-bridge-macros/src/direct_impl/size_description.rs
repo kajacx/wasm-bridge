@@ -35,18 +35,21 @@ pub fn size_description_struct(name: Ident, data: DataStruct) -> TokenStream {
     for (i, field) in fields.iter().enumerate() {
         let field_type = &field.ty;
 
+        let end_prev = if i == 0 {
+            format_ident!("zero")
+        } else {
+            format_ident!("end{}", i - 1)
+        };
         let start_i = format_ident!("start{i}");
         let end_i = format_ident!("end{i}");
-        let start_next = format_ident!("start{}", i + 1);
+
+        let line = quote!(let #start_i = wasm_bridge::next_multiple_of(#end_prev, <#field_type>::ALIGNMENT););
+        layout_impl.extend(line);
 
         let line = quote!(let #end_i = #start_i + <#field_type>::BYTE_SIZE;);
         layout_impl.extend(line);
 
-        let line =
-            quote!(let #start_next = wasm_bridge::direct_bytes::next_multiple_of(#end_i, align););
-        layout_impl.extend(line);
-
-        let ret = quote!(#end_i, #start_next,);
+        let ret = quote!(#start_i, #end_i,);
         layout_return.extend(ret);
     }
 
@@ -64,11 +67,11 @@ pub fn size_description_struct(name: Ident, data: DataStruct) -> TokenStream {
 
             type StructLayout = [usize; #field_count * 2 + 1];
 
+            #[inline]
             fn layout() -> Self::StructLayout {
-                let align = Self::ALIGNMENT;
-                let start0 = 0;
+                let zero = 0;
                 #layout_impl
-                [start0, #layout_return]
+                [#layout_return Self::BYTE_SIZE]
             }
         }
       }
@@ -137,8 +140,9 @@ pub fn size_description_variant(name: Ident, data: DataEnum) -> TokenStream {
 
             type StructLayout = [usize; 3];
 
+            #[inline]
             fn layout() -> Self::StructLayout {
-                [0, 1, 1]
+                [0, Self::BYTE_SIZE, Self::BYTE_SIZE]
             }
         }
     )
