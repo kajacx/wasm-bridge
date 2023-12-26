@@ -6,10 +6,10 @@ pub trait SizeDescription {
     /// Must be a multiple of alignment.
     const BYTE_SIZE: usize;
 
-    type StructLayout;
+    /// To how many arguments would this struct "flatten" to for a function call.
+    const NUM_ARGS: usize;
 
-    /// How many "flatten" arguments would this create for the exported fn called
-    fn num_args() -> usize;
+    type StructLayout;
 
     /// Layout of this struct in memory.
     /// 2*n is start n-th field, 2*n + 1 is end n-th field.
@@ -26,14 +26,13 @@ fn simple_layout(byte_size: usize) -> SimpleStructLayout {
 macro_rules! size_description_primitive {
     ($ty: ty, $bytes: literal) => {
         impl SizeDescription for $ty {
-            type StructLayout = SimpleStructLayout;
-            const BYTE_SIZE: usize = $bytes;
             const ALIGNMENT: usize = $bytes;
+            const BYTE_SIZE: usize = $bytes;
+            const NUM_ARGS: usize = 1;
 
-            fn num_args() -> usize {
-                1
-            }
+            type StructLayout = SimpleStructLayout;
 
+            #[inline]
             fn layout() -> Self::StructLayout {
                 simple_layout(Self::BYTE_SIZE)
             }
@@ -60,14 +59,13 @@ size_description_primitive!(char, 4);
 macro_rules! size_description_fat_ptr_gen {
     ($ty: ty) => {
         impl<T: SizeDescription> SizeDescription for $ty {
-            type StructLayout = SimpleStructLayout;
-            const BYTE_SIZE: usize = 8;
             const ALIGNMENT: usize = 4;
+            const BYTE_SIZE: usize = 8;
+            const NUM_ARGS: usize = 2;
 
-            fn num_args() -> usize {
-                2
-            }
+            type StructLayout = SimpleStructLayout;
 
+            #[inline]
             fn layout() -> Self::StructLayout {
                 simple_layout(Self::BYTE_SIZE)
             }
@@ -81,14 +79,13 @@ size_description_fat_ptr_gen!(Vec<T>);
 macro_rules! size_description_fat_ptr {
     ($ty: ty) => {
         impl SizeDescription for $ty {
-            type StructLayout = SimpleStructLayout;
-            const BYTE_SIZE: usize = 8;
             const ALIGNMENT: usize = 4;
+            const BYTE_SIZE: usize = 8;
+            const NUM_ARGS: usize = 2;
 
-            fn num_args() -> usize {
-                2
-            }
+            type StructLayout = SimpleStructLayout;
 
+            #[inline]
             fn layout() -> Self::StructLayout {
                 simple_layout(Self::BYTE_SIZE)
             }
@@ -100,14 +97,11 @@ size_description_fat_ptr!(&str);
 size_description_fat_ptr!(String);
 
 impl<T: SizeDescription> SizeDescription for Option<T> {
-    type StructLayout = SimpleStructLayout;
-    const BYTE_SIZE: usize = Self::ALIGNMENT + T::BYTE_SIZE;
     const ALIGNMENT: usize = T::ALIGNMENT;
+    const BYTE_SIZE: usize = Self::ALIGNMENT + T::BYTE_SIZE;
+    const NUM_ARGS: usize = 1 + T::NUM_ARGS;
 
-    #[inline]
-    fn num_args() -> usize {
-        1 + T::num_args()
-    }
+    type StructLayout = SimpleStructLayout;
 
     #[inline]
     fn layout() -> Self::StructLayout {
@@ -116,14 +110,11 @@ impl<T: SizeDescription> SizeDescription for Option<T> {
 }
 
 impl<T: SizeDescription, E: SizeDescription> SizeDescription for Result<T, E> {
-    type StructLayout = SimpleStructLayout;
-    const BYTE_SIZE: usize = Self::ALIGNMENT + usize_max(T::BYTE_SIZE, E::BYTE_SIZE);
     const ALIGNMENT: usize = usize_max(T::ALIGNMENT, E::ALIGNMENT);
+    const BYTE_SIZE: usize = Self::ALIGNMENT + usize_max(T::BYTE_SIZE, E::BYTE_SIZE);
+    const NUM_ARGS: usize = 1 + usize_max(T::NUM_ARGS, E::NUM_ARGS);
 
-    #[inline]
-    fn num_args() -> usize {
-        1 + usize_max(T::num_args(), E::num_args())
-    }
+    type StructLayout = SimpleStructLayout;
 
     #[inline]
     fn layout() -> Self::StructLayout {
@@ -132,13 +123,11 @@ impl<T: SizeDescription, E: SizeDescription> SizeDescription for Result<T, E> {
 }
 
 impl SizeDescription for () {
-    type StructLayout = [usize; 1];
     const ALIGNMENT: usize = 1;
     const BYTE_SIZE: usize = 0;
+    const NUM_ARGS: usize = 0;
 
-    fn num_args() -> usize {
-        0
-    }
+    type StructLayout = [usize; 1];
 
     fn layout() -> Self::StructLayout {
         [0]
@@ -146,14 +135,11 @@ impl SizeDescription for () {
 }
 
 impl<T: SizeDescription> SizeDescription for (T,) {
-    type StructLayout = T::StructLayout;
     const ALIGNMENT: usize = T::ALIGNMENT;
     const BYTE_SIZE: usize = T::BYTE_SIZE;
+    const NUM_ARGS: usize = T::NUM_ARGS;
 
-    #[inline]
-    fn num_args() -> usize {
-        T::num_args()
-    }
+    type StructLayout = T::StructLayout;
 
     #[inline]
     fn layout() -> Self::StructLayout {
@@ -167,40 +153,37 @@ macro_rules! max_alignment {
     };
     ($t:ty, $($ts: ty),*) => {
         usize_max(<$t>::ALIGNMENT, max_alignment!($($ts),*))
-    }
+    };
 }
 
 macro_rules! num_args {
-    ($($ty: ty),*) => {
-        {
-            let args = 0;
-            $(let args = args + <$ty>::num_args();)*
-            args
-        }
+    ($t1: ty, $t2: ty) => {
+        <$t1>::NUM_ARGS + <$t2>::NUM_ARGS
+    };
+    ($t:ty, $($ts: ty),*) => {
+        <$t>::NUM_ARGS + num_args!($($ts),*)
     };
 }
 
 impl<T0: SizeDescription, T1: SizeDescription> SizeDescription for (T0, T1) {
-    type StructLayout = [usize; 5];
     const ALIGNMENT: usize = max_alignment!(T0, T1);
-    const BYTE_SIZE: usize = next_multiple_of(T0::BYTE_SIZE, Self::ALIGNMENT)
-        + next_multiple_of(T1::BYTE_SIZE, Self::ALIGNMENT);
+    const BYTE_SIZE: usize = next_multiple_of(
+        next_multiple_of(T0::BYTE_SIZE, T1::ALIGNMENT) + T1::BYTE_SIZE,
+        Self::ALIGNMENT,
+    );
+    const NUM_ARGS: usize = num_args!(T0, T1);
 
-    #[inline]
-    fn num_args() -> usize {
-        num_args!(T0, T1)
-    }
+    type StructLayout = [usize; 5];
 
     #[inline]
     fn layout() -> Self::StructLayout {
-        let align = Self::ALIGNMENT;
         let start0 = 0;
-
         let end0 = start0 + T0::BYTE_SIZE;
-        let start1 = next_multiple_of(end0, align);
 
+        let start1 = next_multiple_of(end0, T1::ALIGNMENT);
         let end1 = start1 + T1::BYTE_SIZE;
-        let start2 = next_multiple_of(end1, align);
+
+        let start2 = next_multiple_of(end1, Self::ALIGNMENT);
 
         [start0, end0, start1, end1, start2]
     }
@@ -209,17 +192,17 @@ impl<T0: SizeDescription, T1: SizeDescription> SizeDescription for (T0, T1) {
 impl<T0: SizeDescription, T1: SizeDescription, T2: SizeDescription> SizeDescription
     for (T0, T1, T2)
 {
-    type StructLayout = [usize; 7];
     const ALIGNMENT: usize = max_alignment!(T0, T1, T2);
-    // FIXME: this is wrong
-    const BYTE_SIZE: usize = next_multiple_of(T0::BYTE_SIZE, Self::ALIGNMENT)
-        + next_multiple_of(T1::BYTE_SIZE, Self::ALIGNMENT)
-        + next_multiple_of(T2::BYTE_SIZE, Self::ALIGNMENT);
+    const BYTE_SIZE: usize = next_multiple_of(
+        next_multiple_of(
+            next_multiple_of(T0::BYTE_SIZE, T1::ALIGNMENT) + T1::BYTE_SIZE,
+            T2::ALIGNMENT,
+        ) + T2::BYTE_SIZE,
+        Self::ALIGNMENT,
+    );
+    const NUM_ARGS: usize = num_args!(T0, T1, T2);
 
-    #[inline]
-    fn num_args() -> usize {
-        num_args!(T0, T1, T2)
-    }
+    type StructLayout = [usize; 7];
 
     #[inline]
     fn layout() -> Self::StructLayout {
