@@ -17,6 +17,6 @@ impl Guest for MyGuest {
     }
 
     fn group_export(group: Group) -> Group {
-        group
+        group_import(&group)
     }
 }

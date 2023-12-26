@@ -58,8 +58,12 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     assert_eq!(result[0].position.y, 4.0);
     assert_eq!(result[0].position.z, 5.0);
 
-    // let result = instance.call_group_export()
-    // assert_eq!(result, vec![2, 6, 7]);
+    let group = Group {
+        player1: player.clone(),
+        player2: player.clone(),
+    };
+    let result = instance.call_group_export(&mut store, &group).unwrap();
+    assert_eq!(result.player1.health, group.player1.health);
 
     Ok(())
 }
