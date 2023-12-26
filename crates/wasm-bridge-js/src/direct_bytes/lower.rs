@@ -10,7 +10,7 @@ pub trait Lower: SizeDescription {
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue>;
 
     /// Writes itself and all children into the memory buffer. Caller flushes the buffer.
-    /// This MUST write (or skip) exactly `Self::flat_byte_size()` bytes into the buffer.
+    /// This MUST write (or skip) exactly `Self::FLAT_BYTE_SIZE` bytes into the buffer.
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()>;
 }
 

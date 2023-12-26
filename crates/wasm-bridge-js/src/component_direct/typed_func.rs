@@ -52,7 +52,7 @@ impl<Params, Return> TypedFunc<Params, Return> {
             params.to_js_args(&mut args, &memory)?;
             args.into_iter().collect()
         } else {
-            let mut buffer = memory.allocate(Params::alignment(), Params::flat_byte_size())?;
+            let mut buffer = memory.allocate(Params::ALIGNMENT, Params::FLAT_BYTE_SIZE)?;
             params.write_to(&mut buffer, memory)?;
             let addr = memory.flush(buffer) as u32;
             Array::of1(&addr.into())

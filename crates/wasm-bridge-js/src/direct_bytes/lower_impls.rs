@@ -85,7 +85,7 @@ impl<T: Lower> Lower for &[T] {
     }
 
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
-        let mut buffer = memory.allocate(T::alignment(), T::flat_byte_size() * self.len())?;
+        let mut buffer = memory.allocate(T::ALIGNMENT, T::FLAT_BYTE_SIZE * self.len())?;
         self.write_to(&mut buffer, memory)?;
 
         let addr = memory.flush(buffer) as u32;
@@ -148,7 +148,7 @@ impl Lower for String {
 // Writes the data to the memory, returning the starting address of the data
 fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], memory: &M) -> Result<usize> {
     // Allocate space for all the elements
-    let mut buffer = memory.allocate(T::alignment(), T::flat_byte_size() * data.len())?;
+    let mut buffer = memory.allocate(T::ALIGNMENT, T::FLAT_BYTE_SIZE * data.len())?;
 
     // Then write the elements to the slice buffer
     for elem in data {
@@ -178,7 +178,7 @@ impl<T: Lower> Lower for Option<T> {
 
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
         // TODO: this must be duplicated somewhere ... move to a separate helper fn?
-        let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
+        let mut buffer = memory.allocate(Self::ALIGNMENT, Self::FLAT_BYTE_SIZE)?;
         self.write_to(&mut buffer, memory)?;
         let addr = memory.flush(buffer) as u32;
         Ok(addr.to_js_value())
@@ -188,13 +188,13 @@ impl<T: Lower> Lower for Option<T> {
         match self {
             Some(value) => {
                 buffer.write(&1u8, memory)?;
-                buffer.skip(Self::alignment() - 1);
+                buffer.skip(Self::ALIGNMENT - 1);
 
                 buffer.write(value, memory)?;
             }
             None => {
                 buffer.write(&0u8, memory)?;
-                buffer.skip(Self::flat_byte_size() - 1);
+                buffer.skip(Self::FLAT_BYTE_SIZE - 1);
             }
         }
         Ok(())
@@ -231,7 +231,7 @@ impl<T: Lower, E: Lower> Lower for Result<T, E> {
                 Err(_) => Ok(1u8.to_js_value()),
             }
         } else {
-            let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
+            let mut buffer = memory.allocate(Self::ALIGNMENT, Self::FLAT_BYTE_SIZE)?;
             self.write_to(&mut buffer, memory)?;
             let addr = memory.flush(buffer) as u32;
             Ok(addr.to_js_value())
@@ -242,22 +242,22 @@ impl<T: Lower, E: Lower> Lower for Result<T, E> {
         let bytes_written = match self {
             Ok(value) => {
                 buffer.write(&0u8, memory)?;
-                buffer.skip(Self::alignment() - 1);
+                buffer.skip(Self::ALIGNMENT - 1);
 
                 value.write_to(buffer, memory)?;
-                T::flat_byte_size()
+                T::FLAT_BYTE_SIZE
             }
             Err(error) => {
                 buffer.write(&1u8, memory)?;
-                buffer.skip(Self::alignment() - 1);
+                buffer.skip(Self::ALIGNMENT - 1);
 
                 error.write_to(buffer, memory)?;
-                E::flat_byte_size()
+                E::FLAT_BYTE_SIZE
             }
         };
 
         // Variant tag takes 1 whole alignment
-        buffer.skip(Self::flat_byte_size() - bytes_written - Self::alignment());
+        buffer.skip(Self::FLAT_BYTE_SIZE - bytes_written - Self::ALIGNMENT);
 
         Ok(())
     }
@@ -299,7 +299,7 @@ impl<T: Lower, U: Lower> Lower for (T, U) {
     }
 
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
-        let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
+        let mut buffer = memory.allocate(Self::ALIGNMENT, Self::FLAT_BYTE_SIZE)?;
         self.write_to(&mut buffer, memory)?;
 
         let addr = memory.flush(buffer) as u32;
@@ -331,7 +331,7 @@ impl<T: Lower, U: Lower, V: Lower> Lower for (T, U, V) {
     }
 
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
-        let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
+        let mut buffer = memory.allocate(Self::ALIGNMENT, Self::FLAT_BYTE_SIZE)?;
         self.write_to(&mut buffer, memory)?;
 
         let addr = memory.flush(buffer) as u32;

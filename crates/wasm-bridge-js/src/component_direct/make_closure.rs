@@ -52,7 +52,7 @@ where
                             as usize;
 
                         // Buffer is already allocated, we just write there
-                        let mut buffer = ByteBuffer::new(addr, R::flat_byte_size());
+                        let mut buffer = ByteBuffer::new(addr, R::FLAT_BYTE_SIZE);
                         result.write_to(&mut buffer, &memory).map_err(|err| {
                             format!("failed to write result of an imported function: {err:?}")
                         })?;
@@ -105,7 +105,7 @@ macro_rules! make_closure {
                                 let addr = u32::from_js_value(&addr).map_err(|err| format!("return address is not a number: {err:?}"))? as usize;
 
                                 // Buffer is already allocated, we just write there
-                                let mut buffer = ByteBuffer::new(addr, R::flat_byte_size());
+                                let mut buffer = ByteBuffer::new(addr, R::FLAT_BYTE_SIZE);
                                 result.write_to(&mut buffer, &memory).map_err(|err| {
                                     format!("failed to write result of an imported function: {err:?}")
                                 })?;

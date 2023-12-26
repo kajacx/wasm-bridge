@@ -85,8 +85,6 @@ macro_rules! size_description_fat_ptr {
             const FLAT_BYTE_SIZE: usize = 8;
             const ALIGNMENT: usize = 4;
 
-
-
             fn num_args() -> usize {
                 2
             }
@@ -103,9 +101,8 @@ size_description_fat_ptr!(String);
 
 impl<T: SizeDescription> SizeDescription for Option<T> {
     type StructLayout = SimpleStructLayout;
-    const FLAT_BYTE_SIZE: usize = Self::ALIGNMENT + T::FLAT_BYTE_SIZE ;
+    const FLAT_BYTE_SIZE: usize = Self::ALIGNMENT + T::FLAT_BYTE_SIZE;
     const ALIGNMENT: usize = T::ALIGNMENT;
-
 
     #[inline]
     fn num_args() -> usize {
@@ -120,18 +117,17 @@ impl<T: SizeDescription> SizeDescription for Option<T> {
 
 impl<T: SizeDescription, E: SizeDescription> SizeDescription for Result<T, E> {
     type StructLayout = SimpleStructLayout;
-    const FLAT_BYTE_SIZE: usize = Self::ALIGNMENT + usize::max(T::FLAT_BYTE_SIZE, E::FLAT_BYTE_SIZE);
-    const ALIGNMENT: usize = usize::max(T::ALIGNMENT, E::ALIGNMENT);
-
+    const FLAT_BYTE_SIZE: usize = Self::ALIGNMENT + usize_max(T::FLAT_BYTE_SIZE, E::FLAT_BYTE_SIZE);
+    const ALIGNMENT: usize = usize_max(T::ALIGNMENT, E::ALIGNMENT);
 
     #[inline]
     fn num_args() -> usize {
-        1 + usize::max(T::num_args(), E::num_args())
+        1 + usize_max(T::num_args(), E::num_args())
     }
 
     #[inline]
     fn layout() -> Self::StructLayout {
-        simple_layout(Self::flat_byte_size())
+        simple_layout(Self::FLAT_BYTE_SIZE)
     }
 }
 
@@ -139,7 +135,6 @@ impl SizeDescription for () {
     type StructLayout = [usize; 1];
     const ALIGNMENT: usize = 1;
     const FLAT_BYTE_SIZE: usize = 0;
-
 
     fn num_args() -> usize {
         0
@@ -152,8 +147,8 @@ impl SizeDescription for () {
 
 impl<T: SizeDescription> SizeDescription for (T,) {
     type StructLayout = T::StructLayout;
-    const ALIGNMENT: usize = Self::Alignment;
-    const FLAT_BYTE_SIZE: usize = Self::FLAT_BYTE_SIZE;
+    const ALIGNMENT: usize = T::ALIGNMENT;
+    const FLAT_BYTE_SIZE: usize = T::FLAT_BYTE_SIZE;
 
     #[inline]
     fn num_args() -> usize {
@@ -168,10 +163,10 @@ impl<T: SizeDescription> SizeDescription for (T,) {
 
 macro_rules! max_alignment {
     ($t1: ty, $t2: ty) => {
-        usize::max($t1::ALIGNMENT, $t2::ALIGNMENT)
-    }
+        usize_max(<$t1>::ALIGNMENT, <$t2>::ALIGNMENT)
+    };
     ($t:ty, $($ts: ty),*) => {
-        usize::max($t::ALIGNMENT, max_alignment!($($ts),*))
+        usize_max(<$t>::ALIGNMENT, max_alignment!($($ts),*))
     }
 }
 
@@ -188,7 +183,8 @@ macro_rules! num_args {
 impl<T0: SizeDescription, T1: SizeDescription> SizeDescription for (T0, T1) {
     type StructLayout = [usize; 5];
     const ALIGNMENT: usize = max_alignment!(T0, T1);
-    const FLAT_BYTE_SIZE: usize = next_multiple_of(T0::FLAT_BYTE_SIZE, Self::ALIGNMENT) + next_multiple_of(T1::FLAT_BYTE_SIZE, Self::ALIGNMENT);
+    const FLAT_BYTE_SIZE: usize = next_multiple_of(T0::FLAT_BYTE_SIZE, Self::ALIGNMENT)
+        + next_multiple_of(T1::FLAT_BYTE_SIZE, Self::ALIGNMENT);
 
     #[inline]
     fn num_args() -> usize {
@@ -197,13 +193,13 @@ impl<T0: SizeDescription, T1: SizeDescription> SizeDescription for (T0, T1) {
 
     #[inline]
     fn layout() -> Self::StructLayout {
-        let align = Self::alignment();
+        let align = Self::ALIGNMENT;
         let start0 = 0;
 
-        let end0 = start0 + T0::flat_byte_size();
+        let end0 = start0 + T0::FLAT_BYTE_SIZE;
         let start1 = next_multiple_of(end0, align);
 
-        let end1 = start1 + T1::flat_byte_size();
+        let end1 = start1 + T1::FLAT_BYTE_SIZE;
         let start2 = next_multiple_of(end1, align);
 
         [start0, end0, start1, end1, start2]
@@ -216,9 +212,9 @@ impl<T0: SizeDescription, T1: SizeDescription, T2: SizeDescription> SizeDescript
     type StructLayout = [usize; 7];
     const ALIGNMENT: usize = max_alignment!(T0, T1, T2);
     // FIXME: this is wrong
-    const FLAT_BYTE_SIZE: usize = next_multiple_of(T0::FLAT_BYTE_SIZE, Self::ALIGNMENT) 
-    + next_multiple_of(T1::FLAT_BYTE_SIZE, Self::ALIGNMENT)
-    + next_multiple_of(T2::FLAT_BYTE_SIZE, Self::ALIGNMENT);
+    const FLAT_BYTE_SIZE: usize = next_multiple_of(T0::FLAT_BYTE_SIZE, Self::ALIGNMENT)
+        + next_multiple_of(T1::FLAT_BYTE_SIZE, Self::ALIGNMENT)
+        + next_multiple_of(T2::FLAT_BYTE_SIZE, Self::ALIGNMENT);
 
     #[inline]
     fn num_args() -> usize {
@@ -227,17 +223,18 @@ impl<T0: SizeDescription, T1: SizeDescription, T2: SizeDescription> SizeDescript
 
     #[inline]
     fn layout() -> Self::StructLayout {
-        let align = Self::alignment();
+        let align = Self::ALIGNMENT;
+
         let start0 = 0;
+        let end0 = start0 + T0::FLAT_BYTE_SIZE;
 
-        let end0 = start0 + T0::flat_byte_size();
-        let start1 = next_multiple_of(end0, align);
+        let start1 = next_multiple_of(end0, T1::ALIGNMENT);
+        let end1 = start1 + T1::FLAT_BYTE_SIZE;
 
-        let end1 = start1 + T1::flat_byte_size();
-        let start2 = next_multiple_of(end1, align);
+        let start2 = next_multiple_of(end1, T2::ALIGNMENT);
+        let end2 = start2 + T2::FLAT_BYTE_SIZE;
 
-        let end2 = start2 + T2::flat_byte_size();
-        let start3 = next_multiple_of(end2, align);
+        let start3 = next_multiple_of(end2, Self::ALIGNMENT);
 
         [start0, end0, start1, end1, start2, end2, start3]
     }
@@ -265,19 +262,19 @@ impl<T0: SizeDescription, T1: SizeDescription, T2: SizeDescription> SizeDescript
 
 //     #[inline]
 //     fn layout() -> Self::StructLayout {
-//         let align = Self::alignment();
+//         let align = Self::ALIGNMENT;
 //         let start0 = 0;
 
-//         let end0 = start0 + T0::flat_byte_size();
+//         let end0 = start0 + T0::FLAT_BYTE_SIZE;
 //         let start1 = next_multiple_of(end0, align);
 
-//         let end1 = start1 + T1::flat_byte_size();
+//         let end1 = start1 + T1::FLAT_BYTE_SIZE;
 //         let start2 = next_multiple_of(end1, align);
 
-//         let end2 = start2 + T2::flat_byte_size();
+//         let end2 = start2 + T2::FLAT_BYTE_SIZE;
 //         let start3 = next_multiple_of(end2, align);
 
-//         let end3 = start3 + T3::flat_byte_size();
+//         let end3 = start3 + T3::FLAT_BYTE_SIZE;
 //         let start4 = next_multiple_of(end3, align);
 
 //         [
@@ -313,22 +310,22 @@ impl<T0: SizeDescription, T1: SizeDescription, T2: SizeDescription> SizeDescript
 
 //     #[inline]
 //     fn layout() -> Self::StructLayout {
-//         let align = Self::alignment();
+//         let align = Self::ALIGNMENT;
 //         let start0 = 0;
 
-//         let end0 = start0 + T0::flat_byte_size();
+//         let end0 = start0 + T0::FLAT_BYTE_SIZE;
 //         let start1 = next_multiple_of(end0, align);
 
-//         let end1 = start1 + T1::flat_byte_size();
+//         let end1 = start1 + T1::FLAT_BYTE_SIZE;
 //         let start2 = next_multiple_of(end1, align);
 
-//         let end2 = start2 + T2::flat_byte_size();
+//         let end2 = start2 + T2::FLAT_BYTE_SIZE;
 //         let start3 = next_multiple_of(end2, align);
 
-//         let end3 = start3 + T3::flat_byte_size();
+//         let end3 = start3 + T3::FLAT_BYTE_SIZE;
 //         let start4 = next_multiple_of(end3, align);
 
-//         let end4 = start4 + T4::flat_byte_size();
+//         let end4 = start4 + T4::FLAT_BYTE_SIZE;
 //         let start5 = next_multiple_of(end4, align);
 
 //         [
@@ -365,25 +362,25 @@ impl<T0: SizeDescription, T1: SizeDescription, T2: SizeDescription> SizeDescript
 
 //     #[inline]
 //     fn layout() -> Self::StructLayout {
-//         let align = Self::alignment();
+//         let align = Self::ALIGNMENT;
 //         let start0 = 0;
 
-//         let end0 = start0 + T0::flat_byte_size();
+//         let end0 = start0 + T0::FLAT_BYTE_SIZE;
 //         let start1 = next_multiple_of(end0, align);
 
-//         let end1 = start1 + T1::flat_byte_size();
+//         let end1 = start1 + T1::FLAT_BYTE_SIZE;
 //         let start2 = next_multiple_of(end1, align);
 
-//         let end2 = start2 + T2::flat_byte_size();
+//         let end2 = start2 + T2::FLAT_BYTE_SIZE;
 //         let start3 = next_multiple_of(end2, align);
 
-//         let end3 = start3 + T3::flat_byte_size();
+//         let end3 = start3 + T3::FLAT_BYTE_SIZE;
 //         let start4 = next_multiple_of(end3, align);
 
-//         let end4 = start4 + T4::flat_byte_size();
+//         let end4 = start4 + T4::FLAT_BYTE_SIZE;
 //         let start5 = next_multiple_of(end4, align);
 
-//         let end5 = start5 + T5::flat_byte_size();
+//         let end5 = start5 + T5::FLAT_BYTE_SIZE;
 //         let start6 = next_multiple_of(end5, align);
 
 //         [
@@ -422,28 +419,28 @@ impl<T0: SizeDescription, T1: SizeDescription, T2: SizeDescription> SizeDescript
 
 //     #[inline]
 //     fn layout() -> Self::StructLayout {
-//         let align = Self::alignment();
+//         let align = Self::ALIGNMENT;
 //         let start0 = 0;
 
-//         let end0 = start0 + T0::flat_byte_size();
+//         let end0 = start0 + T0::FLAT_BYTE_SIZE;
 //         let start1 = next_multiple_of(end0, align);
 
-//         let end1 = start1 + T1::flat_byte_size();
+//         let end1 = start1 + T1::FLAT_BYTE_SIZE;
 //         let start2 = next_multiple_of(end1, align);
 
-//         let end2 = start2 + T2::flat_byte_size();
+//         let end2 = start2 + T2::FLAT_BYTE_SIZE;
 //         let start3 = next_multiple_of(end2, align);
 
-//         let end3 = start3 + T3::flat_byte_size();
+//         let end3 = start3 + T3::FLAT_BYTE_SIZE;
 //         let start4 = next_multiple_of(end3, align);
 
-//         let end4 = start4 + T4::flat_byte_size();
+//         let end4 = start4 + T4::FLAT_BYTE_SIZE;
 //         let start5 = next_multiple_of(end4, align);
 
-//         let end5 = start5 + T5::flat_byte_size();
+//         let end5 = start5 + T5::FLAT_BYTE_SIZE;
 //         let start6 = next_multiple_of(end5, align);
 
-//         let end6 = start5 + T5::flat_byte_size();
+//         let end6 = start5 + T5::FLAT_BYTE_SIZE;
 //         let start7 = next_multiple_of(end6, align);
 
 //         [
@@ -483,31 +480,31 @@ impl<T0: SizeDescription, T1: SizeDescription, T2: SizeDescription> SizeDescript
 
 //     #[inline]
 //     fn layout() -> Self::StructLayout {
-//         let align = Self::alignment();
+//         let align = Self::ALIGNMENT;
 //         let start0 = 0;
 
-//         let end0 = start0 + T0::flat_byte_size();
+//         let end0 = start0 + T0::FLAT_BYTE_SIZE;
 //         let start1 = next_multiple_of(end0, align);
 
-//         let end1 = start1 + T1::flat_byte_size();
+//         let end1 = start1 + T1::FLAT_BYTE_SIZE;
 //         let start2 = next_multiple_of(end1, align);
 
-//         let end2 = start2 + T2::flat_byte_size();
+//         let end2 = start2 + T2::FLAT_BYTE_SIZE;
 //         let start3 = next_multiple_of(end2, align);
 
-//         let end3 = start3 + T3::flat_byte_size();
+//         let end3 = start3 + T3::FLAT_BYTE_SIZE;
 //         let start4 = next_multiple_of(end3, align);
 
-//         let end4 = start4 + T4::flat_byte_size();
+//         let end4 = start4 + T4::FLAT_BYTE_SIZE;
 //         let start5 = next_multiple_of(end4, align);
 
-//         let end5 = start5 + T5::flat_byte_size();
+//         let end5 = start5 + T5::FLAT_BYTE_SIZE;
 //         let start6 = next_multiple_of(end5, align);
 
-//         let end6 = start5 + T5::flat_byte_size();
+//         let end6 = start5 + T5::FLAT_BYTE_SIZE;
 //         let start7 = next_multiple_of(end6, align);
 
-//         let end7 = start6 + T6::flat_byte_size();
+//         let end7 = start6 + T6::FLAT_BYTE_SIZE;
 //         let start8 = next_multiple_of(end7, align);
 
 //         [
@@ -519,6 +516,14 @@ impl<T0: SizeDescription, T1: SizeDescription, T2: SizeDescription> SizeDescript
 
 pub const fn next_multiple_of(num: usize, multiple: usize) -> usize {
     ((num + multiple - 1) / multiple) * multiple
+}
+
+pub const fn usize_max(a: usize, b: usize) -> usize {
+    if a >= b {
+        a
+    } else {
+        b
+    }
 }
 
 #[test]

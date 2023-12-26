@@ -119,7 +119,7 @@ fn read_vec_from<T: Lift, M: ReadableMemory>(
     len: usize,
     memory: &M,
 ) -> Result<Vec<T>> {
-    let size = T::flat_byte_size();
+    let size = T::FLAT_BYTE_SIZE;
     let data = memory.read_to_vec(addr, size * len);
 
     let mut result = Vec::with_capacity(len);
@@ -173,7 +173,7 @@ impl<T: Lift> Lift for Option<T> {
         let variant = slice[0];
         match variant {
             0 => Ok(Self::None),
-            1 => Ok(Some(T::read_from(&slice[(Self::alignment())..], memory)?)),
+            1 => Ok(Some(T::read_from(&slice[(Self::ALIGNMENT)..], memory)?)),
             other => bail!("Invalid option variant tag: {other}"),
         }
     }
@@ -220,11 +220,11 @@ impl<T: Lift, E: Lift> Lift for Result<T, E> {
         let variant = slice[0];
         match variant {
             0 => Ok(Self::Ok(T::read_from(
-                &slice[(Self::alignment())..(Self::alignment() + T::flat_byte_size())],
+                &slice[(Self::ALIGNMENT)..(Self::ALIGNMENT + T::FLAT_BYTE_SIZE)],
                 memory,
             )?)),
             1 => Ok(Self::Err(E::read_from(
-                &slice[(Self::alignment())..(Self::alignment() + E::flat_byte_size())],
+                &slice[(Self::ALIGNMENT)..(Self::ALIGNMENT + E::FLAT_BYTE_SIZE)],
                 memory,
             )?)),
             other => bail!("Invalid result variant tag: {other}"),
