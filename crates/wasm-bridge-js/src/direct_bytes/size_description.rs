@@ -223,8 +223,6 @@ impl<T0: SizeDescription, T1: SizeDescription, T2: SizeDescription> SizeDescript
 
     #[inline]
     fn layout() -> Self::StructLayout {
-        let align = Self::ALIGNMENT;
-
         let start0 = 0;
         let end0 = start0 + T0::FLAT_BYTE_SIZE;
 

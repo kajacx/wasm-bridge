@@ -43,7 +43,7 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
 
             fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<wasm_bridge::wasm_bindgen::JsValue> {
                 // FIXME: this surely doesn't work for 1-field structs?
-                let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
+                let mut buffer = memory.allocate(Self::ALIGNMENT, Self::FLAT_BYTE_SIZE)?;
                 self.write_to(&mut buffer, memory)?;
 
                 let addr = memory.flush(buffer) as u32;
@@ -167,7 +167,7 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
         )
     } else {
         quote!(
-            let mut buffer = memory.allocate(Self::alignment(), Self::flat_byte_size())?;
+            let mut buffer = memory.allocate(Self::ALIGNMENT, Self::FLAT_BYTE_SIZE)?;
             self.write_to(&mut buffer, memory)?;
 
             let addr = memory.flush(buffer) as u32;
@@ -185,15 +185,15 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
                 let field_type = &field.ty;
                 quote!(Self::#variant_name(value) => {
                     buffer.write(&#i_u8, memory)?;
-                    buffer.skip(Self::alignment() - 1);
+                    buffer.skip(Self::ALIGNMENT - 1);
 
                     buffer.write(value, memory)?;
-                    <#field_type>::flat_byte_size()
+                    <#field_type>::FLAT_BYTE_SIZE
                 },)
             } else {
                 quote!(Self::#variant_name => {
                     buffer.write(&#i_u8, memory)?;
-                    buffer.skip(Self::alignment() - 1);
+                    buffer.skip(Self::ALIGNMENT - 1);
 
                     0
                 },)
@@ -223,7 +223,7 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
                 };
 
                 // Variant tag takes 1 whole alignment
-                buffer.skip(Self::flat_byte_size() - bytes_written - Self::alignment());
+                buffer.skip(Self::FLAT_BYTE_SIZE - bytes_written - Self::ALIGNMENT);
                 Ok(())
             }
         }

@@ -42,6 +42,10 @@ pub use wasm_bridge_macros::async_trait;
 
 #[cfg(feature = "direct-bytes")]
 pub mod direct_bytes;
+#[cfg(feature = "direct-bytes")]
+pub use direct_bytes::next_multiple_of;
+#[cfg(feature = "direct-bytes")]
+pub use direct_bytes::usize_max;
 
 pub use js_sys;
 pub use wasm_bindgen;
