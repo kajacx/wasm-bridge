@@ -33,7 +33,7 @@ pub(crate) fn log_js_value_error(name: &str, value: &JsValue) {
 }
 
 #[allow(unused)]
-pub(crate) fn console_log(value: impl Debug) {
+pub fn console_log(value: impl Debug) {
     let console_log: Function = js_sys::eval("console.log").unwrap().into();
 
     console_log

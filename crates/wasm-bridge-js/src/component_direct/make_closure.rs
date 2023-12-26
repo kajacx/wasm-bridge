@@ -4,7 +4,7 @@ use std::rc::Rc;
 use wasm_bindgen::{prelude::*, JsValue};
 
 use crate::conversions::FromJsValue;
-use crate::direct_bytes::{ByteBuffer, JsArgsReader, Lift, Lower, ModuleMemory, WriteableMemory};
+use crate::direct_bytes::*;
 use crate::{DataHandle, DropHandle, Result, StoreContextMut};
 use js_sys::{Array, Function};
 
@@ -12,62 +12,6 @@ pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>, ModuleMemory) -> (JsV
 
 pub trait IntoMakeClosure<T, Params, Results> {
     fn into_make_closure(self) -> MakeClosure<T>;
-}
-
-impl<T, P0, P1, R, F> IntoMakeClosure<T, (P0, P1), R> for F
-where
-    T: 'static,
-    P0: Lift + 'static,
-    P1: Lift + 'static,
-    R: Lower + 'static,
-    F: Fn(StoreContextMut<T>, (P0, P1)) -> Result<R> + 'static,
-{
-    fn into_make_closure(self) -> MakeClosure<T> {
-        let self_rc = Rc::new(self);
-
-        let make_closure = move |handle: DataHandle<T>, memory: ModuleMemory| {
-            let self_clone = self_rc.clone();
-
-            let closure =
-                Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
-                    // FIXME: if "flat" argument size is > 16 values, args will contain a pointer to the data instead
-                    let mut args_iter = JsArgsReader::new(args);
-                    let args = <(P0, P1)>::from_js_args(&mut args_iter, &memory)
-                        .map_err(|err| format!("conversion of imported fn arguments: {err:?}"))?;
-
-                    let result = self_clone(&mut handle.borrow_mut(), args)
-                        .map_err(|err| format!("host imported fn returned error: {err:?}"))?;
-
-                    if R::NUM_ARGS <= 1 {
-                        let result = result
-                            .to_js_return(&memory)
-                            .map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
-                        Ok(result)
-                    } else {
-                        let addr = args_iter
-                            .next()
-                            .ok_or("missing last mem address argument")?;
-                        let addr = u32::from_js_value(&addr)
-                            .map_err(|err| format!("return address is not a number: {err:?}"))?
-                            as usize;
-
-                        // Buffer is already allocated, we just write there
-                        let mut buffer = ByteBuffer::new(addr, R::BYTE_SIZE);
-                        result.write_to(&mut buffer, &memory).map_err(|err| {
-                            format!("failed to write result of an imported function: {err:?}")
-                        })?;
-                        memory.flush(buffer);
-
-                        Ok(JsValue::UNDEFINED)
-                    }
-                });
-
-            let (function, drop_handle) = DropHandle::from_closure(closure);
-            (inflate_js_fn_args(&function), drop_handle)
-        };
-
-        Box::new(make_closure)
-    }
 }
 
 macro_rules! make_closure {
@@ -88,7 +32,17 @@ macro_rules! make_closure {
                     let closure =
                         Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
                             let mut args_iter = JsArgsReader::new(args);
-                            let args = <($($name,)*)>::from_js_args(&mut args_iter, &memory).map_err(|err| format!("conversion of imported fn arguments: {err:?}"))?;
+                            let args = if <($($name,)*)>::NUM_ARGS <= 16 {
+                                <($($name,)*)>::from_js_args(&mut args_iter, &memory).map_err(|err| {
+                                    format!("conversion of imported fn arguments: {err:?}")
+                                })?
+                            } else {
+                                let addr = args_iter
+                                    .next()
+                                    .ok_or("getting pointer to imported fn args")?;
+                                <($($name,)*)>::from_js_ptr_return(&addr, &memory)
+                                    .map_err(|err| format!("from js ptr return: {err:?}"))?
+                            };
 
                             let result = self_clone(
                                 &mut handle.borrow_mut(),
@@ -145,7 +99,7 @@ make_closure!();
 #[rustfmt::skip]
 make_closure!((p0, P0));
 #[rustfmt::skip]
-// make_closure!((p0, P0), (p1, P1));
+make_closure!((p0, P0), (p1, P1));
 #[rustfmt::skip]
 make_closure!((p0, P0), (p1, P1), (p2, P2));
 // #[rustfmt::skip]
