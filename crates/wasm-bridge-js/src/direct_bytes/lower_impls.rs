@@ -191,11 +191,7 @@ impl<T: Lower> Lower for Option<T> {
     }
 
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
-        // TODO: this must be duplicated somewhere ... move to a separate helper fn?
-        let mut buffer = memory.allocate(Self::ALIGNMENT, Self::BYTE_SIZE)?;
-        self.write_to(&mut buffer, memory)?;
-        let addr = memory.flush(buffer) as u32;
-        Ok(addr.to_js_value())
+        self.to_js_ptr_return(memory)
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
@@ -245,10 +241,7 @@ impl<T: Lower, E: Lower> Lower for Result<T, E> {
                 Err(_) => Ok(1u8.to_js_value()),
             }
         } else {
-            let mut buffer = memory.allocate(Self::ALIGNMENT, Self::BYTE_SIZE)?;
-            self.write_to(&mut buffer, memory)?;
-            let addr = memory.flush(buffer) as u32;
-            Ok(addr.to_js_value())
+            self.to_js_ptr_return(memory)
         }
     }
 
@@ -313,11 +306,7 @@ impl<T: Lower, U: Lower> Lower for (T, U) {
     }
 
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
-        let mut buffer = memory.allocate(Self::ALIGNMENT, Self::BYTE_SIZE)?;
-        self.write_to(&mut buffer, memory)?;
-
-        let addr = memory.flush(buffer) as u32;
-        Ok(addr.to_js_value())
+        self.to_js_ptr_return(memory)
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
@@ -345,11 +334,7 @@ impl<T: Lower, U: Lower, V: Lower> Lower for (T, U, V) {
     }
 
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
-        let mut buffer = memory.allocate(Self::ALIGNMENT, Self::BYTE_SIZE)?;
-        self.write_to(&mut buffer, memory)?;
-
-        let addr = memory.flush(buffer) as u32;
-        Ok(addr.to_js_value())
+        self.to_js_ptr_return(memory)
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {

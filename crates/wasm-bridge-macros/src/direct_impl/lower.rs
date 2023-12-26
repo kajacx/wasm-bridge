@@ -41,11 +41,7 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
 
             fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<wasm_bridge::wasm_bindgen::JsValue> {
                 // FIXME: this surely doesn't work for 1-field structs?
-                let mut buffer = memory.allocate(Self::ALIGNMENT, Self::BYTE_SIZE)?;
-                self.write_to(&mut buffer, memory)?;
-
-                let addr = memory.flush(buffer) as u32;
-                Ok(addr.to_js_value())
+                self.to_js_ptr_return(memory)
             }
 
             fn write_to<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, buffer: &mut wasm_bridge::direct_bytes::ByteBuffer, memory: &M) -> wasm_bridge::Result<()> {
@@ -164,13 +160,7 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
             })
         )
     } else {
-        quote!(
-            let mut buffer = memory.allocate(Self::ALIGNMENT, Self::BYTE_SIZE)?;
-            self.write_to(&mut buffer, memory)?;
-
-            let addr = memory.flush(buffer) as u32;
-            Ok(addr.to_js_value())
-        )
+        quote!(self.to_js_ptr_return(memory))
     };
 
     let write_to = variants

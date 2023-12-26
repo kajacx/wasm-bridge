@@ -17,6 +17,8 @@ pub trait Lift: SizeDescription + Sized {
 
     /// Reads data for Self from a pointer.
     fn from_js_ptr_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
+        debug_assert!(Self::NUM_ARGS > 1);
+
         let addr = u32::from_js_value(value)? as usize;
         if Self::BYTE_SIZE <= 16 {
             let mut data = [0u8; 16];

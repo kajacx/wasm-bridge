@@ -1,5 +1,5 @@
 use super::{ByteBuffer, SizeDescription};
-use crate::Result;
+use crate::{Result, ToJsValue};
 use wasm_bindgen::JsValue;
 
 pub trait Lower: SizeDescription {
@@ -12,6 +12,17 @@ pub trait Lower: SizeDescription {
     /// Writes itself and all children into the memory buffer. Caller flushes the buffer.
     /// This MUST write (or skip) exactly `Self::BYTE_SIZE` bytes into the buffer.
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()>;
+
+    /// Returns this as a pointer to the data. Must be used if NUM_ARGS > 1
+    fn to_js_ptr_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        debug_assert!(Self::NUM_ARGS > 1);
+
+        let mut buffer = memory.allocate(Self::ALIGNMENT, Self::BYTE_SIZE)?;
+        self.write_to(&mut buffer, memory)?;
+
+        let addr = memory.flush(buffer) as u32;
+        Ok(addr.to_js_value())
+    }
 }
 
 pub trait WriteableMemory {
