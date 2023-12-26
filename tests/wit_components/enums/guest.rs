@@ -15,6 +15,13 @@ impl Guest for MyGuest {
         shape
     }
 
+    fn raise_temperature_times(mut temp: Temperature, times: u32) -> Temperature {
+        for _ in 0..times {
+            temp = raise_temperature(temp);
+        }
+        temp
+    }
+
     fn rotate_ccw(way: Direction) -> Direction {
         let way = rotate_cw(way);
         let way = rotate_cw(way);
