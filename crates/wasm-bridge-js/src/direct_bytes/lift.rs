@@ -18,11 +18,14 @@ pub trait Lift: SizeDescription + Sized {
     /// Reads data for Self from a pointer.
     fn from_js_ptr_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
         let addr = u32::from_js_value(value)? as usize;
-        let len = Self::BYTE_SIZE;
-
-        // TODO: could probably re-use a static byte slice here?
-        let data = memory.read_to_vec(addr, len);
-        Self::read_from(&data, memory)
+        if Self::BYTE_SIZE <= 16 {
+            let mut data = [0u8; 16];
+            memory.read_to_slice(addr, &mut data[..Self::BYTE_SIZE]);
+            Self::read_from(&data[..Self::BYTE_SIZE], memory)
+        } else {
+            let data = memory.read_to_vec(addr, Self::BYTE_SIZE);
+            Self::read_from(&data, memory)
+        }
     }
 }
 
