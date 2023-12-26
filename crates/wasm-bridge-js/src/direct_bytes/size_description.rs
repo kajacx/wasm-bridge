@@ -120,18 +120,22 @@ size_description_fat_ptr!(String);
 impl<T: SizeDescription> SizeDescription for Option<T> {
     type StructLayout = SimpleStructLayout;
 
+    #[inline]
     fn alignment() -> usize {
         T::alignment()
     }
 
+    #[inline]
     fn flat_byte_size() -> usize {
-        T::flat_byte_size() + Self::alignment()
+        Self::alignment() + T::flat_byte_size()
     }
 
+    #[inline]
     fn num_args() -> usize {
-        T::num_args() + 1
+        1 + T::num_args()
     }
 
+    #[inline]
     fn layout() -> Self::StructLayout {
         simple_layout(Self::flat_byte_size())
     }
@@ -140,18 +144,22 @@ impl<T: SizeDescription> SizeDescription for Option<T> {
 impl<T: SizeDescription, E: SizeDescription> SizeDescription for Result<T, E> {
     type StructLayout = SimpleStructLayout;
 
+    #[inline]
     fn alignment() -> usize {
         usize::max(T::alignment(), E::alignment())
     }
 
+    #[inline]
     fn flat_byte_size() -> usize {
-        usize::max(T::flat_byte_size(), E::flat_byte_size()) + Self::alignment()
+        Self::alignment() + usize::max(T::flat_byte_size(), E::flat_byte_size())
     }
 
+    #[inline]
     fn num_args() -> usize {
-        usize::max(T::num_args(), E::num_args()) + 1
+        1 + usize::max(T::num_args(), E::num_args())
     }
 
+    #[inline]
     fn layout() -> Self::StructLayout {
         simple_layout(Self::flat_byte_size())
     }
@@ -180,18 +188,22 @@ impl SizeDescription for () {
 impl<T: SizeDescription> SizeDescription for (T,) {
     type StructLayout = T::StructLayout;
 
+    #[inline]
     fn alignment() -> usize {
         T::alignment()
     }
 
+    #[inline]
     fn flat_byte_size() -> usize {
         T::flat_byte_size()
     }
 
+    #[inline]
     fn num_args() -> usize {
         T::num_args()
     }
 
+    #[inline]
     fn layout() -> Self::StructLayout {
         T::layout()
     }
@@ -217,91 +229,352 @@ macro_rules! num_args {
     };
 }
 
-macro_rules! layout_impl {
-    ("stop") => { };
-    (0, $($n: tt),*) => {
-        let e0 = s0 + T0::flat_byte_size();
-        let s1 = next_multiple_of(e0, align);
-        layout_impl!($($n),*)
-    };
-    (1, $($n: tt),*) => {
-        let e1 = s1 + T1::flat_byte_size();
-        let s2 = next_multiple_of(e1, align);
-        layout_impl!($($n),*)
-    };
-    (2, $($n: tt),*) => {
-        let e2 = s2 + T2::flat_byte_size();
-        let s3 = next_multiple_of(e2, align);
-        layout_impl!($($n),*)
-    };
-    (3, $($n: tt),*) => {
-        let e3 = s3 + T3::flat_byte_size();
-        let s4 = next_multiple_of(e3, align);
-        layout_impl!($($n),*)
-    };
+impl<T0: SizeDescription, T1: SizeDescription> SizeDescription for (T0, T1) {
+    type StructLayout = [usize; 5];
+
+    #[inline]
+    fn alignment() -> usize {
+        max_alignment!(T0, T1)
+    }
+
+    #[inline]
+    fn flat_byte_size() -> usize {
+        Self::layout()[4]
+    }
+
+    #[inline]
+    fn num_args() -> usize {
+        num_args!(T0, T1)
+    }
+
+    #[inline]
+    fn layout() -> Self::StructLayout {
+        let align = Self::alignment();
+        let start0 = 0;
+
+        let end0 = start0 + T0::flat_byte_size();
+        let start1 = next_multiple_of(end0, align);
+
+        let end1 = start1 + T1::flat_byte_size();
+        let start2 = next_multiple_of(end1, align);
+
+        [start0, end0, start1, end1, start2]
+    }
 }
 
-macro_rules! size_description_tuple {
-    (($($name: ident),*), $len: literal, ($($layout: tt),*), $ret: expr) => {
-        impl<$($name: SizeDescription),*> SizeDescription for ($($name),*) {
-            type StructLayout = [usize; 2 * $len + 1];
+impl<T0: SizeDescription, T1: SizeDescription, T2: SizeDescription> SizeDescription
+    for (T0, T1, T2)
+{
+    type StructLayout = [usize; 7];
 
-            fn alignment() -> usize {
-                max_alignment!($($name),*)
-            }
+    #[inline]
+    fn alignment() -> usize {
+        max_alignment!(T0, T1, T2)
+    }
 
-            fn flat_byte_size() -> usize {
-                Self::layout[$len * 2]
-            }
+    #[inline]
+    fn flat_byte_size() -> usize {
+        Self::layout()[6]
+    }
 
-            fn num_args() -> usize {
-                num_args!($($name),*)
-            }
+    #[inline]
+    fn num_args() -> usize {
+        num_args!(T0, T1, T2)
+    }
 
-            fn layout() -> Self::StructLayout {
-                let align = Self::alignment();
-                let s0 = 0;
+    #[inline]
+    fn layout() -> Self::StructLayout {
+        let align = Self::alignment();
+        let start0 = 0;
 
-                layout_impl!($($layout),*);
+        let end0 = start0 + T0::flat_byte_size();
+        let start1 = next_multiple_of(end0, align);
 
-                $ret
-            }
-        }
-    };
+        let end1 = start1 + T1::flat_byte_size();
+        let start2 = next_multiple_of(end1, align);
+
+        let end2 = start2 + T2::flat_byte_size();
+        let start3 = next_multiple_of(end2, align);
+
+        [start0, end0, start1, end1, start2, end2, start3]
+    }
 }
 
-size_description_tuple!((T0, T1), 2, (0, 1, "stop"), [s0, e0, s1, e1, s2]);
+impl<T0: SizeDescription, T1: SizeDescription, T2: SizeDescription, T3: SizeDescription>
+    SizeDescription for (T0, T1, T2, T3)
+{
+    type StructLayout = [usize; 9];
 
-// impl<T: SizeDescription, U: SizeDescription> SizeDescription for (T, U) {
-//     type StructLayout = [usize; 5];
+    #[inline]
+    fn alignment() -> usize {
+        max_alignment!(T0, T1, T2, T3)
+    }
 
-//     fn alignment() -> usize {
-//         max_alignment!(T, U)
-//     }
+    #[inline]
+    fn flat_byte_size() -> usize {
+        Self::layout()[8]
+    }
 
-//     fn flat_byte_size() -> usize {
-//         Self::layout()[4]
-//     }
+    #[inline]
+    fn num_args() -> usize {
+        num_args!(T0, T1, T2, T3)
+    }
 
-//     fn num_args() -> usize {
-//         num_args!(T, U)
-//     }
+    #[inline]
+    fn layout() -> Self::StructLayout {
+        let align = Self::alignment();
+        let start0 = 0;
 
-//     fn layout() -> Self::StructLayout {
-//         let align = Self::alignment();
-//         let start0 = 0;
+        let end0 = start0 + T0::flat_byte_size();
+        let start1 = next_multiple_of(end0, align);
 
-//         let end0 = start0 + T::flat_byte_size();
-//         let start1 = next_multiple_of(end0, align);
+        let end1 = start1 + T1::flat_byte_size();
+        let start2 = next_multiple_of(end1, align);
 
-//         let end1 = start1 + U::flat_byte_size();
-//         let start2 = next_multiple_of(end1, align);
+        let end2 = start2 + T2::flat_byte_size();
+        let start3 = next_multiple_of(end2, align);
 
-//         [start0, end0, start1, end1, start2]
-//     }
-// }
+        let end3 = start3 + T3::flat_byte_size();
+        let start4 = next_multiple_of(end3, align);
 
-pub fn next_multiple_of(num: usize, multiple: usize) -> usize {
+        [
+            start0, end0, start1, end1, start2, end2, start3, end3, start4,
+        ]
+    }
+}
+
+impl<
+        T0: SizeDescription,
+        T1: SizeDescription,
+        T2: SizeDescription,
+        T3: SizeDescription,
+        T4: SizeDescription,
+    > SizeDescription for (T0, T1, T2, T3, T4)
+{
+    type StructLayout = [usize; 11];
+
+    #[inline]
+    fn alignment() -> usize {
+        max_alignment!(T0, T1, T2, T3, T4)
+    }
+
+    #[inline]
+    fn flat_byte_size() -> usize {
+        Self::layout()[10]
+    }
+
+    #[inline]
+    fn num_args() -> usize {
+        num_args!(T0, T1, T2, T3, T4)
+    }
+
+    #[inline]
+    fn layout() -> Self::StructLayout {
+        let align = Self::alignment();
+        let start0 = 0;
+
+        let end0 = start0 + T0::flat_byte_size();
+        let start1 = next_multiple_of(end0, align);
+
+        let end1 = start1 + T1::flat_byte_size();
+        let start2 = next_multiple_of(end1, align);
+
+        let end2 = start2 + T2::flat_byte_size();
+        let start3 = next_multiple_of(end2, align);
+
+        let end3 = start3 + T3::flat_byte_size();
+        let start4 = next_multiple_of(end3, align);
+
+        let end4 = start4 + T4::flat_byte_size();
+        let start5 = next_multiple_of(end4, align);
+
+        [
+            start0, end0, start1, end1, start2, end2, start3, end3, start4, end4, start5,
+        ]
+    }
+}
+
+impl<
+        T0: SizeDescription,
+        T1: SizeDescription,
+        T2: SizeDescription,
+        T3: SizeDescription,
+        T4: SizeDescription,
+        T5: SizeDescription,
+    > SizeDescription for (T0, T1, T2, T3, T4, T5)
+{
+    type StructLayout = [usize; 13];
+
+    #[inline]
+    fn alignment() -> usize {
+        max_alignment!(T0, T1, T2, T3, T4, T5)
+    }
+
+    #[inline]
+    fn flat_byte_size() -> usize {
+        Self::layout()[12]
+    }
+
+    #[inline]
+    fn num_args() -> usize {
+        num_args!(T0, T1, T2, T3, T4, T5)
+    }
+
+    #[inline]
+    fn layout() -> Self::StructLayout {
+        let align = Self::alignment();
+        let start0 = 0;
+
+        let end0 = start0 + T0::flat_byte_size();
+        let start1 = next_multiple_of(end0, align);
+
+        let end1 = start1 + T1::flat_byte_size();
+        let start2 = next_multiple_of(end1, align);
+
+        let end2 = start2 + T2::flat_byte_size();
+        let start3 = next_multiple_of(end2, align);
+
+        let end3 = start3 + T3::flat_byte_size();
+        let start4 = next_multiple_of(end3, align);
+
+        let end4 = start4 + T4::flat_byte_size();
+        let start5 = next_multiple_of(end4, align);
+
+        let end5 = start5 + T5::flat_byte_size();
+        let start6 = next_multiple_of(end5, align);
+
+        [
+            start0, end0, start1, end1, start2, end2, start3, end3, start4, end4, start5, end5,
+            start6,
+        ]
+    }
+}
+
+impl<
+        T0: SizeDescription,
+        T1: SizeDescription,
+        T2: SizeDescription,
+        T3: SizeDescription,
+        T4: SizeDescription,
+        T5: SizeDescription,
+        T6: SizeDescription,
+    > SizeDescription for (T0, T1, T2, T3, T4, T5, T6)
+{
+    type StructLayout = [usize; 15];
+
+    #[inline]
+    fn alignment() -> usize {
+        max_alignment!(T0, T1, T2, T3, T4, T5, T6)
+    }
+
+    #[inline]
+    fn flat_byte_size() -> usize {
+        Self::layout()[14]
+    }
+
+    #[inline]
+    fn num_args() -> usize {
+        num_args!(T0, T1, T2, T3, T4, T5, T6)
+    }
+
+    #[inline]
+    fn layout() -> Self::StructLayout {
+        let align = Self::alignment();
+        let start0 = 0;
+
+        let end0 = start0 + T0::flat_byte_size();
+        let start1 = next_multiple_of(end0, align);
+
+        let end1 = start1 + T1::flat_byte_size();
+        let start2 = next_multiple_of(end1, align);
+
+        let end2 = start2 + T2::flat_byte_size();
+        let start3 = next_multiple_of(end2, align);
+
+        let end3 = start3 + T3::flat_byte_size();
+        let start4 = next_multiple_of(end3, align);
+
+        let end4 = start4 + T4::flat_byte_size();
+        let start5 = next_multiple_of(end4, align);
+
+        let end5 = start5 + T5::flat_byte_size();
+        let start6 = next_multiple_of(end5, align);
+
+        let end6 = start5 + T5::flat_byte_size();
+        let start7 = next_multiple_of(end6, align);
+
+        [
+            start0, end0, start1, end1, start2, end2, start3, end3, start4, end4, start5, end5,
+            start6, end6, start7,
+        ]
+    }
+}
+
+impl<
+        T0: SizeDescription,
+        T1: SizeDescription,
+        T2: SizeDescription,
+        T3: SizeDescription,
+        T4: SizeDescription,
+        T5: SizeDescription,
+        T6: SizeDescription,
+        T7: SizeDescription,
+    > SizeDescription for (T0, T1, T2, T3, T4, T5, T6, T7)
+{
+    type StructLayout = [usize; 17];
+
+    #[inline]
+    fn alignment() -> usize {
+        max_alignment!(T0, T1, T2, T3, T4, T5, T6, T7)
+    }
+
+    #[inline]
+    fn flat_byte_size() -> usize {
+        Self::layout()[16]
+    }
+
+    #[inline]
+    fn num_args() -> usize {
+        num_args!(T0, T1, T2, T3, T4, T5, T6, T7)
+    }
+
+    #[inline]
+    fn layout() -> Self::StructLayout {
+        let align = Self::alignment();
+        let start0 = 0;
+
+        let end0 = start0 + T0::flat_byte_size();
+        let start1 = next_multiple_of(end0, align);
+
+        let end1 = start1 + T1::flat_byte_size();
+        let start2 = next_multiple_of(end1, align);
+
+        let end2 = start2 + T2::flat_byte_size();
+        let start3 = next_multiple_of(end2, align);
+
+        let end3 = start3 + T3::flat_byte_size();
+        let start4 = next_multiple_of(end3, align);
+
+        let end4 = start4 + T4::flat_byte_size();
+        let start5 = next_multiple_of(end4, align);
+
+        let end5 = start5 + T5::flat_byte_size();
+        let start6 = next_multiple_of(end5, align);
+
+        let end6 = start5 + T5::flat_byte_size();
+        let start7 = next_multiple_of(end6, align);
+
+        let end7 = start6 + T6::flat_byte_size();
+        let start8 = next_multiple_of(end7, align);
+
+        [
+            start0, end0, start1, end1, start2, end2, start3, end3, start4, end4, start5, end5,
+            start6, end6, start7, end7, start8,
+        ]
+    }
+}
+
+pub const fn next_multiple_of(num: usize, multiple: usize) -> usize {
     ((num + multiple - 1) / multiple) * multiple
 }
 
