@@ -1,12 +1,28 @@
 package component-test:wit-protocol;
 
 world records {
-  // Record structs
-  record player {
-    name: string,
-    inventory: list<u32>,
+  record vector {
+    x: float32,
+    y: float32,
+    z: float32,
   }
 
-  import create-player: func(name: string, inventory: list<u32>) -> player;
-  export get-inventory: func(p: player) -> list<u32>;
+  record player {
+    name: string,
+    health: u64,
+    position: vector,
+    velocity: vector,
+  }
+
+  import move-player: func(p: player, d: float32) -> player;
+  export move-players: func(p: list<player>, t: float32) -> list<player>;
+
+  // Kind of a "dumb" record to force 18 "flatten" values
+  record group {
+    player1: player,
+    player2: player,
+  }
+
+  import group-import: func(g: group) -> group;
+  export group-export: func(g: group) -> group;
 }

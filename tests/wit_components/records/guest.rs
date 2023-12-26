@@ -9,7 +9,14 @@ wit_bindgen::generate!({
 struct MyGuest;
 
 impl Guest for MyGuest {
-    fn get_inventory(player: Player) -> Vec<u32> {
-        player.inventory
+    fn move_players(mut players: Vec<Player>, delta: f32) -> Vec<Player> {
+        players.iter_mut().for_each(|player| {
+            *player = move_player(player, delta);
+        });
+        players
+    }
+
+    fn group_export(group: Group) -> Group {
+        group
     }
 }
