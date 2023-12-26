@@ -1,18 +1,29 @@
-use anyhow::Result;
+use crate::Result;
 use js_sys::Array;
 use wasm_bindgen::JsValue;
 
 use super::SizeDescription;
+use crate::FromJsValue;
 
 pub trait Lift: SizeDescription + Sized {
     /// Converts a returned value from an exported function to Self.
     fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self>;
 
-    // Converts arguments to an imported function to Self.
+    /// Converts arguments to an imported function to Self.
     fn from_js_args<M: ReadableMemory>(args: &mut JsArgsReader, memory: &M) -> Result<Self>;
 
-    // Read from a slice of memory.
+    /// Read from a slice of memory.
     fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self>;
+
+    /// Reads data for Self from a pointer.
+    fn from_js_ptr_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
+        let addr = u32::from_js_value(value)? as usize;
+        let len = Self::flat_byte_size();
+
+        // TODO: could probably re-use a static byte slice here?
+        let data = memory.read_to_vec(addr, len);
+        Self::read_from(&data, memory)
+    }
 }
 
 pub trait ReadableMemory {

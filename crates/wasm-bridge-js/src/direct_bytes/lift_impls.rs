@@ -148,10 +148,7 @@ impl Lift for String {
 
 impl<T: Lift> Lift for Option<T> {
     fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> anyhow::Result<Self> {
-        // TODO: also repeated probably
-        let addr = u32::from_js_value(value)? as usize;
-        let data = memory.read_to_vec(addr, Self::flat_byte_size());
-        Self::read_from(&data, memory)
+        Self::from_js_ptr_return(value, memory)
     }
 
     fn from_js_args<M: ReadableMemory>(
@@ -194,9 +191,7 @@ impl<T: Lift, E: Lift> Lift for Result<T, E> {
                 other => bail!("Invalid result variant tag: {other}"),
             }
         } else {
-            let addr = u32::from_js_value(value)? as usize;
-            let data = memory.read_to_vec(addr, Self::flat_byte_size());
-            Self::read_from(&data, memory)
+            Self::from_js_ptr_return(value, memory)
         }
     }
 
@@ -267,12 +262,7 @@ impl<T: Lift> Lift for (T,) {
 
 impl<T: Lift, U: Lift> Lift for (T, U) {
     fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
-        let addr = u32::from_js_value(value)? as usize;
-        let len = Self::flat_byte_size();
-
-        // TODO: could probably re-use a static byte slice here
-        let data = memory.read_to_vec(addr, len);
-        Self::read_from(&data, memory)
+        Self::from_js_ptr_return(value, memory)
     }
 
     fn from_js_args<M: ReadableMemory>(args: &mut JsArgsReader, memory: &M) -> Result<Self> {
@@ -293,12 +283,7 @@ impl<T: Lift, U: Lift> Lift for (T, U) {
 
 impl<T: Lift, U: Lift, V: Lift> Lift for (T, U, V) {
     fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
-        let addr = u32::from_js_value(value)? as usize;
-        let len = Self::flat_byte_size();
-
-        // TODO: could probably re-use a static byte slice here
-        let data = memory.read_to_vec(addr, len);
-        Self::read_from(&data, memory)
+        Self::from_js_ptr_return(value, memory)
     }
 
     fn from_js_args<M: ReadableMemory>(args: &mut JsArgsReader, memory: &M) -> Result<Self> {

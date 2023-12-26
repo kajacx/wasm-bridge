@@ -8,18 +8,11 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
     let fields = data.fields;
     let field_count = fields.len();
 
-    // TODO: what if field count is 0?
     let from_js_return = if field_count == 1 {
         let field_type = &fields.iter().next().unwrap().ty;
         quote!(<#field_type>::from_js_return(value, memory))
     } else {
-        quote!(
-            let addr = u32::from_js_value(value)? as usize;
-            let len = Self::flat_byte_size();
-
-            let data = memory.read_to_vec(addr, len);
-            Self::read_from(&data, memory)
-        )
+        quote!(Self::from_js_ptr_return(value, memory))
     };
 
     let mut from_js_args = TokenStream::new();
@@ -135,11 +128,7 @@ pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
             })
         )
     } else {
-        quote!(
-            let addr = u32::from_js_value(value)? as usize;
-            let data = memory.read_to_vec(addr, Self::flat_byte_size());
-            Self::read_from(&data, memory)
-        )
+        quote!(Self::from_js_ptr_return(value, memory))
     };
 
     let from_js_args: TokenStream = variants.iter().enumerate().map(|(i, variant)| {
