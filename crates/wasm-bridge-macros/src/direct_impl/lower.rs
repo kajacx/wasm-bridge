@@ -118,7 +118,7 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
                     Self::#variant_name(value) => {
                         args.push(#tag.to_js_value());
                         value.to_js_args(args, memory)?;
-                        <#field_type>::num_args()
+                        <#field_type>::NUM_ARGS
                     }
                 )
             } else {
@@ -138,7 +138,7 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
         };
 
         // Start from 1 to account for the initial variant tag
-        for _ in 1..(Self::num_args() - args_written) {
+        for _ in 1..(Self::NUM_ARGS - args_written) {
             args.push(wasm_bridge::wasm_bindgen::JsValue::UNDEFINED);
         }
         Ok(())

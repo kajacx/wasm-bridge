@@ -136,7 +136,7 @@ pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
         let variant_name = &variant.ident;
         if let Some(field) = variant.fields.iter().next() {
             let field_type = &field.ty;
-            quote!(#tag => (Self::#variant_name(<#field_type>::from_js_args(args, memory)?), <#field_type>::num_args()),)
+            quote!(#tag => (Self::#variant_name(<#field_type>::from_js_args(args, memory)?), <#field_type>::NUM_ARGS),)
         } else {
             quote!(#tag => (Self::#variant_name, 0),)
         }
@@ -176,7 +176,7 @@ pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
                 };
 
                 // Start from 1 to account for the initial variant tag
-                for _ in 1..(Self::num_args() - args_read) {
+                for _ in 1..(Self::NUM_ARGS - args_read) {
                     args.next().context("Skipping unused result args")?;
                 }
                 Ok(result)
