@@ -147,7 +147,7 @@ pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
         let variant_name = &variant.ident;
         if let Some(field) = variant.fields.iter().next() {
             let field_type = &field.ty;
-            quote!(#tag => Self::#variant_name(<#field_type>::read_from(&slice[(Self::ALIGNMENT)..(Self::ALIGNMENT + <#field_type>::FLAT_BYTE_SIZE)], memory)?),)
+            quote!(#tag => Self::#variant_name(<#field_type>::read_from(&slice[(Self::ALIGNMENT)..(Self::ALIGNMENT + <#field_type>::BYTE_SIZE)], memory)?),)
         } else {
             quote!(#tag => Self::#variant_name,)
         }

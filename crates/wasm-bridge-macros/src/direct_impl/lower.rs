@@ -43,7 +43,7 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
 
             fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<wasm_bridge::wasm_bindgen::JsValue> {
                 // FIXME: this surely doesn't work for 1-field structs?
-                let mut buffer = memory.allocate(Self::ALIGNMENT, Self::FLAT_BYTE_SIZE)?;
+                let mut buffer = memory.allocate(Self::ALIGNMENT, Self::BYTE_SIZE)?;
                 self.write_to(&mut buffer, memory)?;
 
                 let addr = memory.flush(buffer) as u32;
@@ -167,7 +167,7 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
         )
     } else {
         quote!(
-            let mut buffer = memory.allocate(Self::ALIGNMENT, Self::FLAT_BYTE_SIZE)?;
+            let mut buffer = memory.allocate(Self::ALIGNMENT, Self::BYTE_SIZE)?;
             self.write_to(&mut buffer, memory)?;
 
             let addr = memory.flush(buffer) as u32;
@@ -188,7 +188,7 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
                     buffer.skip(Self::ALIGNMENT - 1);
 
                     buffer.write(value, memory)?;
-                    <#field_type>::FLAT_BYTE_SIZE
+                    <#field_type>::BYTE_SIZE
                 },)
             } else {
                 quote!(Self::#variant_name => {
@@ -223,7 +223,7 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
                 };
 
                 // Variant tag takes 1 whole alignment
-                buffer.skip(Self::FLAT_BYTE_SIZE - bytes_written - Self::ALIGNMENT);
+                buffer.skip(Self::BYTE_SIZE - bytes_written - Self::ALIGNMENT);
                 Ok(())
             }
         }

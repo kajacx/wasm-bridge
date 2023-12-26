@@ -15,15 +15,15 @@ pub fn size_description_struct(name: Ident, data: DataStruct) -> TokenStream {
         alignment = quote!(wasm_bridge::usize_max(#alignment, <#field_type>::ALIGNMENT));
     }
 
-    let mut flat_byte_size = quote!(0usize);
+    let mut byte_size = quote!(0usize);
     let mut fields_peek = fields.iter().peekable();
     while let Some(field) = fields_peek.next() {
         let field_type = &field.ty;
         if let Some(next) = fields_peek.peek() {
             let next_type = &next.ty;
-            flat_byte_size = quote!(wasm_bridge::next_multiple_of(#flat_byte_size + <#field_type>::FLAT_BYTE_SIZE, <#next_type>::ALIGNMENT));
+            byte_size = quote!(wasm_bridge::next_multiple_of(#byte_size + <#field_type>::BYTE_SIZE, <#next_type>::ALIGNMENT));
         } else {
-            flat_byte_size = quote!(wasm_bridge::next_multiple_of(#flat_byte_size + <#field_type>::FLAT_BYTE_SIZE, Self::ALIGNMENT));
+            byte_size = quote!(wasm_bridge::next_multiple_of(#byte_size + <#field_type>::BYTE_SIZE, Self::ALIGNMENT));
         }
     }
 
@@ -42,7 +42,7 @@ pub fn size_description_struct(name: Ident, data: DataStruct) -> TokenStream {
         let end_i = format_ident!("end{i}");
         let start_next = format_ident!("start{}", i + 1);
 
-        let line = quote!(let #end_i = #start_i + <#field_type>::FLAT_BYTE_SIZE;);
+        let line = quote!(let #end_i = #start_i + <#field_type>::BYTE_SIZE;);
         layout_impl.extend(line);
 
         let line =
@@ -63,7 +63,7 @@ pub fn size_description_struct(name: Ident, data: DataStruct) -> TokenStream {
         impl wasm_bridge::direct_bytes::SizeDescription for #name {
             type StructLayout = [usize; #field_count_token * 2 + 1];
             const ALIGNMENT: usize = #alignment;
-            const FLAT_BYTE_SIZE: usize = #flat_byte_size;
+            const BYTE_SIZE: usize = #byte_size;
 
             fn num_args() -> usize {
                 0 #num_args
@@ -91,7 +91,7 @@ pub fn size_description_enum(name: Ident, data: DataEnum) -> TokenStream {
         impl wasm_bridge::direct_bytes::SizeDescription for #name {
             type StructLayout = [usize; 3];
             const ALIGNMENT: usize = 1;
-            const FLAT_BYTE_SIZE: usize = 1;
+            const BYTE_SIZE: usize = 1;
 
             fn num_args() -> usize {
                 1
@@ -120,12 +120,11 @@ pub fn size_description_variant(name: Ident, data: DataEnum) -> TokenStream {
         }
     }
 
-    let mut flat_byte_size = quote!(0usize);
+    let mut byte_size = quote!(0usize);
     for variant in variants.iter() {
         if let Some(field) = variant.fields.iter().next() {
             let field_type = &field.ty;
-            flat_byte_size =
-                quote!(wasm_bridge::usize_max(#flat_byte_size, <#field_type>::FLAT_BYTE_SIZE));
+            byte_size = quote!(wasm_bridge::usize_max(#byte_size, <#field_type>::BYTE_SIZE));
         }
     }
 
@@ -148,7 +147,7 @@ pub fn size_description_variant(name: Ident, data: DataEnum) -> TokenStream {
         impl wasm_bridge::direct_bytes::SizeDescription for #name {
             type StructLayout = [usize; 3];
             const ALIGNMENT: usize = #alignment;
-            const FLAT_BYTE_SIZE: usize = Self::ALIGNMENT + #flat_byte_size;
+            const BYTE_SIZE: usize = Self::ALIGNMENT + #byte_size;
 
             fn num_args() -> usize {
                 let num_args = 0;
