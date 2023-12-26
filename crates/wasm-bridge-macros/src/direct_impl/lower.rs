@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use proc_macro2::*;
 use quote::{format_ident, quote};
 use syn::{DataEnum, DataStruct};
@@ -18,8 +16,8 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
     for (i, field) in fields.iter().enumerate() {
         let field_name = &field.ident;
 
-        let end = num_to_token(i * 2 + 1);
-        let start_next = num_to_token(i * 2 + 2);
+        let end = i * 2 + 1;
+        let start_next = i * 2 + 2;
 
         let line = quote!(self.#field_name.write_to(buffer, memory)?;);
         write_to_impl.extend(line);
@@ -229,8 +227,4 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
         }
       }
     )
-}
-
-fn num_to_token(num: usize) -> TokenStream {
-    TokenStream::from_str(&num.to_string()).unwrap()
 }

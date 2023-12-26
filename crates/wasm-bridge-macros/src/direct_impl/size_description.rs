@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use proc_macro2::*;
 use quote::{format_ident, quote};
 use syn::{DataEnum, DataStruct};
@@ -7,7 +5,6 @@ use syn::{DataEnum, DataStruct};
 pub fn size_description_struct(name: Ident, data: DataStruct) -> TokenStream {
     let fields = data.fields;
     let field_count = fields.len();
-    let field_count_token = num_to_token(field_count);
 
     let mut alignment = quote!(1usize);
     for field in fields.iter() {
@@ -65,7 +62,7 @@ pub fn size_description_struct(name: Ident, data: DataStruct) -> TokenStream {
             const BYTE_SIZE: usize = #byte_size;
             const NUM_ARGS: usize = #num_args;
 
-            type StructLayout = [usize; #field_count_token * 2 + 1];
+            type StructLayout = [usize; #field_count * 2 + 1];
 
             fn layout() -> Self::StructLayout {
                 let align = Self::ALIGNMENT;
@@ -145,9 +142,4 @@ pub fn size_description_variant(name: Ident, data: DataEnum) -> TokenStream {
             }
         }
     )
-}
-
-// TODO: remove?
-fn num_to_token(num: usize) -> TokenStream {
-    TokenStream::from_str(&num.to_string()).unwrap()
 }
