@@ -12,3 +12,7 @@ pub fn size_description_enum(_name: Ident, _data: DataEnum) -> TokenStream {
 pub fn size_description_variant(_name: Ident, _data: DataEnum) -> TokenStream {
     TokenStream::new()
 }
+
+pub fn size_description_tuple(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    tokens
+}

@@ -20,6 +20,7 @@ mod direct_impl {
 
     pub use super::js_impl::size_description_enum;
     pub use super::js_impl::size_description_struct;
+    pub use super::js_impl::size_description_tuple;
     pub use super::js_impl::size_description_variant;
 }
 
@@ -226,4 +227,9 @@ fn style_from_attributes(attributes: &[Attribute]) -> Option<Style> {
             attr.parse_args()
                 .expect("Attribute should be correct style")
         })
+}
+
+#[proc_macro]
+pub fn size_description_tuple(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    direct_impl::size_description_tuple(tokens)
 }

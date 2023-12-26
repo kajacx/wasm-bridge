@@ -147,3 +147,87 @@ pub fn size_description_variant(name: Ident, data: DataEnum) -> TokenStream {
         }
     )
 }
+
+pub fn size_description_tuple(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let count: usize = tokens.to_string().parse().unwrap();
+
+    let generics = (0..count)
+        .map(|i| {
+            let name = format_ident!("T{i}");
+            quote!(#name: SizeDescription,)
+        })
+        .collect::<TokenStream>();
+
+    let tuple = (0..count)
+        .map(|i| {
+            let name = format_ident!("T{i}");
+            quote!(#name,)
+        })
+        .collect::<TokenStream>();
+
+    let mut alignment = quote!(1usize);
+    for i in 0..count {
+        let name = format_ident!("T{i}");
+        alignment = quote!(usize_max(#alignment, <#name>::ALIGNMENT));
+    }
+
+    let mut byte_size = quote!(0usize);
+    for i in 0..count {
+        let name = format_ident!("T{i}");
+        if i < count - 1 {
+            let next_name = format_ident!("T{}", i + 1);
+            byte_size =
+                quote!(next_multiple_of(#byte_size + <#name>::BYTE_SIZE, <#next_name>::ALIGNMENT));
+        } else {
+            byte_size = quote!(next_multiple_of(#byte_size + <#name>::BYTE_SIZE, Self::ALIGNMENT));
+        }
+    }
+
+    let mut num_args = quote!(0);
+    for i in 0..count {
+        let name = format_ident!("T{i}");
+        num_args.extend(quote!( + <#name>::NUM_ARGS));
+    }
+
+    let mut layout_impl = TokenStream::new();
+    let mut layout_return = TokenStream::new();
+    for i in 0..count {
+        let name = format_ident!("T{i}");
+
+        let end_prev = if i == 0 {
+            format_ident!("zero")
+        } else {
+            format_ident!("end{}", i - 1)
+        };
+        let start_i = format_ident!("start{i}");
+        let end_i = format_ident!("end{i}");
+
+        let line = quote!(let #start_i = next_multiple_of(#end_prev, <#name>::ALIGNMENT););
+        layout_impl.extend(line);
+
+        let line = quote!(let #end_i = #start_i + <#name>::BYTE_SIZE;);
+        layout_impl.extend(line);
+
+        let ret = quote!(#start_i, #end_i,);
+        layout_return.extend(ret);
+    }
+
+    let result = quote!(
+        impl<#generics> SizeDescription for (#tuple) {
+            const ALIGNMENT: usize = #alignment;
+            const BYTE_SIZE: usize = #byte_size;
+            const NUM_ARGS: usize = #num_args;
+
+            type StructLayout = [usize; 2 * #count + 1];
+
+            #[inline]
+            fn layout() -> Self::StructLayout {
+                let zero = 0;
+                #layout_impl
+                [#layout_return Self::BYTE_SIZE]
+            }
+        }
+    );
+
+    proc_macro::TokenStream::from(result)
+}
