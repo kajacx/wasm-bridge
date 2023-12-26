@@ -96,6 +96,18 @@ macro_rules! size_description_fat_ptr {
 size_description_fat_ptr!(&str);
 size_description_fat_ptr!(String);
 
+impl<T: SizeDescription> SizeDescription for &T {
+    const ALIGNMENT: usize = T::ALIGNMENT;
+    const BYTE_SIZE: usize = T::BYTE_SIZE;
+    const NUM_ARGS: usize = T::NUM_ARGS;
+
+    type StructLayout = T::StructLayout;
+
+    fn layout() -> Self::StructLayout {
+        T::layout()
+    }
+}
+
 impl<T: SizeDescription> SizeDescription for Option<T> {
     const ALIGNMENT: usize = T::ALIGNMENT;
     const BYTE_SIZE: usize = Self::ALIGNMENT + T::BYTE_SIZE;

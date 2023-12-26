@@ -159,6 +159,20 @@ fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], memory: &M) -> Resul
     Ok(memory.flush(buffer))
 }
 
+impl<T: Lower> Lower for &T {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        T::to_js_args(&self, args, memory)
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+        T::to_js_return(&self, memory)
+    }
+
+    fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
+        T::write_to(&self, buffer, memory)
+    }
+}
+
 impl<T: Lower> Lower for Option<T> {
     fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
         match self {
