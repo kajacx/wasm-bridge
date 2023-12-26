@@ -54,16 +54,21 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance
         .call_move_players(&mut store, &[player.clone()], 2.0)
         .unwrap();
-    assert_eq!(result[0].position.x, 3.0);
-    assert_eq!(result[0].position.y, 4.0);
-    assert_eq!(result[0].position.z, 5.0);
+    assert_eq!(
+        result[0].position,
+        Vector {
+            x: 3.0,
+            y: 4.0,
+            z: 5.0,
+        }
+    );
 
     let group = Group {
         player1: player.clone(),
         player2: player.clone(),
     };
     let result = instance.call_group_export(&mut store, &group).unwrap();
-    assert_eq!(result.player1.health, group.player1.health);
+    assert_eq!(result, group);
 
     Ok(())
 }

@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use original::{Style, VariantStyle};
-use regex::Regex;
+use regex::{Captures, Regex};
 use syn::Attribute;
 
 mod original;
@@ -46,14 +46,31 @@ pub fn flags(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     replace_namespace(original::flags(input))
 }
 
+fn bindgen(input: proc_macro::TokenStream) -> String {
+    let as_string = replace_namespace_str(original::bindgen(input));
+
+    // Add PartialEq derive, so that testing isn't so miserably painful
+    let regex = Regex::new("derive\\(([^\\)]*Clone[^\\)]*)\\)").unwrap();
+    let as_string = regex.replace_all(&as_string, |caps: &Captures| {
+        if caps[0].contains("PartialEq") {
+            caps[0].to_string()
+        } else {
+            format!("derive({}, PartialEq)", &caps[1])
+        }
+    });
+
+    as_string.to_string()
+}
+
 #[proc_macro]
 pub fn bindgen_sys(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    replace_namespace(original::bindgen(input))
+    let as_string = bindgen(input);
+    proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
 
 #[proc_macro]
 pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let as_string = replace_namespace(original::bindgen(input)).to_string();
+    let as_string = bindgen(input);
 
     // Clone exported function
     let regex = Regex::new("\\*\\s*__exports\\.typed_func([^?]*)\\?\\.func\\(\\)").unwrap();
@@ -100,14 +117,7 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         as_string.to_string()
     };
 
-    // eprintln!("#[cfg(test)]");
-    // eprintln!("#[allow(warnings)]");
-    // eprintln!("mod test {{");
-    // eprintln!("  pub mod wasm_bridge {{");
-    // eprintln!("    pub use crate::*;");
-    // eprintln!("  }}");
-    // eprintln!("  {as_string}");
-    // eprintln!("}}");
+    // eprintln!("{as_string}");
 
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
@@ -191,12 +201,18 @@ pub fn async_trait(
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
 
-fn replace_namespace(stream: proc_macro::TokenStream) -> proc_macro::TokenStream {
+fn replace_namespace_str(stream: proc_macro::TokenStream) -> String {
     let as_string = stream.to_string();
 
     // Replace wasmtime:: package path with wasm_bridge::
     let regex = Regex::new("wasmtime[^:]*::").unwrap();
     let as_string = regex.replace_all(&as_string, "wasm_bridge::");
+
+    as_string.to_string()
+}
+
+fn replace_namespace(stream: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let as_string = replace_namespace_str(stream);
 
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
