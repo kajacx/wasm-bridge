@@ -162,6 +162,10 @@ impl<T: SizeDescription> SizeDescription for (T,) {
 wasm_bridge_macros::size_description_tuple!(2);
 wasm_bridge_macros::size_description_tuple!(3);
 wasm_bridge_macros::size_description_tuple!(4);
+wasm_bridge_macros::size_description_tuple!(5);
+wasm_bridge_macros::size_description_tuple!(6);
+wasm_bridge_macros::size_description_tuple!(7);
+wasm_bridge_macros::size_description_tuple!(8);
 
 pub const fn next_multiple_of(num: usize, multiple: usize) -> usize {
     ((num + multiple - 1) / multiple) * multiple

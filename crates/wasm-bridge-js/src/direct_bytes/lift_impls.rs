@@ -260,46 +260,40 @@ impl<T: Lift> Lift for (T,) {
     }
 }
 
-impl<T: Lift, U: Lift> Lift for (T, U) {
-    fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
-        Self::from_js_ptr_return(value, memory)
-    }
+macro_rules! lift_tuple {
+    ($(($name: ident, $start: literal, $end: literal)),*) => {
+        impl<$($name: Lift),*> Lift for ($($name),*) {
+            fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
+                Self::from_js_ptr_return(value, memory)
+            }
 
-    fn from_js_args<M: ReadableMemory>(args: &mut JsArgsReader, memory: &M) -> Result<Self> {
-        let t = T::from_js_args(args, memory)?;
-        let u = U::from_js_args(args, memory)?;
-        Ok((t, u))
-    }
+            fn from_js_args<M: ReadableMemory>(args: &mut JsArgsReader, memory: &M) -> Result<Self> {
+                Ok((
+                    $(<$name>::from_js_args(args, memory)?),*
+                ))
+            }
 
-    fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
-        let layout = Self::layout();
-
-        let t = T::read_from(&slice[layout[0]..layout[1]], memory)?;
-        let u = U::read_from(&slice[layout[2]..layout[3]], memory)?;
-
-        Ok((t, u))
-    }
+            fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
+                let layout = Self::layout();
+                Ok((
+                    $(<$name>::read_from(&slice[layout[$start]..layout[$end]], memory)?),*
+                ))
+            }
+        }
+    };
 }
 
-impl<T: Lift, U: Lift, V: Lift> Lift for (T, U, V) {
-    fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> Result<Self> {
-        Self::from_js_ptr_return(value, memory)
-    }
-
-    fn from_js_args<M: ReadableMemory>(args: &mut JsArgsReader, memory: &M) -> Result<Self> {
-        let t = T::from_js_args(args, memory)?;
-        let u = U::from_js_args(args, memory)?;
-        let v = V::from_js_args(args, memory)?;
-        Ok((t, u, v))
-    }
-
-    fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
-        let layout = Self::layout();
-
-        let t = T::read_from(&slice[layout[0]..layout[1]], memory)?;
-        let u = U::read_from(&slice[layout[2]..layout[3]], memory)?;
-        let v = V::read_from(&slice[layout[4]..layout[5]], memory)?;
-
-        Ok((t, u, v))
-    }
-}
+#[rustfmt::skip]
+lift_tuple!((T0, 0, 1), (T1, 2, 3));
+#[rustfmt::skip]
+lift_tuple!((T0, 0, 1), (T1, 2, 3), (T2, 4, 5));
+#[rustfmt::skip]
+lift_tuple!((T0, 0, 1), (T1, 2, 3), (T2, 4, 5), (T3, 6, 7));
+#[rustfmt::skip]
+lift_tuple!((T0, 0, 1), (T1, 2, 3), (T2, 4, 5), (T3, 6, 7), (T4, 8, 9));
+#[rustfmt::skip]
+lift_tuple!((T0, 0, 1), (T1, 2, 3), (T2, 4, 5), (T3, 6, 7), (T4, 8, 9), (T5, 10, 11));
+#[rustfmt::skip]
+lift_tuple!((T0, 0, 1), (T1, 2, 3), (T2, 4, 5), (T3, 6, 7), (T4, 8, 9), (T5, 10, 11), (T6, 12, 13));
+#[rustfmt::skip]
+lift_tuple!((T0, 0, 1), (T1, 2, 3), (T2, 4, 5), (T3, 6, 7), (T4, 8, 9), (T5, 10, 11), (T6, 12, 13), (T7, 14, 15));
