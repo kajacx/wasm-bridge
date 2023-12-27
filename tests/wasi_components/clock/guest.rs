@@ -1,11 +1,14 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "clock",
+    exports: {
+        world: GuestImpl,
+    }
 });
 
 struct GuestImpl;
 
-impl Clock for GuestImpl {
+impl Guest for GuestImpl {
     fn seconds_since_epoch() -> u64 {
         let now = std::time::SystemTime::now();
         let interval = now
@@ -27,5 +30,3 @@ impl Clock for GuestImpl {
         elapsed + result * 0
     }
 }
-
-export_clock!(GuestImpl);
