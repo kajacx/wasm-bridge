@@ -18,4 +18,7 @@ world interfaces {
   export guest-sub: interface {
     sub-three: func(num: s32) -> s32;
   }
+
+  import normal-import: func(num: s32) -> s32;
+  export normal-export: func(num: s32) -> s32;
 }

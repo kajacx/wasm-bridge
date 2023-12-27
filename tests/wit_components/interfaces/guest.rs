@@ -2,10 +2,19 @@ wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "interfaces",
     exports: {
+        world: GuestImpl,
         "component-test:wit-protocol/guest-add": GuestImplAdd,
         "guest-sub": GuestImplSub,
     }
 });
+
+struct GuestImpl;
+
+impl Guest for GuestImpl {
+    fn normal_export(n: i32) -> i32 {
+        normal_import(n)
+    }
+}
 
 struct GuestImplAdd;
 
