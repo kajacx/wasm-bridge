@@ -82,9 +82,6 @@ impl ExportsRoot {
     }
 
     pub fn typed_func<Params, Return>(&self, name: &str) -> Result<TypedFunc<Params, Return>> {
-        // TODO: converting in the opposite direction when storing would be slightly faster
-        // let name = name.to_lower_camel_case();
-
         let func = self
             .exported_fns
             .get(name)
@@ -94,31 +91,27 @@ impl ExportsRoot {
         Ok(TypedFunc::new(func))
     }
 
-    pub fn instance(&self, _name: &str) -> Option<ExportInstance> {
-        todo!("named interface nesting")
-        // Some(ExportInstance::new(
-        //     self.exported_objects
-        //         .get(name)
-        //         // TODO: This is a workaround for https://github.com/bytecodealliance/jco/issues/110
-        //         .or_else(|| self.exported_objects.get(&name.to_lower_camel_case()))?,
-        // ))
+    pub fn instance<'a>(&'a self, name: &str) -> Option<ExportInstance<'a, 'static>> {
+        Some(ExportInstance::new(self, name))
     }
 }
 
 pub struct ExportInstance<'a, 'b> {
-    root: &'a ExportsRoot, // TODO: this is not the root, refactor
+    root: &'a ExportsRoot,
+    name: String,
     _phantom: PhantomData<&'b ()>,
 }
 
 impl<'a, 'b> ExportInstance<'a, 'b> {
-    // pub(crate) fn new(root: &'a ExportsRoot) -> Self {
-    //     Self {
-    //         root,
-    //         _phantom: PhantomData,
-    //     }
-    // }
+    pub(crate) fn new(root: &'a ExportsRoot, name: &str) -> Self {
+        Self {
+            root,
+            _phantom: PhantomData,
+            name: name.into(),
+        }
+    }
 
     pub fn typed_func<Params, Return>(&self, name: &str) -> Result<TypedFunc<Params, Return>> {
-        self.root.typed_func(name)
+        self.root.typed_func(&format!("{}#{}", self.name, name))
     }
 }
