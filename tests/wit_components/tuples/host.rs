@@ -18,6 +18,23 @@ impl TuplesImports for Imports {
     fn add_sub_ten(&mut self, num: i32) -> Result<(i32, i32)> {
         Ok((num + 10, num - 10))
     }
+
+    fn increment(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    fn add_all(
+        &mut self,
+        a: i32,
+        b: i64,
+        c: u32,
+        d: u64,
+        e: f32,
+        f: f64,
+        g: String,
+    ) -> Result<f64> {
+        Ok(a as f64 + b as f64 + c as f64 + d as f64 + e as f64 + f + g.parse::<f64>().unwrap())
+    }
 }
 
 pub fn run_test(component_bytes: &[u8]) -> Result<()> {

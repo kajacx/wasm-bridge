@@ -23,14 +23,6 @@ impl TestWorldImports for HostData {
         Ok(())
     }
 
-    fn add_sub_two(&mut self, num: i32) -> Result<(i32, i32)> {
-        Ok((num + 2, num - 2))
-    }
-
-    fn add_sub_ten(&mut self, num: i32) -> Result<(i32, i32)> {
-        Ok((num + 10, num - 10))
-    }
-
     fn add_all(
         &mut self,
         a: i32,
@@ -42,6 +34,14 @@ impl TestWorldImports for HostData {
         g: String,
     ) -> Result<f64> {
         Ok(a as f64 + b as f64 + c as f64 + d as f64 + e as f64 + f + g.parse::<f64>().unwrap())
+    }
+
+    fn add_sub_two(&mut self, num: i32) -> Result<(i32, i32)> {
+        Ok((num + 2, num - 2))
+    }
+
+    fn add_sub_ten(&mut self, num: i32) -> Result<(i32, i32)> {
+        Ok((num + 10, num - 10))
     }
 }
 
