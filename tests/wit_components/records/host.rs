@@ -20,6 +20,11 @@ impl RecordsImports for Host {
     fn group_import(&mut self, group: Group) -> Result<Group> {
         Ok(group)
     }
+
+    fn increment_single(&mut self, mut single: Single) -> Result<Single> {
+        single.value += 1;
+        Ok(single)
+    }
 }
 
 pub fn run_test(component_bytes: &[u8]) -> Result<()> {
@@ -69,6 +74,9 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     };
     let result = instance.call_group_export(&mut store, &group).unwrap();
     assert_eq!(result, group);
+
+    let result = instance.call_increment_single_times(&mut store, Single { value: 5 }, 2)?;
+    assert_eq!(result, Single { value: 7 });
 
     Ok(())
 }

@@ -19,4 +19,11 @@ impl Guest for MyGuest {
     fn group_export(group: Group) -> Group {
         group_import(&group)
     }
+
+    fn increment_single_times(mut single: Single, times: u32) -> Single {
+        for _ in 0..times {
+            single = increment_single(single);
+        }
+        single
+    }
 }

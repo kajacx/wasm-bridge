@@ -25,4 +25,11 @@ world records {
 
   import group-import: func(g: group) -> group;
   export group-export: func(g: group) -> group;
+
+  record single {
+    value: s32,
+  }
+
+  import increment-single: func(s: single) -> single;
+  export increment-single-times: func(s: single, times: u32) -> single;
 }
