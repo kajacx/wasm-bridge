@@ -12,6 +12,14 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
         to_abi_impl.extend(line);
     }
 
+    let to_js_return = if fields.len() == 1 {
+        let field = fields.iter().next().unwrap();
+        let field_name = &field.ident;
+        quote!(self.#field_name.to_js_return(memory))
+    } else {
+        quote!(self.to_js_ptr_return(memory))
+    };
+
     let mut write_to_impl = TokenStream::new();
     for (i, field) in fields.iter().enumerate() {
         let field_name = &field.ident;
@@ -40,8 +48,7 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
             }
 
             fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<wasm_bridge::wasm_bindgen::JsValue> {
-                // FIXME: this surely doesn't work for 1-field structs?
-                self.to_js_ptr_return(memory)
+                #to_js_return
             }
 
             fn write_to<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, buffer: &mut wasm_bridge::direct_bytes::ByteBuffer, memory: &M) -> wasm_bridge::Result<()> {

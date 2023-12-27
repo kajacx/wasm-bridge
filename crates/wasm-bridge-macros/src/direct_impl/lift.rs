@@ -7,8 +7,10 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
     let field_count = fields.len();
 
     let from_js_return = if field_count == 1 {
-        let field_type = &fields.iter().next().unwrap().ty;
-        quote!(<#field_type>::from_js_return(value, memory))
+        let field = fields.iter().next().unwrap();
+        let field_name = &field.ident;
+        let field_type = &field.ty;
+        quote!(Ok(Self {#field_name: <#field_type>::from_js_return(value, memory)?}))
     } else {
         quote!(Self::from_js_ptr_return(value, memory))
     };
