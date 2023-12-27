@@ -298,60 +298,39 @@ impl<T: Lower> Lower for (T,) {
     }
 }
 
-impl<T: Lower, U: Lower> Lower for (T, U) {
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
-        self.0.to_js_args(args, memory)?;
-        self.1.to_js_args(args, memory)?;
-        Ok(())
-    }
+macro_rules! lower_tuple {
+    ($(($name: ident, $index: tt, $next: literal, $end: literal)),*) => {
+        impl<$($name: Lower),*> Lower for ($($name),*) {
+            fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+                $(self.$index.to_js_args(args, memory)?;)*
+                Ok(())
+            }
 
-    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
-        self.to_js_ptr_return(memory)
-    }
+            fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
+                self.to_js_ptr_return(memory)
+            }
 
-    fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
-        // CAREFUL!!!
-        // `write_to` needs to fill the entire byte size of the pair,
-        // or there would be unfilled "gaps" and the data would get shifted.
-        let layout = Self::layout();
-
-        self.0.write_to(buffer, memory)?;
-        buffer.skip(layout[2] - layout[1]);
-
-        self.1.write_to(buffer, memory)?;
-        buffer.skip(layout[4] - layout[2]);
-
-        Ok(())
-    }
+            fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
+                let layout = Self::layout();
+                $(self.$index.write_to(buffer, memory)?;)*
+                $(buffer.skip(layout[$next] - layout[$end]);)*
+                Ok(())
+            }
+        }
+    };
 }
 
-impl<T: Lower, U: Lower, V: Lower> Lower for (T, U, V) {
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
-        self.0.to_js_args(args, memory)?;
-        self.1.to_js_args(args, memory)?;
-        self.2.to_js_args(args, memory)?;
-        Ok(())
-    }
-
-    fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
-        self.to_js_ptr_return(memory)
-    }
-
-    fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
-        // CAREFUL!!!
-        // `write_to` needs to fill the entire byte size of the tuple,
-        // or there would be unfilled "gaps" and the data would get shifted.
-        let layout = Self::layout();
-
-        self.0.write_to(buffer, memory)?;
-        buffer.skip(layout[2] - layout[1]);
-
-        self.1.write_to(buffer, memory)?;
-        buffer.skip(layout[4] - layout[2]);
-
-        self.2.write_to(buffer, memory)?;
-        buffer.skip(layout[6] - layout[4]);
-
-        Ok(())
-    }
-}
+#[rustfmt::skip]
+lower_tuple!((T0, 0, 2, 1), (T1, 1, 4, 3));
+#[rustfmt::skip]
+lower_tuple!((T0, 0, 2, 1), (T1, 1, 4, 3), (T2, 2, 6, 5));
+#[rustfmt::skip]
+lower_tuple!((T0, 0, 2, 1), (T1, 1, 4, 3), (T2, 2, 6, 5), (T3, 3, 8, 7));
+#[rustfmt::skip]
+lower_tuple!((T0, 0, 2, 1), (T1, 1, 4, 3), (T2, 2, 6, 5), (T3, 3, 8, 7), (T4, 4, 10, 9));
+#[rustfmt::skip]
+lower_tuple!((T0, 0, 2, 1), (T1, 1, 4, 3), (T2, 2, 6, 5), (T3, 3, 8, 7), (T4, 4, 10, 9), (T5, 5, 12, 11));
+#[rustfmt::skip]
+lower_tuple!((T0, 0, 2, 1), (T1, 1, 4, 3), (T2, 2, 6, 5), (T3, 3, 8, 7), (T4, 4, 10, 9), (T5, 5, 12, 11), (T6, 6, 14, 13));
+#[rustfmt::skip]
+lower_tuple!((T0, 0, 2, 1), (T1, 1, 4, 3), (T2, 2, 6, 5), (T3, 3, 8, 7), (T4, 4, 10, 9), (T5, 5, 12, 11), (T6, 6, 14, 13), (T7, 7, 16, 15));
