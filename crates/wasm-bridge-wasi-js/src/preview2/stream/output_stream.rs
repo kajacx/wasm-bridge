@@ -1,7 +1,7 @@
 use js_sys::Function;
 use wasm_bindgen::JsValue;
 
-use crate::{helpers::map_js_error, Result};
+use wasm_bridge::Result;
 
 pub trait OutputStream: Send {
     fn as_any(&self) -> &dyn std::any::Any;
@@ -47,13 +47,13 @@ impl OutputStream for InheritStream {
 
         // Do not store the js Function, it makes the stream not Send
         let function: Function = js_sys::eval(&self.0)
-            .map_err(map_js_error("Eval inherit stream function"))?
+            .expect("TODO: user error: Eval inherit stream function")
             .into();
         debug_assert!(function.is_function());
 
         function
             .call1(&JsValue::UNDEFINED, &text.as_ref().into())
-            .map_err(map_js_error("Call output stream function"))?;
+            .expect("TODO: user error: Call output stream function");
 
         Ok(buf.len() as _)
     }

@@ -1,0 +1,16 @@
+[package]
+name = "wasm-bridge-wasi"
+description = "Expose wasmtime's wasi API on js targets"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+wasmtime-wasi = { version = "15.0.0" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bridge-wasi-js = { workspace = true }
+

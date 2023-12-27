@@ -3,7 +3,7 @@ use wasm_bridge::{
     Config, Engine, Result, Store,
 };
 
-use wasm_bridge::wasi::preview2::*;
+use wasm_bridge_wasi::preview2::*;
 
 wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
@@ -43,8 +43,8 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let mut table = Table::new();
-    let wasi = WasiCtxBuilder::new().build(&mut table)?;
+    let table = Table::new();
+    let wasi = WasiCtxBuilder::new().build();
 
     let engine = Engine::new(&config)?;
     let mut store = Store::new(&engine, State { table, wasi });
@@ -52,7 +52,7 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     let component = new_component_async(&store.engine(), &component_bytes).await?;
 
     let mut linker = Linker::new(store.engine());
-    wasi::command::add_to_linker(&mut linker)?;
+    command::add_to_linker(&mut linker)?;
     WitImports::add_to_linker(&mut linker, |data| data)?;
 
     let (instance, _) = WitImports::instantiate_async(&mut store, &component, &linker).await?;

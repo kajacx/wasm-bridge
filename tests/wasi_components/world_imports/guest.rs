@@ -1,11 +1,14 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "wit-imports",
+    exports: {
+        world: GuestImpl
+    }
 });
 
 struct GuestImpl;
 
-impl WitImports for GuestImpl {
+impl Guest for GuestImpl {
     fn add_three(num: i32) -> i32 {
         let num = add_one(num);
         let num = add_one(num);
@@ -13,5 +16,3 @@ impl WitImports for GuestImpl {
         num
     }
 }
-
-export_wit_imports!(GuestImpl);

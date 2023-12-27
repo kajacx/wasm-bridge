@@ -1,12 +1,12 @@
 use anyhow::bail;
 use js_sys::Object;
 
-use crate::component::Linker;
-use crate::wasi::preview2::{clocks, WasiView};
-use crate::{Result, StoreContextMut};
+use crate::preview2::{clocks, WasiView};
+use wasm_bridge::component::Linker;
+use wasm_bridge::{Result, StoreContextMut};
 
 static WASI_IMPORTS_STR: &str =
-    include_str!("../../../../../resources/transformed/preview2-shim/bundled.js");
+    include_str!("../../../../resources/transformed/preview2-shim/bundled.js");
 
 const STDIN_IDENT: u32 = 0;
 const STDOUT_IDENT: u32 = 1;
@@ -14,7 +14,8 @@ const STDERR_IDENT: u32 = 2;
 
 pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
     // Default imports
-    linker.set_wasi_imports(get_imports());
+    // TODO: this doesn't work?
+    // linker.set_wasi_imports(get_imports());
 
     // Overrides
     linker.instance("wasi:io/streams")?.func_wrap(

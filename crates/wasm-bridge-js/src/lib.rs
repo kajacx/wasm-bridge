@@ -34,9 +34,6 @@ pub mod component_direct;
 #[cfg(all(feature = "component-model", feature = "direct-bytes"))]
 pub use component_direct as component;
 
-#[cfg(feature = "wasi")]
-pub mod wasi;
-
 #[cfg(feature = "async")]
 pub use wasm_bridge_macros::async_trait;
 

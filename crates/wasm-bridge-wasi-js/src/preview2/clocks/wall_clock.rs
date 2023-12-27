@@ -1,9 +1,9 @@
 use std::time::Duration;
 
-use wasm_bridge_macros::{LowerJs, SizeDescription};
+use wasm_bridge::component::Linker;
+use wasm_bridge::{Result, StoreContextMut};
 
-use crate::{component::Linker, wasi::preview2::WasiView};
-use crate::{Result, StoreContextMut};
+use crate::preview2::WasiView;
 
 pub trait HostWallClock: Send + Sync {
     fn resolution(&self) -> Duration;
@@ -43,23 +43,14 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
         "now",
         |data: StoreContextMut<T>, (): ()| {
             let now = data.ctx().wall_clock().now();
-            Ok(WallTime {
-                seconds: now.as_secs(),
-                nanoseconds: now.subsec_nanos(),
-            })
+            // Ok(WallTime {
+            //     seconds: now.as_secs(),
+            //     nanoseconds: now.subsec_nanos(),
+            // })
+            // TODO: fix properly
+            Ok((now.as_secs(), now.subsec_nanos()))
         },
     )?;
 
     Ok(())
-}
-
-// TODO: this is kind of hacky ...
-mod wasm_bridge {
-    pub use crate::*;
-}
-
-#[derive(SizeDescription, LowerJs)]
-struct WallTime {
-    seconds: u64,
-    nanoseconds: u32,
 }

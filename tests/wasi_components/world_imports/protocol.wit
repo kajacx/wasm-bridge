@@ -1,6 +1,6 @@
-package component-test:wasi-protocol
+package component-test:wasi-protocol;
 
 world wit-imports {
-  import add-one: func(num: s32) -> s32
-  export add-three: func(num: s32) -> s32
+  import add-one: func(num: s32) -> s32;
+  export add-three: func(num: s32) -> s32;
 }

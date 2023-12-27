@@ -1,4 +1,4 @@
-use crate::Result;
+use wasm_bridge::Result;
 
 pub trait InputStream: Send {
     fn as_any(&self) -> &dyn std::any::Any;

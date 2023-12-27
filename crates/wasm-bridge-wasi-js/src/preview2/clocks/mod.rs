@@ -4,8 +4,8 @@ mod wall_clock;
 pub use monotonic_clock::*;
 pub use wall_clock::*;
 
-use crate::component::Linker;
-use crate::Result;
+use wasm_bridge::component::Linker;
+use wasm_bridge::Result;
 
 use super::WasiView;
 

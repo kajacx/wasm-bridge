@@ -3,7 +3,7 @@ use wasm_bridge::{
     Config, Engine, Result, Store,
 };
 
-use wasm_bridge::wasi::preview2::*;
+use wasm_bridge_wasi::preview2::*;
 
 wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
@@ -32,8 +32,8 @@ impl WasiView for State {
 }
 
 pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
-    default_random(component_bytes).await?;
-    custom_random(component_bytes).await?;
+    default_random(component_bytes).await.unwrap();
+    custom_random(component_bytes).await.unwrap();
 
     Ok(())
 }
@@ -43,24 +43,24 @@ async fn default_random(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let mut table = Table::new();
-    let wasi = WasiCtxBuilder::new().build(&mut table)?;
+    let table = Table::new();
+    let wasi = WasiCtxBuilder::new().build();
 
-    let engine = Engine::new(&config)?;
+    let engine = Engine::new(&config).unwrap();
     let mut store = Store::new(&engine, State { table, wasi });
 
-    let component = Component::new(&store.engine(), &component_bytes)?;
+    let component = Component::new(&store.engine(), &component_bytes).unwrap();
 
     let mut linker = Linker::new(store.engine());
-    wasi::command::add_to_linker(&mut linker)?;
+    command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await?;
-    let number1 = instance.call_random_number(&mut store).await?;
-    let bytes1 = instance.call_random_bytes(&mut store).await?;
+    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let number1 = instance.call_random_number(&mut store).await.unwrap();
+    let bytes1 = instance.call_random_bytes(&mut store).await.unwrap();
 
-    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await?;
-    let number2 = instance.call_random_number(&mut store).await?;
-    let bytes2 = instance.call_random_bytes(&mut store).await?;
+    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let number2 = instance.call_random_number(&mut store).await.unwrap();
+    let bytes2 = instance.call_random_bytes(&mut store).await.unwrap();
 
     assert_ne!(number1, number2, "Two random u64 should not really be equal");
     assert_ne!(bytes1, bytes2, "32 random bytes should definitely noy be equal");
@@ -73,26 +73,26 @@ async fn custom_random(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let mut table = Table::new();
+    let table = Table::new();
     let wasi = WasiCtxBuilder::new()
-        .set_secure_random_to_custom_generator(ZeroRng)
-        .build(&mut table)?;
+        .secure_random(ZeroRng)
+        .build();
 
-    let engine = Engine::new(&config)?;
+    let engine = Engine::new(&config).unwrap();
     let mut store = Store::new(&engine, State { table, wasi });
 
-    let component = Component::new(&store.engine(), &component_bytes)?;
+    let component = Component::new(&store.engine(), &component_bytes).unwrap();
 
     let mut linker = Linker::new(store.engine());
-    wasi::command::add_to_linker(&mut linker)?;
+    command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await?;
-    let number1 = instance.call_random_number(&mut store).await?;
-    let bytes1 = instance.call_random_bytes(&mut store).await?;
+    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let number1 = instance.call_random_number(&mut store).await.unwrap();
+    let bytes1 = instance.call_random_bytes(&mut store).await.unwrap();
 
-    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await?;
-    let number2 = instance.call_random_number(&mut store).await?;
-    let bytes2 = instance.call_random_bytes(&mut store).await?;
+    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let number2 = instance.call_random_number(&mut store).await.unwrap();
+    let bytes2 = instance.call_random_bytes(&mut store).await.unwrap();
 
     assert_eq!(number1, number2);
     assert_eq!(bytes1, bytes2);

@@ -1,4 +1,5 @@
-use crate::{component::Linker, wasi::preview2::WasiView, Result, StoreContextMut};
+use crate::preview2::WasiView;
+use wasm_bridge::{component::Linker, Result, StoreContextMut};
 
 pub trait HostMonotonicClock: Send + Sync {
     fn resolution(&self) -> u64;
