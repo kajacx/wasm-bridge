@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use wasm_bridge_macros::ToJsValue;
+use wasm_bridge_macros::{LowerJs, SizeDescription};
 
 use crate::{component::Linker, wasi::preview2::WasiView};
 use crate::{Result, StoreContextMut};
@@ -58,7 +58,7 @@ mod wasm_bridge {
     pub use crate::*;
 }
 
-#[derive(ToJsValue)]
+#[derive(SizeDescription, LowerJs)]
 struct WallTime {
     seconds: u64,
     nanoseconds: u32,

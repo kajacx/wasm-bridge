@@ -1,7 +1,6 @@
 use rand_core::RngCore;
 
 use super::*;
-use crate::Result;
 
 #[derive(Default)]
 pub struct WasiCtxBuilder {
@@ -20,32 +19,32 @@ impl WasiCtxBuilder {
         Default::default()
     }
 
-    pub fn build(self, _table: &mut Table) -> Result<WasiCtx> {
-        Ok(WasiCtx::new(
+    pub fn build(self) -> WasiCtx {
+        WasiCtx::new(
             self.stdin,
             self.stdout,
             self.stderr,
             self.random,
             self.wall_clock,
             self.monotonic_clock,
-        ))
+        )
     }
 
-    pub fn set_stdin(self, in_stream: impl InputStream + 'static) -> Self {
+    pub fn stdin(self, in_stream: impl InputStream + 'static) -> Self {
         Self {
             stdin: Some(Box::new(in_stream)),
             ..self
         }
     }
 
-    pub fn set_stdout(self, out: impl OutputStream + 'static) -> Self {
+    pub fn stdout(self, out: impl OutputStream + 'static) -> Self {
         Self {
             stdout: Some(Box::new(out)),
             ..self
         }
     }
 
-    pub fn set_stderr(self, err: impl OutputStream + 'static) -> Self {
+    pub fn stderr(self, err: impl OutputStream + 'static) -> Self {
         Self {
             stderr: Some(Box::new(err)),
             ..self
@@ -75,14 +74,14 @@ impl WasiCtxBuilder {
         self.inherit_stdin().inherit_stdout().inherit_stderr()
     }
 
-    pub fn set_secure_random(self) -> Self {
+    pub fn secure_random(self) -> Self {
         Self {
             random: None, // Will be filled later
             ..self
         }
     }
 
-    pub fn set_secure_random_to_custom_generator(
+    pub fn secure_random_to_custom_generator(
         self,
         random: impl RngCore + Send + Sync + 'static,
     ) -> Self {
@@ -92,14 +91,14 @@ impl WasiCtxBuilder {
         }
     }
 
-    pub fn set_wall_clock(self, wall_clock: impl HostWallClock + 'static) -> Self {
+    pub fn wall_clock(self, wall_clock: impl HostWallClock + 'static) -> Self {
         Self {
             wall_clock: Some(Box::new(wall_clock)),
             ..self
         }
     }
 
-    pub fn set_monotonic_clock(self, monotonic_clock: impl HostMonotonicClock + 'static) -> Self {
+    pub fn monotonic_clock(self, monotonic_clock: impl HostMonotonicClock + 'static) -> Self {
         Self {
             monotonic_clock: Some(Box::new(monotonic_clock)),
             ..self
