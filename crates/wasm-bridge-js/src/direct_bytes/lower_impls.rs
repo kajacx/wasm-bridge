@@ -320,17 +320,6 @@ macro_rules! lower_tuple {
     };
 }
 
-// TODO: remove
-fn check_lower<T: Lower>() {}
-fn check_lift<T: Lift>() {}
-
-fn check() {
-    check_lower::<(i32, i64, u32, u64, f32, f64, String)>();
-    check_lower::<(i32, i64, u32, u64, f32, f64, &str)>();
-    check_lift::<(i32, i64, u32, u64, f32, f64, String)>();
-    // check_lift::<(i32, i64, u32, u64, f32, f64, &str)>();
-}
-
 #[rustfmt::skip]
 lower_tuple!((T0, 0, 2, 1), (T1, 1, 4, 3));
 #[rustfmt::skip]
