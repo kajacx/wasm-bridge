@@ -1,0 +1,10 @@
+package wasi:clocks;
+
+interface monotonic-clock {
+    resolution: func() -> u64;
+    now: func() -> u64;
+}
+
+world exports {
+    import monotonic-clock;
+}
