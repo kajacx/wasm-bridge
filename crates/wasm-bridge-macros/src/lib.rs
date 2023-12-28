@@ -24,8 +24,13 @@ pub fn component_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream
 }
 
 #[proc_macro]
-pub fn flags(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    replace_namespace(original::flags(input))
+pub fn flags_sys(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    replace_namespace(original::flags(input, true))
+}
+
+#[proc_macro]
+pub fn flags_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    replace_namespace(original::flags(input, false))
 }
 
 fn bindgen(input: proc_macro::TokenStream) -> String {
@@ -99,8 +104,7 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         as_string.to_string()
     };
 
-    // eprintln!("{as_string}");
-
+    // eprintln!("bindgen IMPL: {as_string}");
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
 
