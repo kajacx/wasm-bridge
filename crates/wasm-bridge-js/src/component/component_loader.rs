@@ -1,12 +1,10 @@
-use anyhow::{bail, Context};
+use anyhow::Context;
 use js_component_bindgen::{transpile, InstantiationMode, TranspileOpts};
-use js_sys::Function;
 
-use crate::{helpers::map_js_error, Result};
+use crate::Result;
 
 pub(crate) struct ComponentFiles {
-    pub instantiate: Function,
-    pub wasm_cores: Vec<(String, Vec<u8>)>,
+    pub(crate) core: Vec<u8>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -22,52 +20,17 @@ impl ComponentLoader {
         let transpiled = transpile(bytes, opts)?;
         let files = transpiled.files;
 
-        let mut wasm_cores = Vec::<(String, Vec<u8>)>::new();
-        let mut instantiate = Option::<Function>::None;
+        let mut core = Option::<Vec<u8>>::None;
 
         for (name, bytes) in files.into_iter() {
-            if name.ends_with(".wasm") {
-                wasm_cores.push((name, bytes));
-            } else if name.ends_with(".js") {
-                // TODO: test that instantiate is not already Some?
-                instantiate = Some(load_instantiate_fn(&bytes)?);
+            if name.ends_with("core.wasm") {
+                // TODO: detect multiple cores
+                core = Some(bytes);
             }
         }
 
-        let instantiate = instantiate.context("Missing component.js file")?;
+        let core = core.context("JCO transpile should generate a main .core.wasm file")?;
 
-        Ok(ComponentFiles {
-            instantiate,
-            wasm_cores,
-        })
+        Ok(ComponentFiles { core })
     }
-}
-
-fn load_instantiate_fn(bytes: &[u8]) -> Result<Function> {
-    let text = std::str::from_utf8(bytes)?;
-    let text = modify_js(text);
-
-    let result = js_sys::eval(&text).map_err(map_js_error("eval modified component.js file"))?;
-    if !result.is_function() {
-        bail!("instantiate should be a function");
-    }
-
-    Ok(result.into())
-}
-
-fn modify_js(text: &str) -> String {
-    // function signature
-    let text = text.replace("export async function", "function");
-
-    // remove all awaits
-    let text = text.replace("await ", "");
-
-    // remove Promise.all call - not necessary
-    // let regex = Regex::new(".*Promise\\.all.*").unwrap();
-    // let text = regex.replace_all(&text, "");
-
-    // Final update
-    let text = format!("(() => {{\n{text}\nreturn instantiate;\n}})()\n");
-
-    text
 }

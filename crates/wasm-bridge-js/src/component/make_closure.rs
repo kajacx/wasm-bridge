@@ -1,104 +1,93 @@
 // use std::future::Future;
 use std::rc::Rc;
 
-use wasm_bindgen::{convert::ReturnWasmAbi, prelude::*, JsValue};
+use wasm_bindgen::{prelude::*, JsValue};
 
-use crate::{DataHandle, DropHandle, FromJsValue, Result, StoreContextMut, ToJsValue};
+use crate::conversions::FromJsValue;
+use crate::direct::*;
+use crate::{DataHandle, DropHandle, Result, StoreContextMut};
+use js_sys::{Array, Function};
 
-pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>) -> (JsValue, DropHandle)>;
+pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>, ModuleMemory) -> (JsValue, DropHandle)>;
 
 pub trait IntoMakeClosure<T, Params, Results> {
     fn into_make_closure(self) -> MakeClosure<T>;
 }
 
-macro_rules! make_closure {
-    ($(($param: ident, $name: ident)),*) => {
-        impl<T, $($name, )* R, F> IntoMakeClosure<T, ($($name,)*), R> for F
-        where
-            T: 'static,
-            $($name: FromJsValue + 'static,)*
-            R: ToJsValue + 'static ,
-            F: Fn(StoreContextMut<T>, ($($name, )*)) -> Result<R> + 'static,
-            Result<R::ReturnAbi, JsValue>: ReturnWasmAbi, // TODO: unnecessary return bound?
-        {
-            fn into_make_closure(self) -> MakeClosure<T> {
-                let self_rc = Rc::new(self);
+impl<T, P, R, F> IntoMakeClosure<T, P, R> for F
+where
+    T: 'static,
+    P: Lift + 'static,
+    R: Lower + 'static,
+    F: Fn(StoreContextMut<T>, P) -> Result<R> + 'static,
+{
+    fn into_make_closure(self) -> MakeClosure<T> {
+        let self_rc = Rc::new(self);
 
-                let make_closure = move |handle: DataHandle<T>| {
-                    let self_clone = self_rc.clone();
+        let make_closure = move |handle: DataHandle<T>, memory: ModuleMemory| {
+            let self_clone = self_rc.clone();
 
-                    let closure =
-                        Closure::<dyn Fn($($name::WasmAbi),*) -> Result<R::ReturnAbi, JsValue>>::new(move |$($param: $name::WasmAbi),*| {
-                            self_clone(
-                                &mut handle.borrow_mut(),
-                                ($($name::from_wasm_abi($param).map_err::<JsValue, _>(|err| format!("import value from abi error: {err:?}").into())?,)*)
-                            ).map_err(|err| format!("host imported fn returned error: {err:?}"))?.into_return_abi()
-                        });
+            let closure =
+                Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
+                    let mut args_iter = JsArgsReader::new(args);
+                    let args = if P::NUM_ARGS <= 16 {
+                        P::from_js_args(&mut args_iter, &memory).map_err(|err| {
+                            format!("conversion of imported fn arguments: {err:?}")
+                        })?
+                    } else {
+                        let addr = args_iter
+                            .next()
+                            .ok_or("getting pointer to imported fn args")?;
+                        P::from_js_ptr_return(&addr, &memory)
+                            .map_err(|err| format!("from js ptr return: {err:?}"))?
+                    };
 
-                    DropHandle::from_closure(closure)
-                };
+                    let result = self_clone(&mut handle.borrow_mut(), args)
+                        .map_err(|err| format!("host imported fn returned error: {err:?}"))?;
 
-                Box::new(make_closure)
-            }
-        }
+                    if R::NUM_ARGS <= 1 {
+                        let result = result
+                            .to_js_return(&memory)
+                            .map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
+                        Ok(result)
+                    } else {
+                        let addr = args_iter
+                            .next()
+                            .ok_or("missing last mem address argument")?;
+                        let addr = u32::from_js_value(&addr)
+                            .map_err(|err| format!("return address is not a number: {err:?}"))?
+                            as usize;
 
-        // impl<T, $($name, )* R, F, Fut> IntoMakeClosure<T, ($($name,)*), R> for F
-        // where
-        //     T: 'static,
-        //     $($name: FromJsValue + 'static,)*
-        //     R: ToJsValue + 'static ,
-        //     F: Fn(StoreContextMut<T>, ($($name, )*)) -> Fut + 'static,
-        //     Fut: Future<Output = Result<R>>
-        // {
-        //     fn into_make_closure(self) -> MakeClosure<T> {
-        //         let self_rc = Rc::new(self);
+                        // Buffer is already allocated, we just write there
+                        let mut buffer = ByteBuffer::new(addr, R::BYTE_SIZE);
+                        result.write_to(&mut buffer, &memory).map_err(|err| {
+                            format!("failed to write result of an imported function: {err:?}")
+                        })?;
+                        memory.flush(buffer);
 
-        //         let make_closure = move |handle: DataHandle<T>| {
-        //             let self_clone = self_rc.clone();
+                        Ok(JsValue::UNDEFINED)
+                    }
+                });
 
-        //             let closure =
-        //                 Closure::<dyn Fn($($name::WasmAbi),*) -> Result<R::ReturnAbi, JsValue>>::new(move |$($param: $name::WasmAbi),*| {
-        //                     self_clone(
-        //                         &mut handle.borrow_mut(),
-        //                         ($($name::from_wasm_abi($param).map_err::<JsValue, _>(|err| format!("import value from abi error: {err:?}").into())?,)*)
-        //                     ).map_err(|err| format!("host imported fn returned error: {err:?}"))?.into_return_abi()
-        //                 });
+            let (function, drop_handle) = DropHandle::from_closure(closure);
+            (inflate_js_fn_args(&function), drop_handle)
+        };
 
-        //             DropHandle::from_closure(closure)
-        //         };
-
-        //         Box::new(make_closure)
-        //     }
-        // }
-    };
+        Box::new(make_closure)
+    }
 }
 
-#[rustfmt::skip]
-make_closure!();
-#[rustfmt::skip]
-make_closure!((p0, P0));
-#[rustfmt::skip]
-make_closure!((p0, P0), (p1, P1));
-#[rustfmt::skip]
-make_closure!((p0, P0), (p1, P1), (p2, P2));
-#[rustfmt::skip]
-make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3));
-#[rustfmt::skip]
-make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4));
-#[rustfmt::skip]
-make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5));
-#[rustfmt::skip]
-make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6));
-#[rustfmt::skip]
-make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7));
+/**
+ * Takes a JS function that takes one Array argument
+ * and returns a JS function that takes many arguments,
+ * but calls the original function with those arguments.
+ */
+fn inflate_js_fn_args(function: &JsValue) -> JsValue {
+    let converter: Function = js_sys::eval("(inner_fn) => (...outer_args) => inner_fn(outer_args)")
+        .expect("eval converter")
+        .into();
 
-// TODO: closured with more that 8 arguments are not supported. Bother with a workaround?
-
-// #[rustfmt::skip]
-// make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7), (p8, P8));
-// #[rustfmt::skip]
-// make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7), (p8, P8), (p9, P9));
-// #[rustfmt::skip]
-// make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7), (p8, P8), (p9, P9), (p10, P10));
-// #[rustfmt::skip]
-// make_closure!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7), (p8, P8), (p9, P9), (p10, P10), (p11, P11));
+    converter
+        .call1(&JsValue::UNDEFINED, function)
+        .expect("call converter")
+}

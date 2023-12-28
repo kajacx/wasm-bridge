@@ -26,23 +26,18 @@ pub use anyhow::Context;
 
 pub mod helpers;
 
-#[cfg(all(feature = "component-model", not(feature = "direct-bytes")))]
+#[cfg(feature = "component-model")]
 pub mod component;
 
-#[cfg(all(feature = "component-model", feature = "direct-bytes"))]
-pub mod component_direct;
-#[cfg(all(feature = "component-model", feature = "direct-bytes"))]
-pub use component_direct as component;
+#[cfg(feature = "component-model")]
+pub mod direct;
+#[cfg(feature = "component-model")]
+pub use direct::next_multiple_of;
+#[cfg(feature = "component-model")]
+pub use direct::usize_max;
 
 #[cfg(feature = "async")]
 pub use wasm_bridge_macros::async_trait;
-
-#[cfg(feature = "direct-bytes")]
-pub mod direct_bytes;
-#[cfg(feature = "direct-bytes")]
-pub use direct_bytes::next_multiple_of;
-#[cfg(feature = "direct-bytes")]
-pub use direct_bytes::usize_max;
 
 pub use js_sys;
 pub use wasm_bindgen;

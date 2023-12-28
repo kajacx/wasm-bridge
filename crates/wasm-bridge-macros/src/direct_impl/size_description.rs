@@ -56,11 +56,11 @@ pub fn size_description_struct(name: Ident, data: DataStruct) -> TokenStream {
     let name_impl = format_ident!("impl_size_description_{}", name);
     quote!(
       mod #name_impl {
-        use wasm_bridge::direct_bytes::*;
+        use wasm_bridge::direct::*;
         use wasm_bridge::FromJsValue;
         use super::*;
 
-        impl wasm_bridge::direct_bytes::SizeDescription for #name {
+        impl wasm_bridge::direct::SizeDescription for #name {
             const ALIGNMENT: usize = #alignment;
             const BYTE_SIZE: usize = #byte_size;
             const NUM_ARGS: usize = #num_args;
@@ -86,7 +86,7 @@ pub fn size_description_enum(name: Ident, data: DataEnum) -> TokenStream {
     }
 
     quote!(
-        impl wasm_bridge::direct_bytes::SizeDescription for #name {
+        impl wasm_bridge::direct::SizeDescription for #name {
             const NUM_ARGS: usize = 1;
             const ALIGNMENT: usize = 1;
             const BYTE_SIZE: usize = 1;
@@ -133,7 +133,7 @@ pub fn size_description_variant(name: Ident, data: DataEnum) -> TokenStream {
     }
 
     quote!(
-        impl wasm_bridge::direct_bytes::SizeDescription for #name {
+        impl wasm_bridge::direct::SizeDescription for #name {
             const ALIGNMENT: usize = #alignment;
             const BYTE_SIZE: usize = Self::ALIGNMENT + #byte_size;
             const NUM_ARGS: usize = 1 + #num_args;

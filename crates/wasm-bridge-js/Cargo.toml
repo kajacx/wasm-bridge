@@ -25,4 +25,3 @@ wasm-bindgen-test = { workspace = true }
 component-model = ["wasm-bridge-macros", "js-component-bindgen"]
 async = ["wasm-bridge-macros/async"]
 error-logging = []
-direct-bytes = ["wasm-bridge-macros/direct-bytes"]

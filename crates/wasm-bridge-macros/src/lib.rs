@@ -6,25 +6,6 @@ use syn::Attribute;
 
 mod original;
 
-#[cfg(not(feature = "direct-bytes"))]
-mod js_impl;
-#[cfg(not(feature = "direct-bytes"))]
-mod direct_impl {
-    pub use super::js_impl::from_js_value_enum as lift_enum;
-    pub use super::js_impl::from_js_value_struct as lift_struct;
-    pub use super::js_impl::from_js_value_variant as lift_variant;
-
-    pub use super::js_impl::to_js_value_enum as lower_enum;
-    pub use super::js_impl::to_js_value_struct as lower_struct;
-    pub use super::js_impl::to_js_value_variant as lower_variant;
-
-    pub use super::js_impl::size_description_enum;
-    pub use super::js_impl::size_description_struct;
-    pub use super::js_impl::size_description_tuple;
-    pub use super::js_impl::size_description_variant;
-}
-
-#[cfg(feature = "direct-bytes")]
 mod direct_impl;
 
 #[proc_macro_derive(Lift, attributes(component))]

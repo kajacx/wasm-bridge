@@ -37,12 +37,12 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
     let name_impl = format_ident!("impl_lower_{}", name);
     quote!(
       mod #name_impl {
-        use wasm_bridge::direct_bytes::*;
+        use wasm_bridge::direct::*;
         use wasm_bridge::ToJsValue;
         use super::*;
 
-        impl wasm_bridge::direct_bytes::Lower for #name {
-            fn to_js_args<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, args: &mut Vec<wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<()> {
+        impl wasm_bridge::direct::Lower for #name {
+            fn to_js_args<M: wasm_bridge::direct::WriteableMemory>(&self, args: &mut Vec<wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<()> {
                 #to_abi_impl
                 Ok(())
             }
@@ -51,7 +51,7 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
                 #to_js_return
             }
 
-            fn write_to<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, buffer: &mut wasm_bridge::direct_bytes::ByteBuffer, memory: &M) -> wasm_bridge::Result<()> {
+            fn write_to<M: wasm_bridge::direct::WriteableMemory>(&self, buffer: &mut wasm_bridge::direct::ByteBuffer, memory: &M) -> wasm_bridge::Result<()> {
                 let layout = Self::layout();
                 #write_to_impl
                 Ok(())
@@ -75,12 +75,12 @@ pub fn lower_enum(name: Ident, data: DataEnum) -> TokenStream {
     let name_impl = format_ident!("impl_lower_{}", name);
     quote!(
       mod #name_impl {
-        use wasm_bridge::direct_bytes::*;
+        use wasm_bridge::direct::*;
         use wasm_bridge::ToJsValue;
         use super::*;
 
-        impl wasm_bridge::direct_bytes::Lower for #name {
-            fn to_js_args<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, args: &mut Vec<wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<()> {
+        impl wasm_bridge::direct::Lower for #name {
+            fn to_js_args<M: wasm_bridge::direct::WriteableMemory>(&self, args: &mut Vec<wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<()> {
                 args.push(self.to_js_return(memory)?);
                 Ok(())
             }
@@ -92,7 +92,7 @@ pub fn lower_enum(name: Ident, data: DataEnum) -> TokenStream {
                 Ok(value.to_js_value())
             }
 
-            fn write_to<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, buffer: &mut wasm_bridge::direct_bytes::ByteBuffer, memory: &M) -> wasm_bridge::Result<()> {
+            fn write_to<M: wasm_bridge::direct::WriteableMemory>(&self, buffer: &mut wasm_bridge::direct::ByteBuffer, memory: &M) -> wasm_bridge::Result<()> {
                 let value = match self {
                     #match_arms
                 };
@@ -194,12 +194,12 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
     let name_impl = format_ident!("impl_lower_{}", name);
     quote!(
       mod #name_impl {
-        use wasm_bridge::direct_bytes::*;
+        use wasm_bridge::direct::*;
         use wasm_bridge::ToJsValue;
         use super::*;
 
-        impl wasm_bridge::direct_bytes::Lower for #name {
-            fn to_js_args<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, args: &mut Vec<wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<()> {
+        impl wasm_bridge::direct::Lower for #name {
+            fn to_js_args<M: wasm_bridge::direct::WriteableMemory>(&self, args: &mut Vec<wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<()> {
                 #to_js_args
             }
 
@@ -207,7 +207,7 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
                 #to_js_return
             }
 
-            fn write_to<M: wasm_bridge::direct_bytes::WriteableMemory>(&self, buffer: &mut wasm_bridge::direct_bytes::ByteBuffer, memory: &M) -> wasm_bridge::Result<()> {
+            fn write_to<M: wasm_bridge::direct::WriteableMemory>(&self, buffer: &mut wasm_bridge::direct::ByteBuffer, memory: &M) -> wasm_bridge::Result<()> {
                 let bytes_written = match self {
                     #write_to
                 };

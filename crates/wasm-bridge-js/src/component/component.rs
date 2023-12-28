@@ -1,116 +1,113 @@
-use std::{collections::HashMap, rc::Rc};
-
-use js_sys::{Function, WebAssembly};
-use wasm_bindgen::prelude::*;
+use js_sys::{Object, WebAssembly};
 use wasm_bindgen_futures::JsFuture;
 
-use crate::{helpers::map_js_error, AsContextMut, DropHandle, Engine, Result, ToJsValue};
+use crate::{direct::ModuleMemory, helpers::map_js_error, DropHandles, Engine, Result, ToJsValue};
 
 use super::*;
 
 pub struct Component {
-    instantiate: Function,
-    compile_core: JsValue,
-    instantiate_core: JsValue,
-    _drop_handles: [DropHandle; 2],
+    module_core: WebAssembly::Module,
+    // core2: Option<WebAssembly::Module>,
+    // core3: Option<WebAssembly::Module>,
 }
 
 impl Component {
     pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
         let files = ComponentLoader::generate_files(bytes.as_ref())?;
 
-        let (compile_core, drop0) = Self::make_compile_core(files.wasm_cores);
-        let (instantiate_core, drop1) = Self::make_instantiate_core();
+        // TODO: maybe we can give the bytes out more effectively? With memory view perhaps?
+        let module_core = WebAssembly::Module::new(&files.core.to_js_value())
+            .map_err(map_js_error("Synchronously compile main core"))?;
 
-        Ok(Self {
-            instantiate: files.instantiate,
-            compile_core,
-            instantiate_core,
-            _drop_handles: [drop0, drop1],
-        })
+        Ok(Self { module_core })
     }
 
     pub async fn new_async(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
         let files = ComponentLoader::generate_files(bytes.as_ref())?;
 
-        let (compile_core, drop0) = Self::make_compile_core_async(files.wasm_cores).await;
-        let (instantiate_core, drop1) = Self::make_instantiate_core();
+        let promise = WebAssembly::compile(&files.core.to_js_value());
+        let module = JsFuture::from(promise)
+            .await
+            .map_err(map_js_error("Asynchronously compile main core"))?;
 
-        Ok(Self {
-            instantiate: files.instantiate,
-            compile_core,
-            instantiate_core,
-            _drop_handles: [drop0, drop1],
-        })
+        let module_core = module.into();
+
+        Ok(Self { module_core })
     }
 
     pub(crate) fn instantiate(
         &self,
-        _store: impl AsContextMut,
-        import_object: &JsValue,
-        closures: Rc<[DropHandle]>,
+        imports: &Object,
+        drop_handles: DropHandles,
+        memory: ModuleMemory,
     ) -> Result<Instance> {
-        let exports = self
-            .instantiate
-            .call3(
-                &JsValue::UNDEFINED,
-                &self.compile_core,
-                import_object,
-                &self.instantiate_core,
-            )
-            .map_err(map_js_error("Call component instantiate"))?;
+        let instance_core = WebAssembly::Instance::new(&self.module_core, imports)
+            .map_err(map_js_error("Synchronously instantiate main core"))?;
 
-        Ok(Instance::new(
-            ExportsRoot::new(exports, &closures)?,
-            closures,
-        ))
+        Instance::new(instance_core, drop_handles, memory)
     }
 
-    fn make_compile_core(wasm_cores: Vec<(String, Vec<u8>)>) -> (JsValue, DropHandle) {
-        let mut wasm_modules = HashMap::<String, WebAssembly::Module>::new();
-        for (name, bytes) in wasm_cores.into_iter() {
-            wasm_modules.insert(
-                name,
-                WebAssembly::Module::new(&bytes.to_js_value()).expect("TODO: user error"),
-            );
-        }
+    pub(crate) async fn instantiate_async(
+        &self,
+        imports: &Object,
+        drop_handles: DropHandles,
+        memory: ModuleMemory,
+    ) -> Result<Instance> {
+        let promise = WebAssembly::instantiate_module(&self.module_core, imports);
+        let instance = JsFuture::from(promise)
+            .await
+            .map_err(map_js_error("Asynchronously instantiate main core"))?;
 
-        let closure = Closure::<dyn Fn(String) -> WebAssembly::Module>::new(move |name: String| {
-            wasm_modules.get(&name).expect("TODO: user error").clone()
-        });
+        let instance_core = instance.into();
 
-        DropHandle::from_closure(closure)
+        Instance::new(instance_core, drop_handles, memory)
     }
 
-    async fn make_compile_core_async(wasm_cores: Vec<(String, Vec<u8>)>) -> (JsValue, DropHandle) {
-        let mut wasm_modules = HashMap::<String, WebAssembly::Module>::new();
+    // fn make_compile_core(wasm_cores: Vec<(String, Vec<u8>)>) -> (JsValue, DropHandle) {
+    //     let mut wasm_modules = HashMap::<String, WebAssembly::Module>::new();
+    //     for (name, bytes) in wasm_cores.into_iter() {
+    //         wasm_modules.insert(
+    //             name,
+    //             WebAssembly::Module::new(&bytes.to_js_value()).expect("TODO: user error"),
+    //         );
+    //     }
 
-        // TODO: wait for all futures at once instead
-        for (name, bytes) in wasm_cores.into_iter() {
-            let promise = WebAssembly::compile(&bytes.to_js_value());
-            let future = JsFuture::from(promise);
-            let module = future.await.expect("TODO: user error");
-            wasm_modules.insert(name, module.into());
-        }
+    //     let closure = Closure::<dyn Fn(String) -> WebAssembly::Module>::new(move |name: String| {
+    //         wasm_modules.get(&name).expect("TODO: user error").clone()
+    //     });
 
-        let closure = Closure::<dyn Fn(String) -> WebAssembly::Module>::new(move |name: String| {
-            // TODO: verify that Clone is effective
-            wasm_modules.get(&name).expect("TODO: user error").clone()
-        });
+    //     DropHandle::from_closure(closure)
+    // }
 
-        DropHandle::from_closure(closure)
-    }
+    // async fn make_compile_core_async(wasm_cores: Vec<(String, Vec<u8>)>) -> (JsValue, DropHandle) {
+    //     let mut wasm_modules = HashMap::<String, WebAssembly::Module>::new();
 
-    fn make_instantiate_core() -> (JsValue, DropHandle) {
-        let closure = Closure::<dyn Fn(WebAssembly::Module, JsValue) -> WebAssembly::Instance>::new(
-            |module: WebAssembly::Module, imports: JsValue| {
-                // TODO: this should be a user error?
-                WebAssembly::Instance::new(&module, &imports.into()).unwrap()
-            },
-        );
+    //     // TODO: wait for all futures at once instead
+    //     for (name, bytes) in wasm_cores.into_iter() {
+    //         let promise = WebAssembly::compile(&bytes.to_js_value());
+    //         let future = JsFuture::from(promise);
+    //         let module = future.await.expect("TODO: user error");
+    //         wasm_modules.insert(name, module.into());
+    //     }
 
-        DropHandle::from_closure(closure)
-    }
+    //     let closure = Closure::<dyn Fn(String) -> WebAssembly::Module>::new(move |name: String| {
+    //         // TODO: verify that Clone is effective
+    //         wasm_modules.get(&name).expect("TODO: user error").clone()
+    //     });
+
+    //     DropHandle::from_closure(closure)
+    // }
+
+    // fn make_instantiate_core() -> (JsValue, DropHandle) {
+    //     let closure = Closure::<dyn Fn(WebAssembly::Module, JsValue) -> WebAssembly::Instance>::new(
+    //         |module: WebAssembly::Module, imports: JsValue| {
+    //             // TODO: this should be a user error?
+    //             WebAssembly::Instance::new(&module, &imports.into()).unwrap()
+    //         },
+    //     );
+
+    //     DropHandle::from_closure(closure)
+    // }
 }
 
 pub async fn new_component_async(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Component> {

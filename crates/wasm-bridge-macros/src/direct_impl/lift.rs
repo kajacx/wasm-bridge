@@ -36,20 +36,20 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
     let name_impl = format_ident!("impl_lift_{}", name);
     quote!(
       mod #name_impl {
-        use wasm_bridge::direct_bytes::*;
+        use wasm_bridge::direct::*;
         use wasm_bridge::FromJsValue;
         use super::*;
 
-        impl wasm_bridge::direct_bytes::Lift for #name {
-            fn from_js_return<M: wasm_bridge::direct_bytes::ReadableMemory>(value: &wasm_bridge::wasm_bindgen::JsValue, memory: &M) -> wasm_bridge::Result<Self> {
+        impl wasm_bridge::direct::Lift for #name {
+            fn from_js_return<M: wasm_bridge::direct::ReadableMemory>(value: &wasm_bridge::wasm_bindgen::JsValue, memory: &M) -> wasm_bridge::Result<Self> {
                 #from_js_return
             }
 
-            fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(args: &mut wasm_bridge::direct_bytes::JsArgsReader, memory: &M) -> wasm_bridge::Result<Self> {
+            fn from_js_args<M: wasm_bridge::direct::ReadableMemory>(args: &mut wasm_bridge::direct::JsArgsReader, memory: &M) -> wasm_bridge::Result<Self> {
                 Ok(Self { #from_js_args })
             }
 
-            fn read_from<M: wasm_bridge::direct_bytes::ReadableMemory>(slice: &[u8], memory: &M) -> wasm_bridge::Result<Self> {
+            fn read_from<M: wasm_bridge::direct::ReadableMemory>(slice: &[u8], memory: &M) -> wasm_bridge::Result<Self> {
                 let layout = Self::layout();
                 Ok(Self { #read_from_impl })
             }
@@ -73,13 +73,13 @@ pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
     let name_impl = format_ident!("impl_lift_{}", name);
     quote!(
       mod #name_impl {
-        use wasm_bridge::direct_bytes::*;
+        use wasm_bridge::direct::*;
         use wasm_bridge::FromJsValue;
         use wasm_bridge::Context;
         use super::*;
 
-        impl wasm_bridge::direct_bytes::Lift for #name {
-            fn from_js_return<M: wasm_bridge::direct_bytes::ReadableMemory>(value: &wasm_bridge::wasm_bindgen::JsValue, memory: &M) -> wasm_bridge::Result<Self> {
+        impl wasm_bridge::direct::Lift for #name {
+            fn from_js_return<M: wasm_bridge::direct::ReadableMemory>(value: &wasm_bridge::wasm_bindgen::JsValue, memory: &M) -> wasm_bridge::Result<Self> {
                 let tag = u8::from_js_value(value)?;
                 Ok(match tag {
                     #from_js_return
@@ -87,12 +87,12 @@ pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
                 })
             }
 
-            fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(args: &mut wasm_bridge::direct_bytes::JsArgsReader, memory: &M) -> wasm_bridge::Result<Self> {
+            fn from_js_args<M: wasm_bridge::direct::ReadableMemory>(args: &mut wasm_bridge::direct::JsArgsReader, memory: &M) -> wasm_bridge::Result<Self> {
                 let value = args.next().context("Get enum tag")?;
                 Self::from_js_return(&value, memory)
             }
 
-            fn read_from<M: wasm_bridge::direct_bytes::ReadableMemory>(slice: &[u8], memory: &M) -> wasm_bridge::Result<Self> {
+            fn read_from<M: wasm_bridge::direct::ReadableMemory>(slice: &[u8], memory: &M) -> wasm_bridge::Result<Self> {
                 let tag = slice[0];
                 Ok(match tag {
                     #from_js_return
@@ -156,17 +156,17 @@ pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
     let name_impl = format_ident!("impl_lift_{}", name);
     quote!(
       mod #name_impl {
-        use wasm_bridge::direct_bytes::*;
+        use wasm_bridge::direct::*;
         use wasm_bridge::FromJsValue;
         use wasm_bridge::Context;
         use super::*;
 
-        impl wasm_bridge::direct_bytes::Lift for #name {
-            fn from_js_return<M: wasm_bridge::direct_bytes::ReadableMemory>(value: &wasm_bridge::wasm_bindgen::JsValue, memory: &M) -> wasm_bridge::Result<Self> {
+        impl wasm_bridge::direct::Lift for #name {
+            fn from_js_return<M: wasm_bridge::direct::ReadableMemory>(value: &wasm_bridge::wasm_bindgen::JsValue, memory: &M) -> wasm_bridge::Result<Self> {
                 #from_js_return
             }
 
-            fn from_js_args<M: wasm_bridge::direct_bytes::ReadableMemory>(args: &mut wasm_bridge::direct_bytes::JsArgsReader, memory: &M) -> wasm_bridge::Result<Self> {
+            fn from_js_args<M: wasm_bridge::direct::ReadableMemory>(args: &mut wasm_bridge::direct::JsArgsReader, memory: &M) -> wasm_bridge::Result<Self> {
                 let tag = args.next().context("Get variant tag")?;
                 let tag = u8::from_js_value(&tag)?;
 
@@ -182,7 +182,7 @@ pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
                 Ok(result)
             }
 
-            fn read_from<M: wasm_bridge::direct_bytes::ReadableMemory>(slice: &[u8], memory: &M) -> wasm_bridge::Result<Self> {
+            fn read_from<M: wasm_bridge::direct::ReadableMemory>(slice: &[u8], memory: &M) -> wasm_bridge::Result<Self> {
                 let tag = slice[0];
                 Ok(match tag {
                     #read_from
