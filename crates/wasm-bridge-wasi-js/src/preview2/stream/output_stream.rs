@@ -1,7 +1,10 @@
+use anyhow::bail;
 use js_sys::Function;
 use wasm_bindgen::JsValue;
 
-use wasm_bridge::Result;
+use wasm_bridge::{component::Linker, Result};
+
+use crate::preview2::WasiView;
 
 pub trait OutputStream: Send {
     fn as_any(&self) -> &dyn std::any::Any;
@@ -65,4 +68,24 @@ pub(crate) fn console_log_stream() -> impl OutputStream {
 
 pub(crate) fn console_error_stream() -> impl OutputStream {
     InheritStream("console.error".into())
+}
+
+wasm_bridge::component::bindgen!({
+    path: "src/preview2/wits/output_streams.wit",
+    world: "exports"
+});
+
+impl<T: WasiView> wasi::io::streams::Host for T {
+    fn write(&mut self, stream_id: u32, bytes: Vec<u8>) -> Result<u64> {
+        let bytes_written = match stream_id {
+            STDOUT_IDENT => self.ctx_mut().stdout().write(&bytes)?,
+            STDERR_IDENT => self.ctx_mut().stderr().write(&bytes)?,
+            id => bail!("unexpected write stream id: {id}"),
+        };
+        Ok(bytes_written)
+    }
+}
+
+pub(crate) fn add_to_linker<T: WasiView>(linker: &mut Linker<T>) -> Result<()> {
+    Exports::add_to_linker(linker, |d| d)
 }

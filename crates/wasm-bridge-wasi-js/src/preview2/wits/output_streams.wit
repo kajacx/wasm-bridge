@@ -1,0 +1,10 @@
+package wasi:io;
+
+interface streams {
+    write: func(stream-id: u32, bytes: list<u8>) -> u64;
+}
+
+world exports {
+    import streams;
+}
+
