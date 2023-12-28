@@ -1,5 +1,5 @@
 use crate::preview2::WasiView;
-use wasm_bridge::{component::Linker, Result, StoreContextMut};
+use wasm_bridge::{component::Linker, Result};
 
 pub trait HostMonotonicClock: Send + Sync {
     fn resolution(&self) -> u64;
@@ -42,7 +42,7 @@ impl<T: WasiView> wasi::clocks::monotonic_clock::Host for T {
     }
 }
 
-pub(crate) fn add_to_linker<T: WasiView>(linker: &mut Linker<T>) -> Result<()> {
+pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
     Exports::add_to_linker(linker, |d| d)
 }
 

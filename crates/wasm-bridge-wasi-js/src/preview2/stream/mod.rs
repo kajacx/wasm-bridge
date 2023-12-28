@@ -15,7 +15,7 @@ pub(crate) use output_stream::{console_error_stream, console_log_stream, voiding
 
 use super::WasiView;
 
-pub(crate) fn add_to_linker<T: WasiView>(linker: &mut Linker<T>) -> Result<()> {
+pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
     input_stream::add_to_linker(linker)?;
     output_stream::add_to_linker(linker)?;
     Ok(())

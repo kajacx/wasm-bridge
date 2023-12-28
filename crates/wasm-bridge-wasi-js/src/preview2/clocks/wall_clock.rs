@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use wasm_bridge::component::Linker;
-use wasm_bridge::{Result, StoreContextMut};
+use wasm_bridge::Result;
 
 use crate::preview2::WasiView;
 
@@ -51,7 +51,7 @@ impl<T: WasiView> wasi::clocks::wall_clock::Host for T {
     }
 }
 
-pub(crate) fn add_to_linker<T: WasiView>(linker: &mut Linker<T>) -> Result<()> {
+pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
     Exports::add_to_linker(linker, |d| d)
 }
 

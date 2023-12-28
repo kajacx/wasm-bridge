@@ -56,6 +56,6 @@ impl<T: WasiView> wasi::io::streams::Host for T {
     }
 }
 
-pub(crate) fn add_to_linker<T: WasiView>(linker: &mut Linker<T>) -> Result<()> {
+pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
     Exports::add_to_linker(linker, |d| d)
 }
