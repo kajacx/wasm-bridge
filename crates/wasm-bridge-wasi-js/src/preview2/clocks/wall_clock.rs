@@ -33,7 +33,7 @@ pub(crate) fn real_wall_clock() -> impl HostWallClock {
 }
 
 wasm_bridge::component::bindgen!({
-    path: "src/preview2/clocks/wall_clock.wit",
+    path: "src/preview2/wits/wall_clock.wit",
     world: "exports"
 });
 

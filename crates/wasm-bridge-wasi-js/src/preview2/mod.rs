@@ -19,4 +19,4 @@ pub mod clocks;
 pub use clocks::*;
 
 mod random;
-pub(crate) use random::*;
+pub(crate) use random::{js_rand, SecureRandom};

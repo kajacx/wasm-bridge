@@ -28,7 +28,7 @@ pub(crate) fn default_monotonic_clock() -> impl HostMonotonicClock {
 }
 
 wasm_bridge::component::bindgen!({
-    path: "src/preview2/clocks/monotonic_clock.wit",
+    path: "src/preview2/wits/monotonic_clock.wit",
     world: "exports"
 });
 
