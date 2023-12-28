@@ -11,6 +11,7 @@ mod wasi_view;
 pub use wasi_view::*;
 
 pub mod command;
+pub use command::wasi;
 
 pub mod stream;
 pub use stream::*;

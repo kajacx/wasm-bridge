@@ -12,3 +12,13 @@ pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()
 
     Ok(())
 }
+
+wasm_bridge::component::bindgen!({
+    // path: "wit/deps/cli/reactor.wit",
+    world: "wasi:cli/command",
+    tracing: true,
+    async: true,
+    with: {
+        "wasi:cli/environment": crate::preview2::bindings::cli::environment,
+    }
+});
