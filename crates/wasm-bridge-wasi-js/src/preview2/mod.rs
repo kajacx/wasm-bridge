@@ -18,5 +18,7 @@ pub use stream::*;
 pub mod clocks;
 pub use clocks::*;
 
+mod cli;
+
 mod random;
 pub(crate) use random::{js_rand, SecureRandom};

@@ -105,9 +105,7 @@ async fn custom_clock(component_bytes: &[u8]) -> Result<()> {
     );
 
     let bench = instance.call_nanoseconds_bench(&mut store).await.unwrap();
-    assert!(
-        // TODO: Bench says its 4999999999 on sys, why?
-        bench < 5_000_000_000 + 10 && bench > 5_000_000_000 - 10,
+    assert_eq!(bench, 5_000_000_000,
         "bench should think it took exactly 5 seconds"
     );
 

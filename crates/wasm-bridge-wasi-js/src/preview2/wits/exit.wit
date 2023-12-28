@@ -1,0 +1,10 @@
+package wasi:cli;
+
+interface exit {
+    exit: func(status: u32);
+}
+
+world exports {
+    import exit;
+}
+

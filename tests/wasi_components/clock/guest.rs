@@ -30,7 +30,7 @@ impl Guest for GuestImpl {
 
         // Make sure the result "contributes" to the return value,
         // so that it isn't optimized, but also make sure it is 0.
-        let result = (result as f64 / 1.0e-15) as u64;
+        let result = (result as f64 / 1.0e15) as u64;
 
         elapsed + result
     }
