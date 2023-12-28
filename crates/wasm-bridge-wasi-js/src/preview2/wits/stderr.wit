@@ -1,0 +1,10 @@
+package wasi:cli;
+
+interface stderr {
+    get-stderr: func() -> u32;
+}
+
+world exports {
+    import stderr;
+}
+

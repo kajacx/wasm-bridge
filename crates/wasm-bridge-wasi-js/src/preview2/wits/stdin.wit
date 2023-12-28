@@ -1,0 +1,10 @@
+package wasi:cli;
+
+interface stdin {
+    get-stdin: func() -> u32;
+}
+
+world exports {
+    import stdin;
+}
+

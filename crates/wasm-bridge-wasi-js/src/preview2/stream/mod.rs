@@ -1,9 +1,9 @@
 use wasm_bridge::component::Linker;
 use wasm_bridge::Result;
 
-const STDIN_IDENT: u32 = 0;
-const STDOUT_IDENT: u32 = 1;
-const STDERR_IDENT: u32 = 2;
+pub(crate) const STDIN_IDENT: u32 = 0;
+pub(crate) const STDOUT_IDENT: u32 = 1;
+pub(crate) const STDERR_IDENT: u32 = 2;
 
 mod input_stream;
 pub(crate) use input_stream::void_stream;
