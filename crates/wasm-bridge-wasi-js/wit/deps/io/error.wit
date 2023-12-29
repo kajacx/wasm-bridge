@@ -21,14 +21,5 @@ interface error {
     ///
     /// The set of functions which can "downcast" an `error` into a more
     /// concrete type is open.
-    resource error {
-        /// Returns a string that is suitable to assist humans in debugging
-        /// this error.
-        ///
-        /// WARNING: The returned string should not be consumed mechanically!
-        /// It may change across platforms, hosts, or other implementation
-        /// details. Parsing this string is a major platform-compatibility
-        /// hazard.
-        to-debug-string: func() -> string;
-    }
+    type error = u32;
 }

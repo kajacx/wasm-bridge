@@ -1,6 +1,6 @@
 interface terminal-input {
     /// The input side of a terminal.
-    resource terminal-input;
+    type terminal-input = u32;
 
     // In the future, this may include functions for disabling echoing,
     // disabling input buffering so that keyboard events are sent through
@@ -9,7 +9,7 @@ interface terminal-input {
 
 interface terminal-output {
     /// The output side of a terminal.
-    resource terminal-output;
+    type terminal-output = u32;
 
     // In the future, this may include functions for querying the terminal
     // size, being notified of terminal size changes, querying supported
