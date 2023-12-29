@@ -47,7 +47,7 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
                 Ok(())
             }
 
-            fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<wasm_bridge::wasm_bindgen::JsValue> {
+            fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> wasm_bridge::Result<wasm_bridge::wasm_bindgen::JsValue> {
                 #to_js_return
             }
 
@@ -85,7 +85,7 @@ pub fn lower_enum(name: Ident, data: DataEnum) -> TokenStream {
                 Ok(())
             }
 
-            fn to_js_return<M: WriteableMemory>(&self, _memory: &M) -> Result<wasm_bridge::wasm_bindgen::JsValue> {
+            fn to_js_return<M: WriteableMemory>(&self, _memory: &M) -> wasm_bridge::Result<wasm_bridge::wasm_bindgen::JsValue> {
                 let value = match self {
                     #match_arms
                 };
@@ -203,7 +203,7 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
                 #to_js_args
             }
 
-            fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<wasm_bridge::wasm_bindgen::JsValue> {
+            fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> wasm_bridge::Result<wasm_bridge::wasm_bindgen::JsValue> {
                 #to_js_return
             }
 

@@ -72,7 +72,7 @@ impl<Params, Return> TypedFunc<Params, Return> {
         Ok(result)
     }
 
-    pub fn call_async(&self, store: impl AsContextMut, params: Params) -> Result<Return>
+    pub async fn call_async(&self, store: impl AsContextMut, params: Params) -> Result<Return>
     where
         Params: Lower,
         Return: Lift,
@@ -91,7 +91,7 @@ impl<Params, Return> TypedFunc<Params, Return> {
         Ok(())
     }
 
-    pub fn post_return_async(&self, store: impl AsContextMut) -> Result<()> {
+    pub async fn post_return_async(&self, store: impl AsContextMut) -> Result<()> {
         self.post_return(store)
     }
 }

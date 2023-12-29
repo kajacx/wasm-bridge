@@ -62,52 +62,6 @@ impl Component {
 
         Instance::new(instance_core, drop_handles, memory)
     }
-
-    // fn make_compile_core(wasm_cores: Vec<(String, Vec<u8>)>) -> (JsValue, DropHandle) {
-    //     let mut wasm_modules = HashMap::<String, WebAssembly::Module>::new();
-    //     for (name, bytes) in wasm_cores.into_iter() {
-    //         wasm_modules.insert(
-    //             name,
-    //             WebAssembly::Module::new(&bytes.to_js_value()).expect("TODO: user error"),
-    //         );
-    //     }
-
-    //     let closure = Closure::<dyn Fn(String) -> WebAssembly::Module>::new(move |name: String| {
-    //         wasm_modules.get(&name).expect("TODO: user error").clone()
-    //     });
-
-    //     DropHandle::from_closure(closure)
-    // }
-
-    // async fn make_compile_core_async(wasm_cores: Vec<(String, Vec<u8>)>) -> (JsValue, DropHandle) {
-    //     let mut wasm_modules = HashMap::<String, WebAssembly::Module>::new();
-
-    //     // TODO: wait for all futures at once instead
-    //     for (name, bytes) in wasm_cores.into_iter() {
-    //         let promise = WebAssembly::compile(&bytes.to_js_value());
-    //         let future = JsFuture::from(promise);
-    //         let module = future.await.expect("TODO: user error");
-    //         wasm_modules.insert(name, module.into());
-    //     }
-
-    //     let closure = Closure::<dyn Fn(String) -> WebAssembly::Module>::new(move |name: String| {
-    //         // TODO: verify that Clone is effective
-    //         wasm_modules.get(&name).expect("TODO: user error").clone()
-    //     });
-
-    //     DropHandle::from_closure(closure)
-    // }
-
-    // fn make_instantiate_core() -> (JsValue, DropHandle) {
-    //     let closure = Closure::<dyn Fn(WebAssembly::Module, JsValue) -> WebAssembly::Instance>::new(
-    //         |module: WebAssembly::Module, imports: JsValue| {
-    //             // TODO: this should be a user error?
-    //             WebAssembly::Instance::new(&module, &imports.into()).unwrap()
-    //         },
-    //     );
-
-    //     DropHandle::from_closure(closure)
-    // }
 }
 
 pub async fn new_component_async(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Component> {

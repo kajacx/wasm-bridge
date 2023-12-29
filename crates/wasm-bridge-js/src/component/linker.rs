@@ -1,26 +1,24 @@
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, future::Future, rc::Rc};
 
 use heck::ToLowerCamelCase;
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 
 use crate::{
-    direct::ModuleMemory, AsContextMut, DataHandle, DropHandle, DropHandles, Engine, Result,
+    direct::{Lift, Lower, ModuleMemory},
+    AsContextMut, DataHandle, DropHandle, DropHandles, Engine, Result, StoreContextMut,
 };
 
 use super::*;
 
 pub struct Linker<T> {
     interfaces: HashMap<String, LinkerInterface<T>>,
-    #[allow(unused)] // TODO: re-enable wasi
-    wasi_imports: Option<Object>,
 }
 
 impl<T> Linker<T> {
     pub fn new(_engine: &Engine) -> Self {
         Self {
             interfaces: HashMap::new(),
-            wasi_imports: None,
         }
     }
 
@@ -73,11 +71,6 @@ impl<T> Linker<T> {
             .entry(name.to_owned())
             .or_insert_with(LinkerInterface::new))
     }
-
-    #[cfg(feature = "wasi")]
-    pub(crate) fn set_wasi_imports(&mut self, imports: Object) {
-        self.wasi_imports = Some(imports);
-    }
 }
 
 pub struct LinkerInterface<T> {
@@ -98,6 +91,24 @@ impl<T> LinkerInterface<T> {
             .push(PreparedFn::new(name, func.into_make_closure()));
 
         Ok(())
+    }
+
+    pub async fn func_wrap_async<Params, Results, F>(&mut self, name: &str, func: F) -> Result<()>
+    where
+        T: 'static,
+        // F: IntoMakeClosure<T, Params, Results>,
+        F: for<'a> Fn(
+                StoreContextMut<'a, T>,
+                Params,
+            ) -> Box<dyn Future<Output = Result<Results>> + Send + 'a>
+            + Send
+            + Sync
+            + 'static,
+        Params: Lift + 'static,
+        Results: Lower + 'static,
+    {
+        // self.func_wrap(name, func)
+        todo!("implement func_wrap_async")
     }
 
     fn prepare_imports(

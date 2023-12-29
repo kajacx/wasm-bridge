@@ -14,6 +14,7 @@ wasm-bindgen = { workspace = true }
 wasm-bindgen-futures = { workspace = true }
 wat = { workspace = true, optional = true }
 wasm-bridge-macros = { workspace = true, optional = true }
+async-trait = { workspace = true, optional = true }
 js-component-bindgen = { workspace = true, optional = true }
 anyhow = { workspace = true }
 heck = { workspace = true }
@@ -22,6 +23,6 @@ heck = { workspace = true }
 wasm-bindgen-test = { workspace = true }
 
 [features]
-component-model = ["wasm-bridge-macros", "js-component-bindgen"]
+component-model = ["wasm-bridge-macros", "js-component-bindgen", "async-trait"]
 async = ["wasm-bridge-macros/async"]
 error-logging = []

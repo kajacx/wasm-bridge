@@ -43,10 +43,5 @@ pub mod component {
     }
 }
 
-#[cfg(feature = "wasi")]
-pub mod wasi {
-    pub use wasmtime_wasi::*;
-}
-
 #[cfg(feature = "async")]
 pub use async_trait::async_trait;

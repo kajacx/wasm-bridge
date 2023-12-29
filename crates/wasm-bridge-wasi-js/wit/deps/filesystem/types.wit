@@ -102,11 +102,11 @@ interface types {
     record descriptor-stat {
         /// File type.
         %type: descriptor-type,
-        /// Number of hard links to the file.
-        link-count: link-count,
+        /// Number of hard links to the file. // TODO: FIX
+        link-count: u64,
         /// For regular files, the file size in bytes. For symbolic links, the
         /// length in bytes of the pathname contained in the symbolic link.
-        size: filesize,
+        size: u64,
         /// Last data access timestamp.
         ///
         /// If the `option` is none, the platform doesn't maintain an access
