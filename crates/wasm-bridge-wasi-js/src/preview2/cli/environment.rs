@@ -10,21 +10,20 @@ use crate::preview2::WasiView;
 //     world: "exports"
 // });
 
-#[wasm_bridge::async_trait]
-impl<T: WasiView + Send + 'static> wasi::cli::environment::Host for T {
-    async fn get_environment(&mut self) -> Result<Vec<(String, String)>> {
+impl<T: WasiView + 'static> wasi::cli::environment::Host for T {
+    fn get_environment(&mut self) -> Result<Vec<(String, String)>> {
         Ok(vec![])
     }
 
-    async fn get_arguments(&mut self) -> Result<Vec<String>> {
+    fn get_arguments(&mut self) -> Result<Vec<String>> {
         Ok(vec![])
     }
 
-    async fn initial_cwd(&mut self) -> Result<Option<String>> {
+    fn initial_cwd(&mut self) -> Result<Option<String>> {
         Ok(None)
     }
 }
 
-pub(crate) fn add_to_linker<T: WasiView + Send + 'static>(linker: &mut Linker<T>) -> Result<()> {
+pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
     wasi::cli::environment::add_to_linker(linker, |d| d)
 }
