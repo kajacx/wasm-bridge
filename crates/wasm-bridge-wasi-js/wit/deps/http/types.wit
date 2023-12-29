@@ -106,7 +106,7 @@ interface types {
   ///
   /// Note that this function is fallible because not all io-errors are
   /// http-related errors.
-  http-error-code: func(err: borrow<io-error>) -> option<error-code>;
+  http-error-code: func(err: io-error) -> option<error-code>;
 
   /// This type enumerates the different kinds of errors that may occur when
   /// setting or appending to a `fields` resource.

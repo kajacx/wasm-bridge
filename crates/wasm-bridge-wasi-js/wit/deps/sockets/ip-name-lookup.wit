@@ -24,7 +24,7 @@ interface ip-name-lookup {
     /// - <https://man7.org/linux/man-pages/man3/getaddrinfo.3.html>
     /// - <https://learn.microsoft.com/en-us/windows/win32/api/ws2tcpip/nf-ws2tcpip-getaddrinfo>
     /// - <https://man.freebsd.org/cgi/man.cgi?query=getaddrinfo&sektion=3>
-    resolve-addresses: func(network: borrow<network>, name: string) -> result<resolve-address-stream, error-code>;
+    resolve-addresses: func(network: network, name: string) -> result<resolve-address-stream, error-code>;
 
     type resolve-address-stream = u32;
 }
