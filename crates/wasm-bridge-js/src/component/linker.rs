@@ -93,7 +93,7 @@ impl<T> LinkerInterface<T> {
         Ok(())
     }
 
-    pub async fn func_wrap_async<Params, Results, F>(&mut self, name: &str, func: F) -> Result<()>
+    pub fn func_wrap_async<Params, Results, F>(&mut self, name: &str, _func: F) -> Result<()>
     where
         T: 'static,
         // F: IntoMakeClosure<T, Params, Results>,
@@ -108,7 +108,7 @@ impl<T> LinkerInterface<T> {
         Results: Lower + 'static,
     {
         // self.func_wrap(name, func)
-        todo!("implement func_wrap_async")
+        todo!("implement func_wrap_async for {name}")
     }
 
     fn prepare_imports(
