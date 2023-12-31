@@ -18,6 +18,7 @@ impl<T> Resource<T> {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct ResourceAny {
     pub(crate) id: u32,
 }

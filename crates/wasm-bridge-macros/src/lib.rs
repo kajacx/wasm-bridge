@@ -71,6 +71,10 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let regex = Regex::new("let host = get\\(caller\\.data_mut\\(\\)\\)\\s*;").unwrap();
     let as_string = regex.replace_all(&as_string, "let host = get(&mut caller);\n");
 
+    // Workaround to get data reference for resources
+    let regex = Regex::new("get\\(store\\.data_mut\\(\\)\\)").unwrap();
+    let as_string = regex.replace_all(&as_string, "get(store)\n");
+
     // TODO: these static bounds are not great
     let regex = Regex::new("add_to_linker\\s*<\\s*T").unwrap();
     let as_string = regex.replace_all(&as_string, "add_to_linker<T: 'static");
