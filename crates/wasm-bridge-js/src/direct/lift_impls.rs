@@ -1,3 +1,4 @@
+use crate::component::ResourceAny;
 use crate::Result;
 use crate::{component::Resource, conversions::FromJsValue};
 use anyhow::{bail, Context};
@@ -246,6 +247,23 @@ impl<T> Lift for Resource<T> {
     fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
         let id = u32::read_from(slice, memory)?;
         Ok(Resource::new_own(id))
+    }
+}
+
+impl Lift for ResourceAny {
+    fn from_js_args<M: ReadableMemory>(args: &mut JsArgsReader, memory: &M) -> Result<Self> {
+        let value = args.next().context("lift resource arg")?;
+        Self::from_js_return(&value, memory)
+    }
+
+    fn from_js_return<M: ReadableMemory>(value: &JsValue, _memory: &M) -> Result<Self> {
+        let id = u32::from_js_value(value)?;
+        Ok(ResourceAny { id })
+    }
+
+    fn read_from<M: ReadableMemory>(slice: &[u8], memory: &M) -> Result<Self> {
+        let id = u32::read_from(slice, memory)?;
+        Ok(ResourceAny { id })
     }
 }
 

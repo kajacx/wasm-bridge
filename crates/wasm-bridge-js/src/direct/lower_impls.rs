@@ -1,5 +1,5 @@
 use super::*;
-use crate::component::Resource;
+use crate::component::{Resource, ResourceAny};
 use crate::conversions::ToJsValue;
 use crate::Result;
 use wasm_bindgen::JsValue;
@@ -283,6 +283,21 @@ impl<T> Lower for Resource<T> {
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
         buffer.write(&self.rep(), memory)
+    }
+}
+
+impl Lower for ResourceAny {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+        args.push(self.to_js_return(memory)?);
+        Ok(())
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, _memory: &M) -> Result<JsValue> {
+        Ok(self.id.to_js_value())
+    }
+
+    fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
+        buffer.write(&self.id, memory)
     }
 }
 

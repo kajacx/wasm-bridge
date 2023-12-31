@@ -1,7 +1,5 @@
 use std::marker::PhantomData;
 
-use wasm_bridge_macros::{LiftJs, LowerJs, SizeDescription};
-
 pub struct Resource<T> {
     id: u32,
     _phantom: PhantomData<Box<T>>,
@@ -21,5 +19,5 @@ impl<T> Resource<T> {
 }
 
 pub struct ResourceAny {
-    id: u32,
+    pub(crate) id: u32,
 }

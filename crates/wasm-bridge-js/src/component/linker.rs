@@ -111,6 +111,14 @@ impl<T> LinkerInterface<T> {
         todo!("implement func_wrap_async for {name}")
     }
 
+    pub fn resource<U>(
+        &mut self,
+        _name: &str,
+        _destroy: impl Fn(StoreContextMut<'_, T>, u32) -> Result<()>,
+    ) -> Result<()> {
+        Ok(())
+    }
+
     fn prepare_imports(
         &self,
         mut store: impl AsContextMut<Data = T>,

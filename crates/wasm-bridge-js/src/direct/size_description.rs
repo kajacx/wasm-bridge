@@ -1,4 +1,4 @@
-use crate::component::Resource;
+use crate::component::{Resource, ResourceAny};
 
 pub trait SizeDescription {
     /// Alignment in bytes
@@ -137,6 +137,19 @@ impl<T: SizeDescription, E: SizeDescription> SizeDescription for Result<T, E> {
 }
 
 impl<T> SizeDescription for Resource<T> {
+    const ALIGNMENT: usize = 4;
+    const BYTE_SIZE: usize = 4;
+    const NUM_ARGS: usize = 1;
+
+    type StructLayout = SimpleStructLayout;
+
+    #[inline]
+    fn layout() -> Self::StructLayout {
+        simple_layout(Self::BYTE_SIZE)
+    }
+}
+
+impl SizeDescription for ResourceAny {
     const ALIGNMENT: usize = 4;
     const BYTE_SIZE: usize = 4;
     const NUM_ARGS: usize = 1;
