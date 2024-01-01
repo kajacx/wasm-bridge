@@ -38,7 +38,7 @@ if [ "$test" = "wasi_components/io_redirect" ]; then
   # run test and capture its output
 
   # run the sys host test
-  cd instance/host_sys && cargo run > out.txt 2> err.txt && cd ../..
+  cd instance/host_sys && cargo test --lib -- --nocapture > out.txt 2> err.txt && cd ../..
   if [ $? -ne 0 ]; then
     cat *.txt
     echo
@@ -113,7 +113,7 @@ else
   # run test normally
 
   # run the sys host test
-  cd instance/host_sys && cargo run && cd ../..
+  cd instance/host_sys && cargo test --lib -- --nocapture && cd ../..
   if [ $? -ne 0 ]; then
     echo
     echo "Oh no, there is an error in the $test sys host."
