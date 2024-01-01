@@ -13,12 +13,14 @@ use super::*;
 
 pub struct Linker<T> {
     interfaces: HashMap<String, LinkerInterface<T>>,
+    wasi_object: Option<Box<dyn Fn() -> Object>>,
 }
 
 impl<T> Linker<T> {
     pub fn new(_engine: &Engine) -> Self {
         Self {
             interfaces: HashMap::new(),
+            wasi_object: None,
         }
     }
 
@@ -46,15 +48,21 @@ impl<T> Linker<T> {
         &self,
         mut store: impl AsContextMut<Data = T>,
     ) -> (Object, DropHandles, ModuleMemory) {
-        let imports = js_sys::Object::new();
+        let imports = self.wasi_object.as_ref().map_or_else(Object::new, |f| f());
 
         let mut closures = Vec::new();
         let memory = ModuleMemory::new();
 
         for (name, interface) in self.interfaces.iter() {
-            let interface_imports =
-                interface.prepare_imports(&mut store, &mut closures, memory.clone());
-            Reflect::set(&imports, &name.into(), &interface_imports).expect("imports is an object");
+            let name_js: JsValue = name.into();
+
+            let mut imports_obj = Reflect::get(&imports, &name_js).expect("imports is an object");
+            if imports_obj.is_undefined() {
+                imports_obj = Object::new().into();
+            }
+
+            interface.prepare_imports(&mut store, &mut closures, &imports_obj, memory.clone());
+            Reflect::set(&imports, &name_js, &imports_obj).expect("imports is an object");
         }
 
         (imports, Rc::new(closures), memory)
@@ -70,6 +78,10 @@ impl<T> Linker<T> {
             .interfaces
             .entry(name.to_owned())
             .or_insert_with(LinkerInterface::new))
+    }
+
+    pub fn set_wasi_object(&mut self, creator: impl Fn() -> Object + 'static) {
+        self.wasi_object = Some(Box::new(creator));
     }
 }
 
@@ -123,10 +135,9 @@ impl<T> LinkerInterface<T> {
         &self,
         mut store: impl AsContextMut<Data = T>,
         drop_handles: &mut Vec<DropHandle>,
+        imports: &JsValue,
         memory: ModuleMemory,
-    ) -> JsValue {
-        let imports: JsValue = js_sys::Object::new().into();
-
+    ) {
         let data_handle = store.as_context_mut().data_handle();
 
         for function in self.fns.iter() {
@@ -134,8 +145,6 @@ impl<T> LinkerInterface<T> {
                 function.add_to_imports(&imports, data_handle.clone(), memory.clone());
             drop_handles.push(drop_handle);
         }
-
-        imports
     }
 }
 
