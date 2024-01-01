@@ -56,6 +56,10 @@ impl<T> Linker<T> {
         for (name, interface) in self.interfaces.iter() {
             let name_js: JsValue = name.into();
 
+            //   if name != "$root" && name != "component-test:wit-protocol/host-add" {
+            //       panic!("MODULE NAME: {name}");
+            //   }
+
             let mut imports_obj = Reflect::get(&imports, &name_js).expect("imports is an object");
             if imports_obj.is_undefined() {
                 imports_obj = Object::new().into();

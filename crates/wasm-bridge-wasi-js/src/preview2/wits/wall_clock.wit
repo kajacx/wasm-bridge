@@ -1,15 +1,10 @@
-package wasi:clocks;
+package wasi:snapshot-preview1;
 
-interface wall-clock {
+world exports {
     record wall-time {
         seconds: u64,
         nanoseconds: u32,
     }
 
-    resolution: func() -> u64;
-    now: func() -> wall-time;
-}
-
-world exports {
-    import wall-clock;
+    import clock-time-get: func() -> wall-time;
 }
