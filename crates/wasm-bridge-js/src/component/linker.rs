@@ -6,7 +6,7 @@ use wasm_bindgen::JsValue;
 
 use crate::{
     direct::{Lift, Lower, ModuleMemory},
-    helpers::map_js_error,
+    helpers::static_str_to_js,
     AsContextMut, DataHandle, DropHandle, DropHandles, Engine, Result, StoreContextMut,
 };
 
@@ -40,8 +40,14 @@ impl<T> Linker<T> {
         store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
-        let (imports, drop_handles, memory) = self.prepare_imports(store, component)?;
-        component.instantiate(&imports, drop_handles, memory)
+        let (imports, wasi_imports, dyn_fns, drop_handles, memory) =
+            self.prepare_imports(store, component)?;
+
+        if let (Some(wasi_imports), Some(dyn_fns)) = (wasi_imports, dyn_fns) {
+            component.instantiate_wasi(&imports, &wasi_imports, &dyn_fns, drop_handles, memory)
+        } else {
+            component.instantiate(&imports, drop_handles, memory)
+        }
     }
 
     pub async fn instantiate_async(
@@ -49,21 +55,35 @@ impl<T> Linker<T> {
         store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
-        let (imports, drop_handles, memory) = self.prepare_imports(store, component)?;
-        component
-            .instantiate_async(&imports, drop_handles, memory)
-            .await
+        let (imports, wasi_imports, dyn_fns, drop_handles, memory) =
+            self.prepare_imports(store, component)?;
+
+        if let (Some(wasi_imports), Some(dyn_fns)) = (wasi_imports, dyn_fns) {
+            component
+                .instantiate_wasi_async(&imports, &wasi_imports, &dyn_fns, drop_handles, memory)
+                .await
+        } else {
+            component
+                .instantiate_async(&imports, drop_handles, memory)
+                .await
+        }
     }
 
     fn prepare_imports(
         &self,
         mut store: impl AsContextMut<Data = T>,
         component: &Component,
-    ) -> Result<(Object, DropHandles, ModuleMemory)> {
+    ) -> Result<(
+        Object,
+        Option<Object>,
+        Option<DynFns>,
+        DropHandles,
+        ModuleMemory,
+    )> {
         let mut closures = Vec::new();
         let memory = ModuleMemory::new();
 
-        let imports = if let (Some(wasi_object), Some(wasi_core)) =
+        let (imports, wasi_imports, dyn_fns) = if let (Some(wasi_object), Some(wasi_core)) =
             (&self.wasi_object, &component.module_core2)
         {
             let wasi_imports = wasi_object();
@@ -81,23 +101,29 @@ impl<T> Linker<T> {
                 Reflect::set(&wasi_imports, &name_js, &imports_obj).expect("imports is an object");
             }
 
-            // FIXME: always synchronous instantiation
-            let wasi_instance = WebAssembly::Instance::new(&wasi_core, &wasi_imports)
-                .map_err(map_js_error("SYNCHRONOUSLY instantiate wasi core"))?;
+            let preview = Object::new();
+            let mut setters = HashMap::<&'static str, Array>::new();
+            for name in WASI_IMPORT_NAMES {
+                let (func, setter) = create_dyn_fn(name);
+                Reflect::set(&preview, &(*name).into(), &func).expect("preview is object");
+                setters.insert(name, setter);
+            }
 
-            let exports = wasi_instance.exports();
-            crate::helpers::log_js_value("WASI EXPORTS", &exports);
-            exports // LETS TRY THIS FOR NOW
+            let imports = Object::new();
+            Reflect::set(
+                &imports,
+                static_str_to_js("wasi_snapshot_preview1"),
+                &preview,
+            )
+            .expect("imports is object");
+
+            (imports, Some(wasi_imports), Some(setters))
         } else {
-            Object::new()
+            (Object::new(), None, None)
         };
 
         for (name, interface) in self.interfaces.iter() {
             let name_js: JsValue = name.into();
-
-            //   if name != "$root" && name != "component-test:wit-protocol/host-add" {
-            //       panic!("MODULE NAME: {name}");
-            //   }
 
             let mut imports_obj = Reflect::get(&imports, &name_js).expect("imports is an object");
             if imports_obj.is_undefined() {
@@ -108,7 +134,7 @@ impl<T> Linker<T> {
             Reflect::set(&imports, &name_js, &imports_obj).expect("imports is an object");
         }
 
-        Ok((imports, Rc::new(closures), memory))
+        Ok((imports, wasi_imports, dyn_fns, Rc::new(closures), memory))
     }
 
     pub fn root(&mut self) -> &mut LinkerInterface<T> {
@@ -244,9 +270,11 @@ impl<T> PreparedFn<T> {
     }
 }
 
-fn create_dyn_fn() -> (Function, Array) {
+pub(crate) type DynFns = HashMap<&'static str, Array>;
+
+fn create_dyn_fn(name: &str) -> (Function, Array) {
     let result =
-        js_sys::eval("(() => { let arr = []; return [(...args) => arr[0](...args), arr]; })()")
+        js_sys::eval(&format!("(() => {{ let arr = [() => {{ throw Error('Not bound: {name}'); }}]; return [(...args) => arr[0](...args), arr]; }})()"))
             .expect("eval create dyn fn");
 
     (
@@ -267,7 +295,7 @@ mod tests {
 
     #[wasm_bindgen_test::wasm_bindgen_test]
     fn test_create_dyn_fn() {
-        let (func, arr) = create_dyn_fn();
+        let (func, arr) = create_dyn_fn("foo");
         assert!(func.is_function(), "dyn function is actually a function");
         assert!(arr.is_array(), "dyn array us actually an array");
 

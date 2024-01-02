@@ -99,7 +99,7 @@ impl Component {
         &self,
         imports: &Object,
         wasi_imports: &Object,
-        dyn_fns: &HashMap<String, Array>,
+        dyn_fns: &DynFns,
         drop_handles: DropHandles,
         memory: ModuleMemory,
     ) -> Result<Instance> {
@@ -123,7 +123,7 @@ impl Component {
         &self,
         imports: &Object,
         wasi_imports: &Object,
-        dyn_fns: &HashMap<String, Array>,
+        dyn_fns: &DynFns,
         drop_handles: DropHandles,
         memory: ModuleMemory,
     ) -> Result<Instance> {
@@ -183,14 +183,11 @@ impl Component {
         Ok(())
     }
 
-    fn link_wasi_exports(
-        wasi_core: &WebAssembly::Instance,
-        dyn_fns: &HashMap<String, Array>,
-    ) -> Result<()> {
+    fn link_wasi_exports(wasi_core: &WebAssembly::Instance, dyn_fns: &DynFns) -> Result<()> {
         let wasi_exports = wasi_core.exports();
 
         for (name, dyn_fn) in dyn_fns {
-            let exported_fn = Reflect::get(&wasi_exports, &name.into())
+            let exported_fn = Reflect::get(&wasi_exports, &(*name).into())
                 .map_err(map_js_error("wasi exports get fn"))?;
             if !exported_fn.is_function() {
                 bail!("Missing exported function {name} in wasi exports");
