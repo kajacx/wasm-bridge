@@ -14,6 +14,7 @@ use super::*;
 
 static WASI_IMPORT_NAMES: &[&str] = &[
     "clock_time_get",
+    "random_get",
     "fd_write",
     "environ_get",
     "environ_sizes_get",

@@ -74,17 +74,7 @@ impl WasiCtxBuilder {
         self.inherit_stdin().inherit_stdout().inherit_stderr()
     }
 
-    pub fn secure_random(self) -> Self {
-        Self {
-            random: None, // Will be filled later
-            ..self
-        }
-    }
-
-    pub fn secure_random_to_custom_generator(
-        self,
-        random: impl RngCore + Send + Sync + 'static,
-    ) -> Self {
+    pub fn secure_random(self, random: impl RngCore + Send + Sync + 'static) -> Self {
         Self {
             random: Some(Box::new(random)),
             ..self

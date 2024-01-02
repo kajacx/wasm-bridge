@@ -1,4 +1,4 @@
-use anyhow::{bail, Context};
+use anyhow::Context;
 use js_sys::{Object, Reflect, WebAssembly};
 use wasm_bindgen_futures::JsFuture;
 
@@ -186,10 +186,11 @@ impl Component {
         for (name, dyn_fn) in dyn_fns {
             let exported_fn = Reflect::get(&wasi_exports, &(*name).into())
                 .map_err(map_js_error("wasi exports get fn"))?;
-            if !exported_fn.is_function() {
-                bail!("Missing exported function {name} in wasi exports");
+
+            // If the function is missing, we ignore it, only used imports are present
+            if exported_fn.is_function() {
+                Reflect::set_u32(&dyn_fn, 0, &exported_fn).expect("dyn_fn is an array");
             }
-            Reflect::set_u32(&dyn_fn, 0, &exported_fn).expect("dyn_fn is an array");
         }
 
         Ok(())
