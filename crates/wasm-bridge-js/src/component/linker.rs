@@ -15,7 +15,7 @@ use super::*;
 static WASI_IMPORT_NAMES: &[&str] = &[
     "clock_time_get",
     "fd_write",
-    "environ_gen",
+    "environ_get",
     "environ_sizes_get",
     "proc_exit",
 ];
@@ -57,6 +57,9 @@ impl<T> Linker<T> {
     ) -> Result<Instance> {
         let (imports, wasi_imports, dyn_fns, drop_handles, memory) =
             self.prepare_imports(store, component)?;
+
+        crate::helpers::log_js_value("IMPORTS", &imports);
+        crate::helpers::log_js_value("WASI IMPORTS", wasi_imports.as_ref().unwrap());
 
         if let (Some(wasi_imports), Some(dyn_fns)) = (wasi_imports, dyn_fns) {
             component

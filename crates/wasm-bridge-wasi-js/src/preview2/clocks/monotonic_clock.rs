@@ -43,7 +43,13 @@ impl<T: WasiView> wasi::clocks::monotonic_clock::Host for T {
 }
 
 pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
-    Exports::add_to_linker(linker, |d| d)
+    // Exports::add_to_linker(linker, |d| d)
+    // linker
+    //     .instance("wasi:clocks/wall-clock@0.2.0-rc-2023-11-10")?
+    //     .func_wrap("now", |caller, ()| {
+    //         let now = caller.data().ctx().wall_clock().now();
+    //     })
+    Ok(())
 }
 
 // pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {

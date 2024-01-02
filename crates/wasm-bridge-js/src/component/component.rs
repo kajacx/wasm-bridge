@@ -137,7 +137,7 @@ impl Component {
 
         let promise = WebAssembly::instantiate_module(
             self.module_core2.as_ref().context("Get wasi core")?,
-            imports,
+            wasi_imports,
         );
         let instance = JsFuture::from(promise)
             .await
