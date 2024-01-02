@@ -62,7 +62,7 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
 
     let seconds_real = seconds_since_epoch();
     let seconds_guest = instance.call_seconds_since_epoch(&mut store).await.unwrap();
-    panic!("SECONDS GUEST: {seconds_guest}");
+    // panic!("SECONDS GUEST: {seconds_guest}");
     assert!(
         seconds_guest < seconds_real + 60 && seconds_guest > seconds_real - 60,
         "Guest should return time within one minute"
