@@ -33,7 +33,7 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
         read_from_impl.extend(line);
     }
 
-    let name_impl = format_ident!("impl_lift_{}", name);
+    let name_impl = format_ident!("impl_lift_{}", name.to_string().to_lowercase());
     quote!(
       mod #name_impl {
         use wasm_bridge::direct::*;
@@ -70,7 +70,7 @@ pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
         from_js_return.extend(line);
     }
 
-    let name_impl = format_ident!("impl_lift_{}", name);
+    let name_impl = format_ident!("impl_lift_{}", name.to_string().to_lowercase());
     quote!(
       mod #name_impl {
         use wasm_bridge::direct::*;
@@ -153,7 +153,7 @@ pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
         }
     }).collect();
 
-    let name_impl = format_ident!("impl_lift_{}", name);
+    let name_impl = format_ident!("impl_lift_{}", name.to_string().to_lowercase());
     quote!(
       mod #name_impl {
         use wasm_bridge::direct::*;

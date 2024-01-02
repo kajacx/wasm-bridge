@@ -53,7 +53,7 @@ pub fn size_description_struct(name: Ident, data: DataStruct) -> TokenStream {
         layout_return.extend(ret);
     }
 
-    let name_impl = format_ident!("impl_size_description_{}", name);
+    let name_impl = format_ident!("impl_size_description_{}", name.to_string().to_lowercase());
     quote!(
       mod #name_impl {
         use wasm_bridge::direct::*;

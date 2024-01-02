@@ -13,8 +13,8 @@
   "wasi:filesystem/preopens@0.2.0-rc-2023-11-10": {
     "get-directories": () => [],
   },
-  "wasi:clocks/wall-clock@0.2.0-rc-2023-11-10": {},
-  "wasi:clocks/monotonic-clock@0.2.0-rc-2023-11-10": {},
+  //   "wasi:clocks/wall-clock@0.2.0-rc-2023-11-10": {},
+  //   "wasi:clocks/monotonic-clock@0.2.0-rc-2023-11-10": {},
   "wasi:filesystem/types@0.2.0-rc-2023-11-10": {
     "[method]descriptor.append-via-stream": () => {},
     "[method]descriptor.get-type": () => {},
