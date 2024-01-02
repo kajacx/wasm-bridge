@@ -12,6 +12,14 @@ use crate::{
 
 use super::*;
 
+static WASI_IMPORT_NAMES: &[&str] = &[
+    "clock_time_get",
+    "fd_write",
+    "environ_gen",
+    "environ_sizes_get",
+    "proc_exit",
+];
+
 pub struct Linker<T> {
     interfaces: HashMap<String, LinkerInterface<T>>,
     wasi_interfaces: HashMap<String, LinkerInterface<T>>,
