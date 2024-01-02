@@ -145,6 +145,11 @@ impl<T> Linker<T> {
     }
 
     pub fn instance<'a>(&'a mut self, name: &str) -> Result<&'a mut LinkerInterface<T>> {
+        // TODO: kind of hacky, but it will work (probably)
+        if name.starts_with("wasi:") {
+            return self.instance_wasi(name);
+        }
+
         // This is called at linked time, "clone" is not that bad
         Ok(self
             .interfaces
