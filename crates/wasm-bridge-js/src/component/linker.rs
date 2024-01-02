@@ -1,7 +1,7 @@
 use std::{collections::HashMap, future::Future, rc::Rc};
 
 use heck::ToLowerCamelCase;
-use js_sys::{Object, Reflect, WebAssembly};
+use js_sys::{Array, Function, Object, Reflect, WebAssembly};
 use wasm_bindgen::JsValue;
 
 use crate::{
@@ -233,5 +233,46 @@ impl<T> PreparedFn<T> {
             .expect("imports is object");
 
         handler
+    }
+}
+
+fn create_dyn_fn() -> (Function, Array) {
+    let result =
+        js_sys::eval("(() => { let arr = []; return [(...args) => arr[0](...args), arr]; })()")
+            .expect("eval create dyn fn");
+
+    (
+        Reflect::get_u32(&result, 0)
+            .expect("result us array")
+            .into(),
+        Reflect::get_u32(&result, 1)
+            .expect("result is array")
+            .into(),
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use js_sys::eval;
+
+    use super::*;
+
+    #[wasm_bindgen_test::wasm_bindgen_test]
+    fn test_create_dyn_fn() {
+        let (func, arr) = create_dyn_fn();
+        assert!(func.is_function(), "dyn function is actually a function");
+        assert!(arr.is_array(), "dyn array us actually an array");
+
+        Reflect::set_u32(&arr, 0, &eval("(a, b) => a + b").unwrap()).unwrap();
+        let result = func
+            .call2(&JsValue::UNDEFINED, &5.into(), &3.into())
+            .unwrap();
+        assert_eq!(result.as_f64().unwrap(), 8.0);
+
+        Reflect::set_u32(&arr, 0, &eval("(a, b) => a - b").unwrap()).unwrap();
+        let result = func
+            .call2(&JsValue::UNDEFINED, &5.into(), &3.into())
+            .unwrap();
+        assert_eq!(result.as_f64().unwrap(), 2.0);
     }
 }
