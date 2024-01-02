@@ -1,5 +1,6 @@
 package wasi:snapshot-preview1;
 
+
 world exports {
     record wall-time {
         seconds: u64,

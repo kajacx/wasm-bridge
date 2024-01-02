@@ -1,11 +1,12 @@
 use std::{collections::HashMap, future::Future, rc::Rc};
 
 use heck::ToLowerCamelCase;
-use js_sys::{Object, Reflect};
+use js_sys::{Object, Reflect, WebAssembly};
 use wasm_bindgen::JsValue;
 
 use crate::{
     direct::{Lift, Lower, ModuleMemory},
+    helpers::map_js_error,
     AsContextMut, DataHandle, DropHandle, DropHandles, Engine, Result, StoreContextMut,
 };
 
@@ -13,6 +14,7 @@ use super::*;
 
 pub struct Linker<T> {
     interfaces: HashMap<String, LinkerInterface<T>>,
+    wasi_interfaces: HashMap<String, LinkerInterface<T>>,
     wasi_object: Option<Box<dyn Fn() -> Object>>,
 }
 
@@ -20,6 +22,7 @@ impl<T> Linker<T> {
     pub fn new(_engine: &Engine) -> Self {
         Self {
             interfaces: HashMap::new(),
+            wasi_interfaces: HashMap::new(),
             wasi_object: None,
         }
     }
@@ -29,7 +32,7 @@ impl<T> Linker<T> {
         store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
-        let (imports, drop_handles, memory) = self.prepare_imports(store);
+        let (imports, drop_handles, memory) = self.prepare_imports(store, component)?;
         component.instantiate(&imports, drop_handles, memory)
     }
 
@@ -38,7 +41,7 @@ impl<T> Linker<T> {
         store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
-        let (imports, drop_handles, memory) = self.prepare_imports(store);
+        let (imports, drop_handles, memory) = self.prepare_imports(store, component)?;
         component
             .instantiate_async(&imports, drop_handles, memory)
             .await
@@ -47,11 +50,39 @@ impl<T> Linker<T> {
     fn prepare_imports(
         &self,
         mut store: impl AsContextMut<Data = T>,
-    ) -> (Object, DropHandles, ModuleMemory) {
-        let imports = self.wasi_object.as_ref().map_or_else(Object::new, |f| f());
-
+        component: &Component,
+    ) -> Result<(Object, DropHandles, ModuleMemory)> {
         let mut closures = Vec::new();
         let memory = ModuleMemory::new();
+
+        let imports = if let (Some(wasi_object), Some(wasi_core)) =
+            (&self.wasi_object, &component.module_core2)
+        {
+            let wasi_imports = wasi_object();
+
+            for (name, interface) in self.wasi_interfaces.iter() {
+                let name_js: JsValue = name.into();
+
+                let mut imports_obj =
+                    Reflect::get(&wasi_imports, &name_js).expect("imports is an object");
+                if imports_obj.is_undefined() {
+                    imports_obj = Object::new().into();
+                }
+
+                interface.prepare_imports(&mut store, &mut closures, &imports_obj, memory.clone());
+                Reflect::set(&wasi_imports, &name_js, &imports_obj).expect("imports is an object");
+            }
+
+            // FIXME: always synchronous instantiation
+            let wasi_instance = WebAssembly::Instance::new(&wasi_core, &wasi_imports)
+                .map_err(map_js_error("SYNCHRONOUSLY instantiate wasi core"))?;
+
+            let exports = wasi_instance.exports();
+            crate::helpers::log_js_value("WASI EXPORTS", &exports);
+            exports // LETS TRY THIS FOR NOW
+        } else {
+            Object::new()
+        };
 
         for (name, interface) in self.interfaces.iter() {
             let name_js: JsValue = name.into();
@@ -69,7 +100,7 @@ impl<T> Linker<T> {
             Reflect::set(&imports, &name_js, &imports_obj).expect("imports is an object");
         }
 
-        (imports, Rc::new(closures), memory)
+        Ok((imports, Rc::new(closures), memory))
     }
 
     pub fn root(&mut self) -> &mut LinkerInterface<T> {
@@ -80,6 +111,13 @@ impl<T> Linker<T> {
         // This is called at linked time, "clone" is not that bad
         Ok(self
             .interfaces
+            .entry(name.to_owned())
+            .or_insert_with(LinkerInterface::new))
+    }
+
+    pub fn instance_wasi<'a>(&'a mut self, name: &str) -> Result<&'a mut LinkerInterface<T>> {
+        Ok(self
+            .wasi_interfaces
             .entry(name.to_owned())
             .or_insert_with(LinkerInterface::new))
     }

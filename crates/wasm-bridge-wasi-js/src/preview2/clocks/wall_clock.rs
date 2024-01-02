@@ -63,17 +63,18 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
     //     },
     // )?;
 
-    linker.instance("wasi_snapshot_preview1")?.func_wrap(
-        "clock_time_get",
-        |data: StoreContextMut<T>, (): ()| {
-            // panic!("IT IS GETTING CALLED NOWWW?");
-            let now = data.ctx().wall_clock().now();
-            Ok(WallTime {
-                seconds: now.as_secs(),
-                nanoseconds: now.subsec_nanos(),
-            })
-        },
-    )?;
+    // linker.instance("wasi_snapshot_preview1")?.func_wrap(
+    //     "clock_time_get",
+    //     |data: StoreContextMut<T>, (): ()| {
+    //         // panic!("IT IS GETTING CALLED NOWWW?");
+    //         let now = data.ctx().wall_clock().now();
+    //         // Ok(WallTime {
+    //         //     seconds: now.as_secs(),
+    //         //     nanoseconds: now.subsec_nanos(),
+    //         // })
+    //         Ok(now.as_secs() as u32)
+    //     },
+    // )?;
 
     Ok(())
 }

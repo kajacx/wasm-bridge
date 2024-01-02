@@ -7,7 +7,7 @@ use super::*;
 
 pub struct Component {
     module_core: WebAssembly::Module,
-    // core2: Option<WebAssembly::Module>,
+    pub(crate) module_core2: Option<WebAssembly::Module>,
     // core3: Option<WebAssembly::Module>,
 }
 
@@ -19,7 +19,19 @@ impl Component {
         let module_core = WebAssembly::Module::new(&files.core.to_js_value())
             .map_err(map_js_error("Synchronously compile main core"))?;
 
-        Ok(Self { module_core })
+        let module_core2 = if let core2 = Some(files.core2) {
+            Some(
+                WebAssembly::Module::new(&core2.to_js_value())
+                    .map_err(map_js_error("Synchronously compile main core"))?,
+            )
+        } else {
+            None
+        };
+
+        Ok(Self {
+            module_core,
+            module_core2,
+        })
     }
 
     pub async fn new_async(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
@@ -29,15 +41,28 @@ impl Component {
         let module = JsFuture::from(promise)
             .await
             .map_err(map_js_error("Asynchronously compile main core"))?;
-
         let module_core = module.into();
 
-        Ok(Self { module_core })
+        let module_core2 = if let Some(core2) = files.core2 {
+            let promise = WebAssembly::compile(&core2.to_js_value());
+            let module = JsFuture::from(promise)
+                .await
+                .map_err(map_js_error("Asynchronously compile main core"))?;
+            Some(module.into())
+        } else {
+            None
+        };
+
+        Ok(Self {
+            module_core,
+            module_core2,
+        })
     }
 
     pub(crate) fn instantiate(
         &self,
         imports: &Object,
+        // wasi_imports: Option<&Object>,
         drop_handles: DropHandles,
         memory: ModuleMemory,
     ) -> Result<Instance> {
