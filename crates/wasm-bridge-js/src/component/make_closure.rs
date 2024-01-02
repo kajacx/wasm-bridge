@@ -42,8 +42,9 @@ where
                             .map_err(|err| format!("from js ptr return: {err:?}"))?
                     };
 
-                    let result = self_clone(&mut handle.borrow_mut(), args)
-                        .map_err(|err| format!("host imported fn returned error: {err:?}"))?;
+                    let result =
+                        self_clone(StoreContextMut::new(&mut handle.borrow_mut()), args)
+                            .map_err(|err| format!("host imported fn returned error: {err:?}"))?;
 
                     if R::NUM_ARGS <= 1 {
                         let result = result

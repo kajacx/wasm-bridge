@@ -46,9 +46,33 @@ impl<T> Store<T> {
 
 pub(crate) type DataHandle<T> = Rc<RefCell<T>>;
 
-pub type StoreContext<'a, T> = &'a T;
+pub struct StoreContext<'a, T>(&'a T);
 
-pub type StoreContextMut<'a, T> = &'a mut T;
+impl<'a, T> StoreContext<'a, T> {
+    pub fn new(reference: &'a T) -> Self {
+        Self(reference)
+    }
+
+    pub fn data(&self) -> &T {
+        self.0
+    }
+}
+
+pub struct StoreContextMut<'a, T>(&'a mut T);
+
+impl<'a, T> StoreContextMut<'a, T> {
+    pub fn new(reference: &'a mut T) -> Self {
+        Self(reference)
+    }
+
+    pub fn data(&self) -> &T {
+        self.0
+    }
+
+    pub fn data_mut(&mut self) -> &mut T {
+        self.0
+    }
+}
 
 impl<T> Clone for Store<T> {
     fn clone(&self) -> Self {

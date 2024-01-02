@@ -1,8 +1,5 @@
-use std::collections::HashMap;
-
 use anyhow::{bail, Context};
-use js_sys::{Array, Object, Reflect, WebAssembly};
-use wasm_bindgen::JsValue;
+use js_sys::{Object, Reflect, WebAssembly};
 use wasm_bindgen_futures::JsFuture;
 
 use crate::{

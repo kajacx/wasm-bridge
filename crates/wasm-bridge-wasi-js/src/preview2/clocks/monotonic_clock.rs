@@ -47,7 +47,7 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
     linker
         .instance_wasi("wasi:clocks/monotonic-clock@0.2.0-rc-2023-11-10")?
         .func_wrap("now", |caller: StoreContextMut<T>, ()| {
-            let now = caller.ctx().monotonic_clock().now();
+            let now = caller.data().ctx().monotonic_clock().now();
             Ok(now)
         })
 }

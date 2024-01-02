@@ -1,7 +1,7 @@
 use std::{collections::HashMap, future::Future, rc::Rc};
 
 use heck::ToLowerCamelCase;
-use js_sys::{Array, Function, Object, Reflect, WebAssembly};
+use js_sys::{Array, Function, Object, Reflect};
 use wasm_bindgen::JsValue;
 
 use crate::{
@@ -86,7 +86,7 @@ impl<T> Linker<T> {
         let mut closures = Vec::new();
         let memory = ModuleMemory::new();
 
-        let (imports, wasi_imports, dyn_fns) = if let (Some(wasi_object), Some(wasi_core)) =
+        let (imports, wasi_imports, dyn_fns) = if let (Some(wasi_object), Some(_wasi_core)) =
             (&self.wasi_object, &component.module_core2)
         {
             let wasi_imports = wasi_object();
