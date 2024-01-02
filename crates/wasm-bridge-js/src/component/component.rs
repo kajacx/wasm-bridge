@@ -106,6 +106,53 @@ impl Component {
         let instance_core = WebAssembly::Instance::new(&self.module_core, imports)
             .map_err(map_js_error("Synchronously instantiate main core"))?;
 
+        Self::prepare_wasi_imports(&instance_core, wasi_imports)?;
+
+        let wasi_core = WebAssembly::Instance::new(
+            self.module_core2.as_ref().context("Get wasi core")?,
+            wasi_imports,
+        )
+        .map_err(map_js_error("Synchronously instantiate wasi core"))?;
+
+        Self::link_wasi_exports(&wasi_core, dyn_fns)?;
+
+        Instance::new(instance_core, drop_handles, memory)
+    }
+
+    pub(crate) async fn instantiate_wasi_async(
+        &self,
+        imports: &Object,
+        wasi_imports: &Object,
+        dyn_fns: &HashMap<String, Array>,
+        drop_handles: DropHandles,
+        memory: ModuleMemory,
+    ) -> Result<Instance> {
+        let promise = WebAssembly::instantiate_module(&self.module_core, imports);
+        let instance = JsFuture::from(promise)
+            .await
+            .map_err(map_js_error("Asynchronously instantiate main core"))?;
+        let instance_core: WebAssembly::Instance = instance.into();
+
+        Self::prepare_wasi_imports(&instance_core, wasi_imports)?;
+
+        let promise = WebAssembly::instantiate_module(
+            self.module_core2.as_ref().context("Get wasi core")?,
+            imports,
+        );
+        let instance = JsFuture::from(promise)
+            .await
+            .map_err(map_js_error("Asynchronously instantiate wasi core"))?;
+        let wasi_core: WebAssembly::Instance = instance.into();
+
+        Self::link_wasi_exports(&wasi_core, dyn_fns)?;
+
+        Instance::new(instance_core, drop_handles, memory)
+    }
+
+    fn prepare_wasi_imports(
+        instance_core: &WebAssembly::Instance,
+        wasi_imports: &Object,
+    ) -> Result<()> {
         let exports = instance_core.exports();
         let cabi_realloc = Reflect::get(&exports, static_str_to_js("cabi_realloc"))
             .map_err(map_js_error("Get cabi realloc"))?;
@@ -133,12 +180,13 @@ impl Component {
         Reflect::set(&wasi_imports, static_str_to_js("env"), &env_obj)
             .expect("wasi imports is an object");
 
-        let wasi_core = WebAssembly::Instance::new(
-            self.module_core2.as_ref().context("Get wasi core")?,
-            wasi_imports,
-        )
-        .map_err(map_js_error("Synchronously instantiate wasi core"))?;
+        Ok(())
+    }
 
+    fn link_wasi_exports(
+        wasi_core: &WebAssembly::Instance,
+        dyn_fns: &HashMap<String, Array>,
+    ) -> Result<()> {
         let wasi_exports = wasi_core.exports();
 
         for (name, dyn_fn) in dyn_fns {
@@ -150,23 +198,7 @@ impl Component {
             Reflect::set_u32(&dyn_fn, 0, &exported_fn).expect("dyn_fn is an array");
         }
 
-        Instance::new(instance_core, drop_handles, memory)
-    }
-
-    pub(crate) async fn instantiate_wasi_async(
-        &self,
-        imports: &Object,
-        drop_handles: DropHandles,
-        memory: ModuleMemory,
-    ) -> Result<Instance> {
-        let promise = WebAssembly::instantiate_module(&self.module_core, imports);
-        let instance = JsFuture::from(promise)
-            .await
-            .map_err(map_js_error("Asynchronously instantiate main core"))?;
-
-        let instance_core = instance.into();
-
-        Instance::new(instance_core, drop_handles, memory)
+        Ok(())
     }
 }
 
