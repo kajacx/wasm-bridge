@@ -11,9 +11,13 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub fn new(instance: WebAssembly::Instance, drop_handles: DropHandles) -> Result<Self> {
+    pub fn new(
+        instance: WebAssembly::Instance,
+        drop_handles: DropHandles,
+        memory: &ModuleMemory,
+    ) -> Result<Self> {
         let js_exports: JsValue = instance.exports().into();
-        let exports_root = ExportsRoot::new(js_exports, drop_handles)?;
+        let exports_root = ExportsRoot::new(js_exports, drop_handles, memory)?;
         let exports = Exports::new(exports_root);
 
         Ok(Self { exports })

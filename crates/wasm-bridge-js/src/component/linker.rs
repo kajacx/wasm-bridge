@@ -44,9 +44,9 @@ impl<T> Linker<T> {
         let (imports, drop_handles, memory, wasi_info) = self.prepare_imports(store, component)?;
 
         if let Some(wasi_info) = wasi_info {
-            component.instantiate_wasi(&imports, drop_handles, memory, wasi_info)
+            component.instantiate_wasi(&imports, drop_handles, &memory, wasi_info)
         } else {
-            component.instantiate(&imports, drop_handles, memory)
+            component.instantiate(&imports, drop_handles, &memory)
         }
     }
 
@@ -58,15 +58,15 @@ impl<T> Linker<T> {
         let (imports, drop_handles, memory, wasi_info) = self.prepare_imports(store, component)?;
 
         crate::helpers::log_js_value("IMPORTS", &imports);
-        crate::helpers::log_js_value("WASI IMPORTS", wasi_imports.as_ref().unwrap());
+        crate::helpers::log_js_value("WASI IMPORTS", &wasi_info.as_ref().unwrap().0);
 
         if let Some(wasi_info) = wasi_info {
             component
-                .instantiate_wasi_async(&imports, drop_handles, memory, wasi_info)
+                .instantiate_wasi_async(&imports, drop_handles, &memory, wasi_info)
                 .await
         } else {
             component
-                .instantiate_async(&imports, drop_handles, memory)
+                .instantiate_async(&imports, drop_handles, &memory)
                 .await
         }
     }
@@ -98,7 +98,12 @@ impl<T> Linker<T> {
                     imports_obj = Object::new().into();
                 }
 
-                interface.prepare_imports(&mut store, &mut closures, &imports_obj, memory.clone());
+                interface.prepare_imports(
+                    &mut store,
+                    &mut closures,
+                    &imports_obj,
+                    wasi_memory.clone(),
+                );
                 Reflect::set(&wasi_imports, &name_js, &imports_obj).expect("imports is an object");
             }
 

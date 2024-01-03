@@ -1,7 +1,7 @@
 use std::{collections::HashMap, marker::PhantomData};
 
 use anyhow::Context;
-use js_sys::{Function, Object, Reflect, WebAssembly};
+use js_sys::{Function, Object, Reflect};
 use wasm_bindgen::JsValue;
 
 use crate::{direct::ModuleMemory, helpers::map_js_error, DropHandles, Result};
@@ -27,7 +27,11 @@ pub struct ExportsRoot {
 }
 
 impl ExportsRoot {
-    pub(crate) fn new(exports: JsValue, drop_handles: DropHandles) -> Result<Self> {
+    pub(crate) fn new(
+        exports: JsValue,
+        drop_handles: DropHandles,
+        memory: &ModuleMemory,
+    ) -> Result<Self> {
         let mut exported_js_fns = HashMap::<String, Function>::new();
         let mut post_return_js_fns = HashMap::<String, Function>::new();
 
