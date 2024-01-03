@@ -194,7 +194,7 @@ impl<T> LinkerInterface<T> {
         Ok(())
     }
 
-    pub fn func_wrap_async<Params, Results, F>(&mut self, name: &str, _func: F) -> Result<()>
+    pub fn func_wrap_async<Params, Results, F>(&mut self, _name: &str, _func: F) -> Result<()>
     where
         T: 'static,
         // F: IntoMakeClosure<T, Params, Results>,
@@ -210,6 +210,7 @@ impl<T> LinkerInterface<T> {
     {
         // self.func_wrap(name, func)
         // todo!("implement func_wrap_async for {name}")
+        // FIXME: actually implement this, or somehow resolve "normal" user imports
         Ok(())
     }
 

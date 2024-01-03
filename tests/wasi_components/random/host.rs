@@ -31,12 +31,12 @@ impl WasiView for State {
     }
 }
 
-#[wasm_bridge::async_trait]
-impl RandomImports for State {
-    async fn round_trip_import(&mut self, l: Vec<u32>) -> Result<Vec<u32>> {
-        Ok(l)
-    }
-}
+// #[wasm_bridge::async_trait]
+// impl RandomImports for State {
+//     async fn round_trip_import(&mut self, l: Vec<u32>) -> Result<Vec<u32>> {
+//         Ok(l)
+//     }
+// }
 
 pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     default_random(component_bytes).await.unwrap();
@@ -60,7 +60,7 @@ async fn default_random(component_bytes: &[u8]) -> Result<()> {
 
     let mut linker = Linker::new(store.engine());
     command::add_to_linker(&mut linker).unwrap();
-    Random::add_to_linker(&mut linker, |s| s).unwrap();
+    // Random::add_to_linker(&mut linker, |s| s).unwrap();
 
     let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await.unwrap();
     let number1 = instance.call_random_number(&mut store).await.unwrap();
