@@ -29,7 +29,6 @@ where
 
             let closure =
                 Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
-                    crate::helpers::log_js_value("IMPORT ARGS:", &args);
                     let mut args_iter = JsArgsReader::new(args);
                     let args = if P::NUM_ARGS <= 16 {
                         P::from_js_args(&mut args_iter, &memory).map_err(|err| {
@@ -51,13 +50,11 @@ where
                         let result = result
                             .to_js_return(&memory)
                             .map_err(|err| format!("conversion of imported fn result: {err:?}"))?;
-                        crate::helpers::log_js_value("SINGLE RETURN:", &result);
                         Ok(result)
                     } else {
                         let addr = args_iter
                             .next()
                             .ok_or("missing last mem address argument")?;
-                        crate::helpers::log_js_value("WRITE TO ADDR RETURN:", &addr);
                         let addr = u32::from_js_value(&addr)
                             .map_err(|err| format!("return address is not a number: {err:?}"))?
                             as usize;

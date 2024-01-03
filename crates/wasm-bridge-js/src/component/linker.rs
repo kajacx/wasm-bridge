@@ -57,9 +57,6 @@ impl<T> Linker<T> {
     ) -> Result<Instance> {
         let (imports, drop_handles, memory, wasi_info) = self.prepare_imports(store, component)?;
 
-        crate::helpers::log_js_value("IMPORTS", &imports);
-        crate::helpers::log_js_value("WASI IMPORTS", &wasi_info.as_ref().unwrap().0);
-
         if let Some(wasi_info) = wasi_info {
             component
                 .instantiate_wasi_async(&imports, drop_handles, &memory, wasi_info)
