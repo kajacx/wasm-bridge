@@ -105,7 +105,7 @@ impl Component {
         let instance_core = WebAssembly::Instance::new(&self.module_core, imports)
             .map_err(map_js_error("Synchronously instantiate main core"))?;
 
-        Self::prepare_wasi_imports(&instance_core, &wasi_imports, &memory)?;
+        let js_memory = Self::prepare_wasi_imports(&instance_core, &wasi_imports, &memory)?;
 
         let wasi_core = WebAssembly::Instance::new(
             self.module_core2.as_ref().context("Get wasi core")?,
@@ -113,7 +113,12 @@ impl Component {
         )
         .map_err(map_js_error("Synchronously instantiate wasi core"))?;
 
-        Self::set_memory_and_realloc(&wasi_core, "cabi_import_realloc", &wasi_memory)?;
+        Self::set_existing_memory_and_realloc(
+            &wasi_core,
+            "cabi_import_realloc",
+            &wasi_memory,
+            &js_memory,
+        )?;
 
         Self::link_wasi_exports(&wasi_core, &dyn_fns)?;
 
@@ -133,7 +138,7 @@ impl Component {
             .map_err(map_js_error("Asynchronously instantiate main core"))?;
         let instance_core: WebAssembly::Instance = instance.into();
 
-        Self::prepare_wasi_imports(&instance_core, &wasi_imports, &memory)?;
+        let js_memory = Self::prepare_wasi_imports(&instance_core, &wasi_imports, &memory)?;
 
         let promise = WebAssembly::instantiate_module(
             self.module_core2.as_ref().context("Get wasi core")?,
@@ -144,7 +149,12 @@ impl Component {
             .map_err(map_js_error("Asynchronously instantiate wasi core"))?;
         let wasi_core: WebAssembly::Instance = instance.into();
 
-        Self::set_memory_and_realloc(&wasi_core, "cabi_import_realloc", &wasi_memory)?;
+        Self::set_existing_memory_and_realloc(
+            &wasi_core,
+            "cabi_import_realloc",
+            &wasi_memory,
+            &js_memory,
+        )?;
 
         Self::link_wasi_exports(&wasi_core, &dyn_fns)?;
 
@@ -155,8 +165,8 @@ impl Component {
         instance_core: &WebAssembly::Instance,
         wasi_imports: &Object,
         main_memory: &ModuleMemory,
-    ) -> Result<()> {
-        let (module_memory, cabi_realloc) =
+    ) -> Result<WebAssembly::Memory> {
+        let (js_memory, cabi_realloc) =
             Self::set_memory_and_realloc(instance_core, "cabi_realloc", main_memory)?;
 
         let main_module_obj = Object::new();
@@ -168,8 +178,7 @@ impl Component {
         .expect("main module is an object");
 
         let env_obj = Object::new();
-        Reflect::set(&env_obj, static_str_to_js("memory"), &module_memory)
-            .expect("env is an object");
+        Reflect::set(&env_obj, static_str_to_js("memory"), &js_memory).expect("env is an object");
 
         Reflect::set(
             &wasi_imports,
@@ -180,7 +189,7 @@ impl Component {
         Reflect::set(&wasi_imports, static_str_to_js("env"), &env_obj)
             .expect("wasi imports is an object");
 
-        Ok(())
+        Ok(js_memory)
     }
 
     fn link_wasi_exports(wasi_core: &WebAssembly::Instance, dyn_fns: &DynFns) -> Result<()> {
@@ -213,6 +222,20 @@ impl Component {
         }
         let memory: WebAssembly::Memory = memory.into();
 
+        let realloc =
+            Self::set_existing_memory_and_realloc(instance, realloc_name, module_memory, &memory)?;
+
+        Ok((memory, realloc))
+    }
+
+    fn set_existing_memory_and_realloc(
+        instance: &WebAssembly::Instance,
+        realloc_name: &'static str,
+        module_memory: &ModuleMemory,
+        existing_memory: &WebAssembly::Memory,
+    ) -> Result<Function> {
+        let exports = instance.exports();
+
         let realloc = Reflect::get(&exports, static_str_to_js(realloc_name))
             .map_err(map_js_error("get realloc export"))?;
         if !realloc.is_function() {
@@ -222,9 +245,9 @@ impl Component {
         }
         let realloc: Function = realloc.into();
 
-        module_memory.set(crate::Memory::new(memory.clone()), realloc.clone());
+        module_memory.set(crate::Memory::new(existing_memory.clone()), realloc.clone());
 
-        Ok((memory, realloc))
+        Ok(realloc)
     }
 }
 
