@@ -69,14 +69,6 @@ fn few_values(mut store: &mut Store<()>, instance: &Instance) -> Result<()> {
     let returned = add_i32.call(&mut store, (5, 10))?;
     assert_eq!(returned, 5 + 10);
 
-    // Multiple results
-    let add_sub_ten_i32 =
-        instance.get_typed_func::<i32, (i32, i32)>(&mut store, "add_sub_ten_i32")?;
-
-    let (a, b) = add_sub_ten_i32.call(&mut store, 50)?;
-    assert_eq!(a, 50i32 + 10);
-    assert_eq!(b, 50i32 - 10);
-
     // Single-element tuple
     let add_five_f64 = instance.get_typed_func::<(f64,), (f64,)>(&mut store, "add_five_f64")?;
     let returned = add_five_f64.call(&mut store, (5.5,))?;

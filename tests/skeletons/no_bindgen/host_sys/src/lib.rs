@@ -3,7 +3,7 @@ const GUEST_BYTES: &'static [u8] =
 
 mod host;
 
-#[wasm_bindgen_test::wasm_bindgen_test]
-async fn main() {
-    host::run_test(GUEST_BYTES).await.expect("host_js test should pass")
+#[tokio::test(flavor = "current_thread")]
+async fn test() {
+    host::run_test(GUEST_BYTES).await.expect("host_sys test should pass")
 }

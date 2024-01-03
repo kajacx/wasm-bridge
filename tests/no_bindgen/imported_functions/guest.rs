@@ -25,11 +25,7 @@ pub fn add_i32(a: i32, b: i32) -> i32 {
     unsafe { add_i32_import(a, b) }
 }
 
-// Multiple results
-#[no_mangle]
-pub fn add_sub_ten(num: i32) -> (i32, i32) {
-    unsafe { add_sub_ten_import(num) }
-}
+// Multiple results will be tested from a WAT text instead
 
 // No arguments
 #[no_mangle]
@@ -56,8 +52,6 @@ extern "C" {
     fn add_one_f64(number: f64) -> f64;
 
     fn add_i32_import(a: i32, b: i32) -> i32;
-    #[allow(improper_ctypes)]
-    fn add_sub_ten_import(num: i32) -> (i32, i32);
 
     fn increment();
     // fn panics_import();
