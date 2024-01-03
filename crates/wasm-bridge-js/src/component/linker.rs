@@ -41,11 +41,10 @@ impl<T> Linker<T> {
         store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
-        let (imports, wasi_imports, dyn_fns, drop_handles, memory) =
-            self.prepare_imports(store, component)?;
+        let (imports, drop_handles, memory, wasi_info) = self.prepare_imports(store, component)?;
 
-        if let (Some(wasi_imports), Some(dyn_fns)) = (wasi_imports, dyn_fns) {
-            component.instantiate_wasi(&imports, &wasi_imports, &dyn_fns, drop_handles, memory)
+        if let Some(wasi_info) = wasi_info {
+            component.instantiate_wasi(&imports, drop_handles, memory, wasi_info)
         } else {
             component.instantiate(&imports, drop_handles, memory)
         }
@@ -56,15 +55,14 @@ impl<T> Linker<T> {
         store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
-        let (imports, wasi_imports, dyn_fns, drop_handles, memory) =
-            self.prepare_imports(store, component)?;
+        let (imports, drop_handles, memory, wasi_info) = self.prepare_imports(store, component)?;
 
         crate::helpers::log_js_value("IMPORTS", &imports);
         crate::helpers::log_js_value("WASI IMPORTS", wasi_imports.as_ref().unwrap());
 
-        if let (Some(wasi_imports), Some(dyn_fns)) = (wasi_imports, dyn_fns) {
+        if let Some(wasi_info) = wasi_info {
             component
-                .instantiate_wasi_async(&imports, &wasi_imports, &dyn_fns, drop_handles, memory)
+                .instantiate_wasi_async(&imports, drop_handles, memory, wasi_info)
                 .await
         } else {
             component
@@ -79,18 +77,17 @@ impl<T> Linker<T> {
         component: &Component,
     ) -> Result<(
         Object,
-        Option<Object>,
-        Option<DynFns>,
         DropHandles,
         ModuleMemory,
+        Option<(Object, DynFns, ModuleMemory)>,
     )> {
         let mut closures = Vec::new();
-        let memory = ModuleMemory::new();
 
-        let (imports, wasi_imports, dyn_fns) = if let (Some(wasi_object), Some(_wasi_core)) =
+        let (imports, wasi_info) = if let (Some(wasi_object), Some(_wasi_core)) =
             (&self.wasi_object, &component.module_core2)
         {
             let wasi_imports = wasi_object();
+            let wasi_memory = ModuleMemory::new();
 
             for (name, interface) in self.wasi_interfaces.iter() {
                 let name_js: JsValue = name.into();
@@ -121,10 +118,12 @@ impl<T> Linker<T> {
             )
             .expect("imports is object");
 
-            (imports, Some(wasi_imports), Some(setters))
+            (imports, Some((wasi_imports, setters, wasi_memory)))
         } else {
-            (Object::new(), None, None)
+            (Object::new(), None)
         };
+
+        let memory = ModuleMemory::new();
 
         for (name, interface) in self.interfaces.iter() {
             let name_js: JsValue = name.into();
@@ -138,7 +137,7 @@ impl<T> Linker<T> {
             Reflect::set(&imports, &name_js, &imports_obj).expect("imports is an object");
         }
 
-        Ok((imports, wasi_imports, dyn_fns, Rc::new(closures), memory))
+        Ok((imports, Rc::new(closures), memory, wasi_info))
     }
 
     pub fn root(&mut self) -> &mut LinkerInterface<T> {
