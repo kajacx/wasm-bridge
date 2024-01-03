@@ -3,4 +3,7 @@ package component-test:wasi-protocol;
 world random {
   export random-number: func() -> u64;
   export random-bytes: func() -> list<u8>;
+
+  import round-trip-import: func(l: list<u32>) -> list<u32>;
+  export round-trip-export: func(l: list<u32>) -> list<u32>;
 }

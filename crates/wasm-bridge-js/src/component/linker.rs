@@ -205,7 +205,8 @@ impl<T> LinkerInterface<T> {
         Results: Lower + 'static,
     {
         // self.func_wrap(name, func)
-        todo!("implement func_wrap_async for {name}")
+        // todo!("implement func_wrap_async for {name}")
+        Ok(())
     }
 
     pub fn resource<U>(

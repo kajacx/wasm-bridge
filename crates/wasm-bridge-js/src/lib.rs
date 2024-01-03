@@ -37,7 +37,8 @@ pub use direct::next_multiple_of;
 pub use direct::usize_max;
 
 #[cfg(feature = "async")]
-pub use wasm_bridge_macros::async_trait;
+// pub use wasm_bridge_macros::async_trait;
+pub use async_trait::async_trait;
 
 pub use js_sys;
 pub use wasm_bindgen;
