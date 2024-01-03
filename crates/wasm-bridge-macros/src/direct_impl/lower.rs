@@ -42,7 +42,7 @@ pub fn lower_struct(name: Ident, data: DataStruct) -> TokenStream {
         use super::*;
 
         impl wasm_bridge::direct::Lower for #name {
-            fn to_js_args<M: wasm_bridge::direct::WriteableMemory>(&self, args: &mut Vec<wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<()> {
+            fn to_js_args<M: wasm_bridge::direct::WriteableMemory>(&self, args: &mut wasm_bridge::direct::JsArgsWriter, memory: &M) -> wasm_bridge::Result<()> {
                 #to_abi_impl
                 Ok(())
             }
@@ -80,8 +80,8 @@ pub fn lower_enum(name: Ident, data: DataEnum) -> TokenStream {
         use super::*;
 
         impl wasm_bridge::direct::Lower for #name {
-            fn to_js_args<M: wasm_bridge::direct::WriteableMemory>(&self, args: &mut Vec<wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<()> {
-                args.push(self.to_js_return(memory)?);
+            fn to_js_args<M: wasm_bridge::direct::WriteableMemory>(&self, args: &mut wasm_bridge::direct::JsArgsWriter, memory: &M) -> wasm_bridge::Result<()> {
+                args.push(&self.to_js_return(memory)?);
                 Ok(())
             }
 
@@ -117,7 +117,7 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
                 let field_type = &field.ty;
                 quote!(
                     Self::#variant_name(value) => {
-                        args.push(#tag.to_js_value());
+                        args.push(&#tag.to_js_value());
                         value.to_js_args(args, memory)?;
                         <#field_type>::NUM_ARGS
                     }
@@ -125,7 +125,7 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
             } else {
                 quote!(
                     Self::#variant_name => {
-                        args.push(#tag.to_js_value());
+                        args.push(&#tag.to_js_value());
                         0
                     }
                 )
@@ -138,10 +138,8 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
             #match_arms
         };
 
-        // Start from 1 to account for the initial variant tag
-        for _ in 1..(Self::NUM_ARGS - args_written) {
-            args.push(wasm_bridge::wasm_bindgen::JsValue::UNDEFINED);
-        }
+        // Subtract an additional 1 to account for the initial variant tag
+        args.skip(Self::NUM_ARGS - args_written - 1);
         Ok(())
     );
 
@@ -199,7 +197,7 @@ pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
         use super::*;
 
         impl wasm_bridge::direct::Lower for #name {
-            fn to_js_args<M: wasm_bridge::direct::WriteableMemory>(&self, args: &mut Vec<wasm_bridge::wasm_bindgen::JsValue>, memory: &M) -> wasm_bridge::Result<()> {
+            fn to_js_args<M: wasm_bridge::direct::WriteableMemory>(&self, args: &mut wasm_bridge::direct::JsArgsWriter, memory: &M) -> wasm_bridge::Result<()> {
                 #to_js_args
             }
 

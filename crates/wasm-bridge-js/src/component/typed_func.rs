@@ -5,7 +5,7 @@ use js_sys::Array;
 use wasm_bindgen::JsValue;
 
 use crate::{
-    direct::{Lift, Lower, WriteableMemory},
+    direct::{JsArgsWriter, Lift, Lower, WriteableMemory},
     helpers::map_js_error,
     AsContextMut, Result,
 };
@@ -47,10 +47,9 @@ impl<Params, Return> TypedFunc<Params, Return> {
         let memory = &self.func.memory;
 
         let arguments = if Params::NUM_ARGS <= 16 {
-            // TODO: insert directly to the array instead of to a vec first
-            let mut args = Vec::<JsValue>::with_capacity(Params::NUM_ARGS);
+            let mut args = JsArgsWriter::new(Params::NUM_ARGS as u32);
             params.to_js_args(&mut args, &memory)?;
-            args.into_iter().collect()
+            args.close()
         } else {
             let mut buffer = memory.allocate(Params::ALIGNMENT, Params::BYTE_SIZE)?;
             params.write_to(&mut buffer, memory)?;

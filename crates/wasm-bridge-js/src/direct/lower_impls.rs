@@ -9,10 +9,10 @@ macro_rules! lower_primitive {
         impl Lower for $ty {
             fn to_js_args<M: WriteableMemory>(
                 &self,
-                args: &mut Vec<JsValue>,
+                args: &mut JsArgsWriter,
                 _memory: &M,
             ) -> Result<()> {
-                args.push(self.to_js_value());
+                args.push(&self.to_js_value());
                 Ok(())
             }
 
@@ -46,7 +46,7 @@ lower_primitive!(f32);
 lower_primitive!(f64);
 
 impl Lower for bool {
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
         (*self as u8).to_js_args(args, memory)
     }
 
@@ -60,7 +60,7 @@ impl Lower for bool {
 }
 
 impl Lower for char {
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
         (*self as u32).to_js_args(args, memory)
     }
 
@@ -74,13 +74,13 @@ impl Lower for char {
 }
 
 impl<T: Lower> Lower for &[T] {
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
         let addr = write_vec_data(self, memory)? as u32;
         let len = self.len() as u32;
 
         // First address, then element count
-        args.push(addr.into());
-        args.push(len.into());
+        args.push(&addr.into());
+        args.push(&len.into());
 
         Ok(())
     }
@@ -105,7 +105,7 @@ impl<T: Lower> Lower for &[T] {
 }
 
 impl<T: Lower> Lower for Vec<T> {
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
         self.as_slice().to_js_args(args, memory)
     }
 
@@ -119,7 +119,7 @@ impl<T: Lower> Lower for Vec<T> {
 }
 
 impl Lower for &str {
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
         self.as_bytes().to_js_args(args, memory)
     }
 
@@ -133,7 +133,7 @@ impl Lower for &str {
 }
 
 impl Lower for String {
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
         self.as_bytes().to_js_args(args, memory)
     }
 
@@ -161,7 +161,7 @@ fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], memory: &M) -> Resul
 }
 
 impl<T: Lower> Lower for &T {
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
         T::to_js_args(&self, args, memory)
     }
 
@@ -175,17 +175,15 @@ impl<T: Lower> Lower for &T {
 }
 
 impl<T: Lower> Lower for Option<T> {
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
         match self {
             Some(value) => {
-                args.push(1u8.to_js_value());
+                args.push(&1u8.to_js_value());
                 value.to_js_args(args, memory)?;
             }
             None => {
-                args.push(0u8.to_js_value());
-                for _ in 0..T::NUM_ARGS {
-                    args.push(JsValue::UNDEFINED);
-                }
+                args.push(&0u8.to_js_value());
+                args.skip(T::NUM_ARGS);
             }
         };
         Ok(())
@@ -213,24 +211,22 @@ impl<T: Lower> Lower for Option<T> {
 }
 
 impl<T: Lower, E: Lower> Lower for Result<T, E> {
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
         let args_written = match self {
             Ok(value) => {
-                args.push(0u8.to_js_value());
+                args.push(&0u8.to_js_value());
                 value.to_js_args(args, memory)?;
                 T::NUM_ARGS
             }
             Err(error) => {
-                args.push(1u8.to_js_value());
+                args.push(&1u8.to_js_value());
                 error.to_js_args(args, memory)?;
                 E::NUM_ARGS
             }
         };
 
-        // Start from 1 to account for the initial variant tag
-        for _ in 1..(Self::NUM_ARGS - args_written) {
-            args.push(JsValue::UNDEFINED);
-        }
+        // Subtract an extra 1 to account for the initial variant tag
+        args.skip(Self::NUM_ARGS - args_written - 1);
 
         Ok(())
     }
@@ -272,8 +268,8 @@ impl<T: Lower, E: Lower> Lower for Result<T, E> {
 }
 
 impl<T> Lower for Resource<T> {
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
-        args.push(self.to_js_return(memory)?);
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
+        args.push(&self.to_js_return(memory)?);
         Ok(())
     }
 
@@ -287,8 +283,8 @@ impl<T> Lower for Resource<T> {
 }
 
 impl Lower for ResourceAny {
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
-        args.push(self.to_js_return(memory)?);
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
+        args.push(&self.to_js_return(memory)?);
         Ok(())
     }
 
@@ -302,7 +298,7 @@ impl Lower for ResourceAny {
 }
 
 impl Lower for () {
-    fn to_js_args<M: WriteableMemory>(&self, _args: &mut Vec<JsValue>, _memory: &M) -> Result<()> {
+    fn to_js_args<M: WriteableMemory>(&self, _args: &mut JsArgsWriter, _memory: &M) -> Result<()> {
         Ok(())
     }
 
@@ -316,7 +312,7 @@ impl Lower for () {
 }
 
 impl<T: Lower> Lower for (T,) {
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
         self.0.to_js_args(args, memory)
     }
 
@@ -332,7 +328,7 @@ impl<T: Lower> Lower for (T,) {
 macro_rules! lower_tuple {
     ($(($name: ident, $index: tt, $next: literal, $end: literal)),*) => {
         impl<$($name: Lower),*> Lower for ($($name),*) {
-            fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()> {
+            fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
                 $(self.$index.to_js_args(args, memory)?;)*
                 Ok(())
             }

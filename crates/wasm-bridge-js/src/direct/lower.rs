@@ -5,7 +5,7 @@ use wasm_bindgen::JsValue;
 
 pub trait Lower: SizeDescription {
     /// Serializes self to JS arguments to be passes to an exported method.
-    fn to_js_args<M: WriteableMemory>(&self, args: &mut Vec<JsValue>, memory: &M) -> Result<()>;
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()>;
 
     /// Converts self from a return from an imported function to a JS return value.
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue>;
@@ -58,7 +58,20 @@ impl JsArgsWriter {
     }
 
     pub fn push(&mut self, arg: &JsValue) {
-        Reflect::set_u32(&self.args, self.index, value);
+        Reflect::set_u32(&self.args, self.index, arg).expect("args in an array");
         self.index += 1;
+    }
+
+    pub fn skip(&mut self, num: usize) {
+        self.index += num as u32;
+    }
+
+    pub fn close(self) -> Array {
+        debug_assert_eq!(
+            self.index,
+            self.args.length(),
+            "All arguments must be filled"
+        );
+        self.args
     }
 }
