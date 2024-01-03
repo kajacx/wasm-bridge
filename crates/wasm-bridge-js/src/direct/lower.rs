@@ -1,5 +1,6 @@
 use super::{ByteBuffer, SizeDescription};
 use crate::{Result, ToJsValue};
+use js_sys::{Array, Reflect};
 use wasm_bindgen::JsValue;
 
 pub trait Lower: SizeDescription {
@@ -40,5 +41,24 @@ impl<T: WriteableMemory> WriteableMemory for &T {
 
     fn flush(&self, buffer: ByteBuffer) -> usize {
         T::flush(self, buffer)
+    }
+}
+
+pub struct JsArgsWriter {
+    args: Array,
+    index: u32,
+}
+
+impl JsArgsWriter {
+    pub fn new(num_args: u32) -> Self {
+        Self {
+            args: Array::new_with_length(num_args),
+            index: 0,
+        }
+    }
+
+    pub fn push(&mut self, arg: &JsValue) {
+        Reflect::set_u32(&self.args, self.index, value);
+        self.index += 1;
     }
 }
