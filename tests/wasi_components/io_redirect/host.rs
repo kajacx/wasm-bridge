@@ -4,6 +4,7 @@ use wasm_bridge::{
 };
 use wasm_bridge_wasi::preview2::*;
 
+use bytes::Bytes;
 use std::sync::{Arc, Mutex};
 
 wasm_bridge::component::bindgen!({
@@ -45,8 +46,8 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let mut table = Table::new();
-    let wasi = WasiCtxBuilder::new().build(&mut table)?;
+    let table = Table::new();
+    let wasi = WasiCtxBuilder::new().build();
 
     let engine = Engine::new(&config)?;
     let mut store = Store::new(&engine, State { table, wasi });
@@ -72,8 +73,8 @@ async fn inherit(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let mut table = Table::new();
-    let wasi = WasiCtxBuilder::new().inherit_stdio().build(&mut table)?;
+    let table = Table::new();
+    let wasi = WasiCtxBuilder::new().inherit_stdio().build();
 
     let engine = Engine::new(&config)?;
     let mut store = Store::new(&engine, State { table, wasi });
@@ -109,12 +110,12 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
     let in_bytes = "PRINT_IN_2".to_string().into_bytes();
     let in_stream = InStream { data: in_bytes, offset: 0, max: 3 };
 
-    let mut table = Table::new();
+    let table = Table::new();
     let wasi = WasiCtxBuilder::new()
-        .set_stdin(in_stream)
-        .set_stdout(out_stream)
-        .set_stderr(err_stream)
-        .build(&mut table)?;
+        .stdin(in_stream)
+        .stdout(out_stream)
+        .stderr(err_stream)
+        .build();
 
     let engine = Engine::new(&config)?;
     let mut store = Store::new(&engine, State { table, wasi });
@@ -147,28 +148,45 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
     Ok(())
 }
 
+#[derive(Clone, Debug)]
 struct OutStream { 
     data: Arc<Mutex<Vec<u8>>>,
     max: usize
 }
 
 #[wasm_bridge::async_trait]
-impl OutputStream for OutStream {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+impl Subscribe for OutStream {
+    async fn ready(&mut self) {}
+}
+
+
+impl HostOutputStream for OutStream {
+    fn write(&mut self, buf: Bytes) -> StreamResult<()> {
+        assert!(buf.len() <= self.max, "We specified to write at most {} bytes at a time.", self.max);
+        self.data.try_lock().unwrap().extend(buf);
+        StreamResult::Ok(())
     }
 
-    async fn writable(&self) -> Result<()> {
-        Ok(())
+    fn flush(&mut self) -> StreamResult<()> {
+        StreamResult::Ok(())
     }
 
-    async fn write(&mut self, buf: &[u8]) -> Result<u64> {
-        let amount = buf.len().min(self.max);
-        self.data.try_lock().unwrap().extend(&buf[..amount]);
-        Ok(amount as u64)
+    fn check_write(&mut self) -> StreamResult<usize> {
+        StreamResult::Ok(self.max)
     }
 }
 
+impl StdoutStream for OutStream {
+    fn stream(&self) -> Box<(dyn HostOutputStream + 'static)> {
+        Box::new((*self).clone())
+    }
+
+    fn isatty(&self) -> bool {
+        false
+    }
+}
+
+#[derive(Clone, Debug)]
 struct InStream {
     data: Vec<u8>,
     offset: usize,
@@ -176,26 +194,32 @@ struct InStream {
 }
 
 #[wasm_bridge::async_trait]
-impl InputStream for InStream {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+impl Subscribe for InStream {
+    async fn ready(&mut self) {}
+}
+
+impl HostInputStream for InStream {
+     fn read(&mut self, size: usize) -> StreamResult<Bytes> {
+        let start = self.offset;
+        let len =  (self.data.len() - start).min(self.max).min(size);
+        let end = start + len;
+
+        self.offset = end;
+
+        if size > 0 && len == 0 {
+            StreamResult::Err(StreamError::Closed)
+        } else {
+            StreamResult::Ok(Bytes::copy_from_slice(&self.data[start..end]))
+        }
+    }
+}
+
+impl StdinStream for InStream {
+    fn stream(&self) -> Box<(dyn HostInputStream + 'static)> {
+        Box::new((*self).clone())
     }
 
-    async fn readable(&self) -> Result<()> {
-        Ok(())
-    }
-
-    async fn read(&mut self, buf: &mut [u8]) -> Result<(u64, bool)> {
-        let len = buf.len().min(self.data.len() - self.offset).min(self.max);
-        let from_slice = &self.data[self.offset..(self.offset + len)];
-
-        (&mut buf[..len]).copy_from_slice(from_slice);
-        self.offset += len;
-
-        Ok((len as _, self.data.len() == self.offset))
-    }
-
-    async fn num_ready_bytes(&self) -> Result<u64> {
-        Ok((self.data.len() - self.offset) as _)
+    fn isatty(&self) -> bool {
+        false
     }
 }
