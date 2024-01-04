@@ -2,8 +2,7 @@ use wasm_bridge::{
     component::{Component, Linker},
     Config, Engine, Result, Store,
 };
-
-use wasm_bridge::wasi::preview2::*;
+use wasm_bridge_wasi::preview2::*;
 
 use std::sync::{Arc, Mutex};
 
@@ -55,7 +54,7 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes)?;
 
     let mut linker = Linker::new(store.engine());
-    wasi::command::add_to_linker(&mut linker)?;
+    command::add_to_linker(&mut linker)?;
 
     let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await?;
 
@@ -82,7 +81,7 @@ async fn inherit(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes)?;
 
     let mut linker = Linker::new(store.engine());
-    wasi::command::add_to_linker(&mut linker)?;
+    command::add_to_linker(&mut linker)?;
 
     let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await?;
 
@@ -123,7 +122,7 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes)?;
 
     let mut linker = Linker::new(store.engine());
-    wasi::command::add_to_linker(&mut linker)?;
+    command::add_to_linker(&mut linker)?;
 
     let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await?;
 
@@ -137,7 +136,7 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
     instance.call_writeln_to_stdout(&mut store, "NO_PRINT").await?; // Test that output is not duplicated to stdout
 
     instance.call_writeln_to_stderr(&mut store, "PRINT_ERR_2").await?;
-    instance.call_writeln_to_stdout(&mut store, "NO_PRINT").await?;
+    instance.call_writeln_to_stderr(&mut store, "NO_PRINT").await?;
 
     let text = String::from_utf8(out_bytes.try_lock().unwrap().clone())?;
     assert!(text.contains("PRINT_OUT_2"), "stdout is captured");
