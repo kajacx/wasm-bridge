@@ -8,7 +8,9 @@ use wasm_bridge_wasi::preview2::*;
 wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
     world: "wit-imports",
-    async: true,
+    async: {
+        only_imports: [],
+    },
 });
 
 struct State {
@@ -31,10 +33,14 @@ impl WasiView for State {
     }
 }
 
-#[wasm_bridge::async_trait]
 impl WitImportsImports for State {
-    async fn add_one(&mut self, num: i32) -> Result<i32> {
+    fn add_one(&mut self, num: i32) -> Result<i32> {
         Ok(num + 1)
+    }
+
+    fn push_string(&mut self, mut strings: Vec<String>, a: String) -> Result<Vec<String>> {
+        strings.push(a);
+        Ok(strings)
     }
 }
 
@@ -59,6 +65,9 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
 
     let result = instance.call_add_three(&mut store, 5).await?;
     assert_eq!(result, 8);
+
+    let result = instance.call_push_strings(&mut store, &["a".into(), "b".into()], "c", "d").await?;
+    assert_eq!(result, vec!["a", "b", "c", "d"]);
 
     Ok(())
 }

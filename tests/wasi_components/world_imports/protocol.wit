@@ -3,4 +3,8 @@ package component-test:wasi-protocol;
 world wit-imports {
   import add-one: func(num: s32) -> s32;
   export add-three: func(num: s32) -> s32;
+
+  // Test memory allocations with "normal" user functions
+  import push-string: func(strings: list<string>, a: string) -> list<string>;
+  export push-strings: func(strings: list<string>, a: string, b: string) -> list<string>;
 }

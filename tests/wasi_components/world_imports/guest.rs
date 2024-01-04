@@ -15,4 +15,10 @@ impl Guest for GuestImpl {
         let num = add_one(num);
         num
     }
+
+    fn push_strings(strings: Vec<String>, a: String, b: String) -> Vec<String> {
+        let strings = push_string(&strings, &a);
+        let strings = push_string(&strings, &b);
+        strings
+    }
 }
