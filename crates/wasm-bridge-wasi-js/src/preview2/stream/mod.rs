@@ -11,8 +11,8 @@ use super::WasiView;
 )]
 #[component(variant)]
 pub enum StreamError {
-    Closed,
     LastOperationFailed(anyhow::Error),
+    Closed,
     Trap(anyhow::Error),
 }
 

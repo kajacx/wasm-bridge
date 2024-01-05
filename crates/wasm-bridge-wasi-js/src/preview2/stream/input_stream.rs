@@ -60,6 +60,8 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
                     .context("Get input stream resource")?;
 
                 let result = stream.read(len as usize);
+                wasm_bridge::helpers::console_log("RESULT FROM READ:");
+                wasm_bridge::helpers::console_log(&result);
 
                 Ok(result.map(|bytes| bytes.to_vec()))
             },
