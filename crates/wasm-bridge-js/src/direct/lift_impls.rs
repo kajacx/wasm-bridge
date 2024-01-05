@@ -183,7 +183,7 @@ impl<T: Lift> Lift for Option<T> {
 impl<T: Lift, E: Lift> Lift for Result<T, E> {
     fn from_js_return<M: ReadableMemory>(value: &JsValue, memory: &M) -> anyhow::Result<Self> {
         if Self::NUM_ARGS == 1 {
-            let variant = u8::from_js_value(&value)?;
+            let variant = u8::from_js_value(value)?;
             match variant {
                 // TODO: The (T/E)::from_js_return are not really needed,
                 // since we know both T and E are the unit.

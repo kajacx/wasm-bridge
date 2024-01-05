@@ -105,7 +105,7 @@ pub fn lower_enum(name: Ident, data: DataEnum) -> TokenStream {
 
 pub fn lower_variant(name: Ident, data: DataEnum) -> TokenStream {
     let variants = data.variants;
-    let all_empty = variants.iter().all(|variant| variant.fields.len() == 0);
+    let all_empty = variants.iter().all(|variant| variant.fields.is_empty());
 
     let match_arms = variants
         .iter()

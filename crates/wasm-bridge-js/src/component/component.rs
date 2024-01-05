@@ -100,12 +100,12 @@ impl Component {
         imports: &Object,
         drop_handles: DropHandles,
         memory: &ModuleMemory,
-        (wasi_imports, dyn_fns, wasi_memory): (Object, DynFns, ModuleMemory),
+        (wasi_imports, dyn_fns, wasi_memory): WasiInfo,
     ) -> Result<Instance> {
         let instance_core = WebAssembly::Instance::new(&self.module_core, imports)
             .map_err(map_js_error("Synchronously instantiate main core"))?;
 
-        let js_memory = Self::prepare_wasi_imports(&instance_core, &wasi_imports, &memory)?;
+        let js_memory = Self::prepare_wasi_imports(&instance_core, &wasi_imports, memory)?;
 
         let wasi_core = WebAssembly::Instance::new(
             self.module_core2.as_ref().context("Get wasi core")?,
@@ -130,7 +130,7 @@ impl Component {
         imports: &Object,
         drop_handles: DropHandles,
         memory: &ModuleMemory,
-        (wasi_imports, dyn_fns, wasi_memory): (Object, DynFns, ModuleMemory),
+        (wasi_imports, dyn_fns, wasi_memory): WasiInfo,
     ) -> Result<Instance> {
         let promise = WebAssembly::instantiate_module(&self.module_core, imports);
         let instance = JsFuture::from(promise)
@@ -138,7 +138,7 @@ impl Component {
             .map_err(map_js_error("Asynchronously instantiate main core"))?;
         let instance_core: WebAssembly::Instance = instance.into();
 
-        let js_memory = Self::prepare_wasi_imports(&instance_core, &wasi_imports, &memory)?;
+        let js_memory = Self::prepare_wasi_imports(&instance_core, &wasi_imports, memory)?;
 
         let promise = WebAssembly::instantiate_module(
             self.module_core2.as_ref().context("Get wasi core")?,
@@ -181,12 +181,12 @@ impl Component {
         Reflect::set(&env_obj, static_str_to_js("memory"), &js_memory).expect("env is an object");
 
         Reflect::set(
-            &wasi_imports,
+            wasi_imports,
             static_str_to_js("__main_module__"),
             &main_module_obj,
         )
         .expect("wasi imports is an object");
-        Reflect::set(&wasi_imports, static_str_to_js("env"), &env_obj)
+        Reflect::set(wasi_imports, static_str_to_js("env"), &env_obj)
             .expect("wasi imports is an object");
 
         Ok(js_memory)
@@ -201,7 +201,7 @@ impl Component {
 
             // If the function is missing, we ignore it, only used imports are present
             if exported_fn.is_function() {
-                Reflect::set_u32(&dyn_fn, 0, &exported_fn).expect("dyn_fn is an array");
+                Reflect::set_u32(dyn_fn, 0, &exported_fn).expect("dyn_fn is an array");
             }
         }
 

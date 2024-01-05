@@ -35,7 +35,7 @@ impl ExportsRoot {
         let mut exported_js_fns = HashMap::<String, Function>::new();
         let mut post_return_js_fns = HashMap::<String, Function>::new();
 
-        const POST_RETURN_PREFIX: &'static str = "cabi_post_";
+        const POST_RETURN_PREFIX: &str = "cabi_post_";
 
         let names = Object::get_own_property_names(&exports.clone().into());
         for i in 0..names.length() {

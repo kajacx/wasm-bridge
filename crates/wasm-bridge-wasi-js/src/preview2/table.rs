@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use super::*;
 
+#[derive(Default)]
 pub struct Table {
     pub(crate) input_streams: ResourceTable<Box<dyn HostInputStream>>,
     pub(crate) output_streams: ResourceTable<Box<dyn HostOutputStream>>,
@@ -43,5 +44,11 @@ impl<T> ResourceTable<T> {
 
     pub(crate) fn get_mut(&mut self, index: u32) -> Option<&mut T> {
         self.items.get_mut(&index)
+    }
+}
+
+impl<T> Default for ResourceTable<T> {
+    fn default() -> Self {
+        Self::new()
     }
 }

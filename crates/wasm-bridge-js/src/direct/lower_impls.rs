@@ -162,15 +162,15 @@ fn write_vec_data<T: Lower, M: WriteableMemory>(data: &[T], memory: &M) -> Resul
 
 impl<T: Lower> Lower for &T {
     fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
-        T::to_js_args(&self, args, memory)
+        T::to_js_args(self, args, memory)
     }
 
     fn to_js_return<M: WriteableMemory>(&self, memory: &M) -> Result<JsValue> {
-        T::to_js_return(&self, memory)
+        T::to_js_return(self, memory)
     }
 
     fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
-        T::write_to(&self, buffer, memory)
+        T::write_to(self, buffer, memory)
     }
 }
 

@@ -107,7 +107,7 @@ pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
 pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
     let name_str = format_ident!("{}", name).to_string();
     let variants = data.variants;
-    let all_empty = variants.iter().all(|variant| variant.fields.len() == 0);
+    let all_empty = variants.iter().all(|variant| variant.fields.is_empty());
 
     let from_js_return = if all_empty {
         let match_arms: TokenStream = variants

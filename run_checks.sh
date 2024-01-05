@@ -6,9 +6,13 @@ cd crates/wasm-bridge-js
 wasm-pack test --node -- --all-features
 cd ../..
 
+cd crates/wasm-bridge-wasi-js
+wasm-pack test --node -- --all-features
+cd ../..
+
 # Warnigns
-cargo check --all-features
-cargo clippy --all-features -- -D clippy::all
+cargo check --target wasm32-unknown-unknown --all-features
+cargo clippy --target wasm32-unknown-unknown --all-features -- -D clippy::all
 
 # Formatting
 cargo fmt --all -- --check

@@ -22,10 +22,10 @@ jobs:
             ~/.rustup
           key: ${{ runner.os }}-installation
 
-      - name: Install wasm32 target
+      - name: Add wasm32 target
         run: rustup target add wasm32-unknown-unknown
 
-      - name: Install wasm32-wasi target
+      - name: Add wasm32-wasi target
         run: rustup target add wasm32-wasi
 
       - name: Install wasm-pack
@@ -51,6 +51,11 @@ jobs:
           RUSTFLAGS: "-D warnings"
         run: cd crates/wasm-bridge-js && wasm-pack test --node -- --all-features
 
+      - name: Run wasi unit tests
+        env:
+          RUSTFLAGS: "-D warnings"
+        run: cd crates/wasm-bridge-wasi-js && wasm-pack test --node -- --all-features
+
       - name: Check formatting
         env:
           RUSTFLAGS: "-D warnings"
@@ -59,12 +64,12 @@ jobs:
       - name: Check compile warnings
         env:
           RUSTFLAGS: "-D warnings"
-        run: cargo check --all-features
+        run: cargo check --target wasm32-unknown-unknown --all-features
 
       - name: Check clippy warnings
         env:
           RUSTFLAGS: "-D warnings"
-        run: cargo clippy --all-features -- -D clippy::all
+        run: cargo clippy --target wasm32-unknown-unknown --all-features -- -D clippy::all
 
       - name: Run tests
         env:

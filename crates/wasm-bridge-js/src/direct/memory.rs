@@ -14,7 +14,7 @@ pub struct ModuleMemoryInner {
     realloc: Function,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ModuleMemory(Rc<RefCell<Option<ModuleMemoryInner>>>);
 
 impl ModuleMemory {

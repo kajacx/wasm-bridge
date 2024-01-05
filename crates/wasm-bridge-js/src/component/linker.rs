@@ -73,12 +73,7 @@ impl<T> Linker<T> {
         &self,
         mut store: impl AsContextMut<Data = T>,
         component: &Component,
-    ) -> Result<(
-        Object,
-        DropHandles,
-        ModuleMemory,
-        Option<(Object, DynFns, ModuleMemory)>,
-    )> {
+    ) -> Result<(Object, DropHandles, ModuleMemory, Option<WasiInfo>)> {
         let mut closures = Vec::new();
 
         let (imports, wasi_info) = if let (Some(wasi_object), Some(_wasi_core)) =
@@ -230,8 +225,7 @@ impl<T> LinkerInterface<T> {
         let data_handle = store.as_context_mut().data_handle();
 
         for function in self.fns.iter() {
-            let drop_handle =
-                function.add_to_imports(&imports, data_handle.clone(), memory.clone());
+            let drop_handle = function.add_to_imports(imports, data_handle.clone(), memory.clone());
             drop_handles.push(drop_handle);
         }
     }
@@ -325,3 +319,5 @@ mod tests {
         assert_eq!(result.as_f64().unwrap(), 2.0);
     }
 }
+
+pub(crate) type WasiInfo = (Object, DynFns, ModuleMemory);
