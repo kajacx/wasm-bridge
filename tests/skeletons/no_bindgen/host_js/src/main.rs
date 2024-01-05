@@ -1,5 +1,5 @@
 const GUEST_BYTES: &'static [u8] =
-    include_bytes!("../../guest/target/wasm32-unknown-unknown/debug/no_bindgen_guest.wasm");
+    include_bytes!("../../guest/target/wasm32-unknown-unknown/release/no_bindgen_guest.wasm");
 
 mod host;
 

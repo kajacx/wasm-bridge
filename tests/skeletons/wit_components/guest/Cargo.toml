@@ -10,4 +10,4 @@ crate-type = ["cdylib"]
 package = "component:wit-guest"
 
 [dependencies]
-wit-bindgen = "0.14.0"
+wit-bindgen = "0.15.0"

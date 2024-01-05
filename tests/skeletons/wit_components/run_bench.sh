@@ -9,14 +9,31 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# copy the "wit_components" skeleton
-cp -r skeletons/wit_components/host_js_bench instance
+
+# copy the sys bench skeleton
+cp -r skeletons/wit_components/bench_sys instance
 
 # copy the host code
-cp $test/bench.rs instance/host_js_bench/src/host.rs
+cp $test/bench.rs instance/bench_sys/src/host.rs
+
+# run the sys host test
+cd instance/bench_sys && cargo test --lib --release -- --nocapture && cd ../..
+if [ $? -ne 0 ]; then
+  echo
+  echo "Oh no, there is an error in the $test sys bench."
+  echo "Inspect the instance folder for more detail."
+  exit 1
+fi
+
+
+# copy the js bench skeleton
+cp -r skeletons/wit_components/bench_js instance
+
+# copy the host code
+cp $test/bench.rs instance/bench_js/src/host.rs
 
 # run the js bench test
-cd instance/host_js_bench && wasm-pack test --node && cd ../..
+cd instance/bench_js && wasm-pack test --release --node && cd ../..
 if [ $? -ne 0 ]; then
   echo
   echo "Oh no, there is an error in the $test js bench."

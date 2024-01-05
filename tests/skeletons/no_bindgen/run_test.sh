@@ -19,8 +19,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # build the guest
-cd instance/guest && cargo rustc --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && cd ../..
-cd instance/guest && cargo rustc --release --target=wasm32-unknown-unknown -- -C target-feature=+multivalue && cd ../..
+cd instance/guest && cargo build --release --target=wasm32-unknown-unknown && cd ../..
 if [ $? -ne 0 ]; then
   echo
   echo "Oh no, there is an error in the $test guest."
@@ -33,7 +32,7 @@ cp $test/host.rs instance/host_sys/src/host.rs
 cp $test/host.rs instance/host_js/src/host.rs
 
 # run the sys host test
-cd instance/host_sys && cargo run && cd ../..
+cd instance/host_sys && cargo test --lib -- --nocapture && cd ../..
 if [ $? -ne 0 ]; then
   echo
   echo "Oh no, there is an error in the $test sys host."

@@ -1,0 +1,24 @@
+package component-test:wit-protocol;
+
+interface host-add {
+  add-one: func(num: s32) -> s32;
+}
+
+interface guest-add {
+  add-three: func(num: s32) -> s32;
+}
+
+world interfaces {
+  import host-add;
+  export guest-add;
+
+  import host-sub: interface {
+    sub-one: func(num: s32) -> s32;
+  }
+  export guest-sub: interface {
+    sub-three: func(num: s32) -> s32;
+  }
+
+  import normal-import: func(num: s32) -> s32;
+  export normal-export: func(num: s32) -> s32;
+}

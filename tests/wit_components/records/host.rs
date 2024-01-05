@@ -10,8 +10,20 @@ wasm_bridge::component::bindgen!({
 
 struct Host;
 impl RecordsImports for Host {
-    fn create_player(&mut self, name: String, inventory: Vec<u32>) -> Result<Player> {
-        Ok(Player { name, inventory })
+    fn move_player(&mut self, mut player: Player, delta: f32) -> Result<Player> {
+        player.position.x += player.velocity.x * delta;
+        player.position.y += player.velocity.y * delta;
+        player.position.z += player.velocity.z * delta;
+        Ok(player)
+    }
+
+    fn group_import(&mut self, group: Group) -> Result<Group> {
+        Ok(group)
+    }
+
+    fn increment_single(&mut self, mut single: Single) -> Result<Single> {
+        single.value += 1;
+        Ok(single)
     }
 }
 
@@ -29,17 +41,42 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
 
     let (instance, _) = Records::instantiate(&mut store, &component, &linker).unwrap();
 
-    let result = instance
-        .call_get_inventory(
-            &mut store,
-            &Player {
-                name: "Foo".into(),
-                inventory: vec![2, 6, 7],
-            },
-        )
-        .unwrap();
+    let player = Player {
+        name: "Mike".into(),
+        health: 80,
+        position: Vector {
+            x: 1.0,
+            y: 2.0,
+            z: 3.0,
+        },
+        velocity: Vector {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
+        },
+    };
 
-    assert_eq!(result, vec![2, 6, 7]);
+    let result = instance
+        .call_move_players(&mut store, &[player.clone()], 2.0)
+        .unwrap();
+    assert_eq!(
+        result[0].position,
+        Vector {
+            x: 3.0,
+            y: 4.0,
+            z: 5.0,
+        }
+    );
+
+    let group = Group {
+        player1: player.clone(),
+        player2: player.clone(),
+    };
+    let result = instance.call_group_export(&mut store, &group).unwrap();
+    assert_eq!(result, group);
+
+    let result = instance.call_increment_single_times(&mut store, Single { value: 5 }, 2)?;
+    assert_eq!(result, Single { value: 7 });
 
     Ok(())
 }

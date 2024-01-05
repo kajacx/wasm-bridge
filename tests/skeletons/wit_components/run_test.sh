@@ -18,7 +18,7 @@ cp $test/host.rs instance/host_sys/src/host.rs
 cp $test/host.rs instance/host_js/src/host.rs
 
 # run the sys host test
-cd instance/host_sys && cargo run && cd ../..
+cd instance/host_sys && cargo test --lib -- --nocapture && cd ../..
 if [ $? -ne 0 ]; then
   echo
   echo "Oh no, there is an error in the $test sys host."
@@ -34,3 +34,4 @@ if [ $? -ne 0 ]; then
   echo "Inspect the instance folder for more detail."
   exit 1
 fi
+

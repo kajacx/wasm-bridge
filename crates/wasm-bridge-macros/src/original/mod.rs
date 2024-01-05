@@ -32,8 +32,8 @@ pub fn component_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream
     .into()
 }
 
-pub fn flags(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    component::expand_flags(&parse_macro_input!(input as component::Flags))
+pub fn flags(input: proc_macro::TokenStream, is_sys: bool) -> proc_macro::TokenStream {
+    component::expand_flags(&parse_macro_input!(input as component::Flags), is_sys)
         .unwrap_or_else(Error::into_compile_error)
         .into()
 }

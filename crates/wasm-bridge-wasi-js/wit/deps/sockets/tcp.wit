@@ -1,0 +1,22 @@
+
+interface tcp {
+    use wasi:io/streams@0.2.0-rc-2023-11-10.{input-stream, output-stream};
+    use wasi:io/poll@0.2.0-rc-2023-11-10.{pollable};
+    use wasi:clocks/monotonic-clock@0.2.0-rc-2023-11-10.{duration};
+    use network.{network, error-code, ip-socket-address, ip-address-family};
+
+    enum shutdown-type {
+        /// Similar to `SHUT_RD` in POSIX.
+        receive,
+
+        /// Similar to `SHUT_WR` in POSIX.
+        send,
+
+        /// Similar to `SHUT_RDWR` in POSIX.
+        both,
+    }
+
+
+    /// A TCP socket handle.
+    type tcp-socket = u32;
+}

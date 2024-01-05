@@ -9,22 +9,20 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-js-sys = { version = "0.3.0" }
-wasm-bindgen = { version = "0.2.89" } # See https://users.rust-lang.org/t/very-strange-trait-bounds-error/104028
-wasm-bindgen-futures = { version = "0.4.0" }
-wat = { version = "1.0", optional = true }
-wasm-bridge-macros = { path = "../wasm-bridge-macros", version = "0.2.2", optional = true }
-js-component-bindgen = { version = "0.14", optional = true }
-anyhow = { version = "1.0" }
-heck = { version = "0.4.0" }
-rand_core = { version = "0.6.0", optional = true }
+js-sys = { workspace = true }
+wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
+wat = { workspace = true, optional = true }
+wasm-bridge-macros = { workspace = true, optional = true }
+async-trait = { workspace = true, optional = true }
+js-component-bindgen = { workspace = true, optional = true }
+anyhow = { workspace = true }
+heck = { workspace = true }
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.37"
+wasm-bindgen-test = { workspace = true }
 
 [features]
-component-model = ["wasm-bridge-macros", "js-component-bindgen"]
+component-model = ["wasm-bridge-macros", "js-component-bindgen", "async-trait"]
 async = ["wasm-bridge-macros/async"]
-wasi = ["async", "rand_core"]
 error-logging = []
-direct-bytes = ["wasm-bridge-macros/direct-bytes"]

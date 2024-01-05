@@ -1,20 +1,27 @@
-use std::rc::Rc;
-
 use js_sys::Function;
 
-use crate::DropHandle;
+use crate::{direct::ModuleMemory, DropHandles};
 
 #[derive(Debug, Clone)]
 pub struct Func {
     pub(crate) function: Function,
-    _closures: Rc<[DropHandle]>,
+    pub(crate) post_return: Option<Function>,
+    pub(crate) memory: ModuleMemory,
+    _drop_handles: DropHandles,
 }
 
 impl Func {
-    pub(crate) fn new(function: Function, closures: Rc<[DropHandle]>) -> Self {
+    pub(crate) fn new(
+        function: Function,
+        post_return: Option<Function>,
+        memory: ModuleMemory,
+        drop_handles: DropHandles,
+    ) -> Self {
         Self {
             function,
-            _closures: closures,
+            post_return,
+            memory,
+            _drop_handles: drop_handles,
         }
     }
 }

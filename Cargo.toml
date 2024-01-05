@@ -3,6 +3,8 @@
 members = [
   "crates/wasm-bridge",
   "crates/wasm-bridge-js",
+  "crates/wasm-bridge-wasi",
+  "crates/wasm-bridge-wasi-js",
   "crates/wasm-bridge-macros",
 ]
 
@@ -19,3 +21,21 @@ repository = "https://github.com/kajacx/wasm-bridge"
 license = "MIT"
 keywords = ["WASM", "wasmtime", "web"]
 categories = ["wasm", "web-programming"]
+
+[workspace.dependencies]
+wasm-bridge = { path = "crates/wasm-bridge", version = "0.2.2" }
+wasm-bridge-js = { path = "crates/wasm-bridge-js", version = "0.2.2" }
+wasm-bridge-wasi-js = { path = "crates/wasm-bridge-wasi-js", version = "0.2.2" }
+wasm-bridge-macros = { path = "crates/wasm-bridge-macros", version = "0.2.2" }
+
+js-sys = { version = "0.3" }
+wasm-bindgen = { version = "0.2.89" } # See https://users.rust-lang.org/t/very-strange-trait-bounds-error/104028
+wasm-bindgen-futures = { version = "0.4" }
+wasm-bindgen-test = { version = "0.3" }
+wat = { version = "1.0" }
+js-component-bindgen = { version = "0.14" }
+anyhow = { version = "1.0" }
+rand_core = { version = "0.6", default-features = false }
+bytes = { version = "1.0" }
+heck = { version = "0.4" }
+async-trait = { version = "0.1" }

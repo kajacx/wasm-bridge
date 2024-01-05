@@ -25,7 +25,7 @@ pub mod component {
     pub use wasmtime::component::*;
 
     pub use wasm_bridge_macros::bindgen_sys as bindgen;
-    pub use wasm_bridge_macros::flags;
+    pub use wasm_bridge_macros::flags_sys as flags;
     pub use wasm_bridge_macros::ComponentType;
     pub use wasm_bridge_macros::Lift;
     pub use wasm_bridge_macros::Lower;
@@ -41,11 +41,6 @@ pub mod component {
     ) -> wasmtime::Result<Component> {
         Component::new(engine, bytes)
     }
-}
-
-#[cfg(feature = "wasi")]
-pub mod wasi {
-    pub use wasmtime_wasi::*;
 }
 
 #[cfg(feature = "async")]

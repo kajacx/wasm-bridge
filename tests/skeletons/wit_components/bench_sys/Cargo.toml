@@ -1,0 +1,8 @@
+[package]
+name = "wit-components-host-sys"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wasm-bridge = { path = "../../../crates/wasm-bridge", default-features = false, features = ["component-model"] }
+easybench = { version = "1.1" }

@@ -1,11 +1,10 @@
-use std::{collections::HashMap, marker::PhantomData, rc::Rc};
+use std::{collections::HashMap, marker::PhantomData};
 
 use anyhow::Context;
-use heck::ToLowerCamelCase;
-use js_sys::{Object, Reflect};
+use js_sys::{Function, Object, Reflect};
 use wasm_bindgen::JsValue;
 
-use crate::{helpers::map_js_error, DropHandle, Result};
+use crate::{direct::ModuleMemory, helpers::map_js_error, DropHandles, Result};
 
 use super::*;
 
@@ -25,15 +24,20 @@ impl Exports {
 
 pub struct ExportsRoot {
     exported_fns: HashMap<String, Func>,
-    exported_objects: HashMap<String, ExportsRoot>, // TODO: not really great design
 }
 
 impl ExportsRoot {
-    pub(crate) fn new(exports: JsValue, closures: &Rc<[DropHandle]>) -> Result<Self> {
-        let names = Object::get_own_property_names(&exports.clone().into());
-        let mut exported_fns = HashMap::<String, Func>::new();
-        let mut exported_objects = HashMap::<String, ExportsRoot>::new();
+    pub(crate) fn new(
+        exports: JsValue,
+        drop_handles: DropHandles,
+        memory: &ModuleMemory,
+    ) -> Result<Self> {
+        let mut exported_js_fns = HashMap::<String, Function>::new();
+        let mut post_return_js_fns = HashMap::<String, Function>::new();
 
+        const POST_RETURN_PREFIX: &str = "cabi_post_";
+
+        let names = Object::get_own_property_names(&exports.clone().into());
         for i in 0..names.length() {
             let name =
                 Reflect::get_u32(&names, i).map_err(map_js_error("Get name of an export"))?;
@@ -43,59 +47,58 @@ impl ExportsRoot {
                 Reflect::get(&exports, &name).map_err(map_js_error("Get exported value"))?;
 
             if exported.is_function() {
-                exported_fns.insert(name_string, Func::new(exported.into(), closures.clone()));
-            } else if exported.is_object() {
-                exported_objects.insert(name_string, ExportsRoot::new(exported, closures)?);
-            } else {
-                return Err(map_js_error(
-                    "Exported value must be a function or an object",
-                )(exported));
+                if name_string.starts_with(POST_RETURN_PREFIX) {
+                    post_return_js_fns.insert(name_string, exported.into());
+                } else {
+                    exported_js_fns.insert(name_string, exported.into());
+                }
             }
         }
 
-        Ok(Self {
-            exported_fns,
-            exported_objects,
-        })
+        let mut exported_fns = HashMap::<String, Func>::new();
+        for (name, func) in exported_js_fns.into_iter() {
+            let post_return_name = format!("{POST_RETURN_PREFIX}{name}");
+            let post_return = post_return_js_fns.get(&post_return_name).map(Clone::clone);
+            exported_fns.insert(
+                name,
+                Func::new(func, post_return, memory.clone(), drop_handles.clone()),
+            );
+        }
+
+        Ok(Self { exported_fns })
     }
 
     pub fn typed_func<Params, Return>(&self, name: &str) -> Result<TypedFunc<Params, Return>> {
-        // TODO: converting in the opposite direction when storing would be slightly faster
-        let name = name.to_lower_camel_case();
-
         let func = self
             .exported_fns
-            .get(&name)
+            .get(name)
             .with_context(|| format!("Exported function '{name}' not found"))?
             .clone();
 
         Ok(TypedFunc::new(func))
     }
 
-    pub fn instance(&self, name: &str) -> Option<ExportInstance> {
-        Some(ExportInstance::new(
-            self.exported_objects
-                .get(name)
-                // TODO: This is a workaround for https://github.com/bytecodealliance/jco/issues/110
-                .or_else(|| self.exported_objects.get(&name.to_lower_camel_case()))?,
-        ))
+    pub fn instance<'a>(&'a self, name: &str) -> Option<ExportInstance<'a, 'static>> {
+        Some(ExportInstance::new(self, name))
     }
 }
 
 pub struct ExportInstance<'a, 'b> {
-    root: &'a ExportsRoot, // TODO: this is not the root, refactor
+    root: &'a ExportsRoot,
+    name: String,
     _phantom: PhantomData<&'b ()>,
 }
 
 impl<'a, 'b> ExportInstance<'a, 'b> {
-    pub(crate) fn new(root: &'a ExportsRoot) -> Self {
+    pub(crate) fn new(root: &'a ExportsRoot, name: &str) -> Self {
         Self {
             root,
             _phantom: PhantomData,
+            name: name.into(),
         }
     }
 
     pub fn typed_func<Params, Return>(&self, name: &str) -> Result<TypedFunc<Params, Return>> {
-        self.root.typed_func(name)
+        self.root.typed_func(&format!("{}#{}", self.name, name))
     }
 }

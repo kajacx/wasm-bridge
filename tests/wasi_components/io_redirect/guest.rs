@@ -1,11 +1,14 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "io-redirect",
+    exports: {
+        world: GuestImpl,
+    }
 });
 
 struct GuestImpl;
 
-impl IoRedirect for GuestImpl {
+impl Guest for GuestImpl {
     fn readln_from_stdin() -> Option<String> {
         std::io::stdin()
             .lines()
@@ -21,5 +24,3 @@ impl IoRedirect for GuestImpl {
         eprintln!("{line}");
     }
 }
-
-export_io_redirect!(GuestImpl);

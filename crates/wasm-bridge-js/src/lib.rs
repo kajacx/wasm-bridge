@@ -21,20 +21,24 @@ pub use context::*;
 
 pub type Error = anyhow::Error;
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
+pub use anyhow::bail;
+pub use anyhow::Context;
 
 pub mod helpers;
 
 #[cfg(feature = "component-model")]
 pub mod component;
 
-#[cfg(feature = "wasi")]
-pub mod wasi;
+#[cfg(feature = "component-model")]
+pub mod direct;
+#[cfg(feature = "component-model")]
+pub use direct::next_multiple_of;
+#[cfg(feature = "component-model")]
+pub use direct::usize_max;
 
 #[cfg(feature = "async")]
 pub use wasm_bridge_macros::async_trait;
-
-#[cfg(feature = "direct-bytes")]
-pub mod direct_bytes;
+// pub use async_trait::async_trait;
 
 pub use js_sys;
 pub use wasm_bindgen;

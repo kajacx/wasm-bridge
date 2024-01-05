@@ -1,19 +1,26 @@
-use std::{marker::PhantomData, rc::Rc};
+use std::marker::PhantomData;
+
+use js_sys::WebAssembly;
+use wasm_bindgen::JsValue;
 
 use super::*;
-use crate::{AsContextMut, DropHandle, Result};
+use crate::{direct::ModuleMemory, AsContextMut, DropHandles, Result};
 
 pub struct Instance {
     exports: Exports,
-    _closures: Rc<[DropHandle]>,
 }
 
 impl Instance {
-    pub(crate) fn new(exports: ExportsRoot, closures: Rc<[DropHandle]>) -> Self {
-        Self {
-            exports: Exports::new(exports),
-            _closures: closures,
-        }
+    pub fn new(
+        instance: WebAssembly::Instance,
+        drop_handles: DropHandles,
+        memory: &ModuleMemory,
+    ) -> Result<Self> {
+        let js_exports: JsValue = instance.exports().into();
+        let exports_root = ExportsRoot::new(js_exports, drop_handles, memory)?;
+        let exports = Exports::new(exports_root);
+
+        Ok(Self { exports })
     }
 
     pub fn exports(&self, _store: impl AsContextMut) -> &Exports {
@@ -30,7 +37,7 @@ impl<T> InstancePre<T> {
         todo!()
     }
 
-    pub fn instantiate_async(&self, _store: impl AsContextMut<Data = T>) -> Result<Instance> {
+    pub async fn instantiate_async(&self, _store: impl AsContextMut<Data = T>) -> Result<Instance> {
         todo!()
     }
 }

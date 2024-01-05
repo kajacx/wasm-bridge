@@ -4,8 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-wasm-bridge = { path = "../../../crates/wasm-bridge", default-features = false, features = ["component-model", "wasi"] }
-rand_core = { version = "0.6.4" }
+wasm-bridge = { path = "../../../crates/wasm-bridge", default-features = false, features = ["component-model", "async"] }
+wasm-bridge-wasi = { path = "../../../crates/wasm-bridge-wasi" }
+rand_core = { version = "0.6" }
+bytes = { version = "1.5" }
 
 [dev-dependencies]
-wasm-bindgen-test = { version = "0.3.37" }
+wasm-bindgen-test = { version = "0.3" }

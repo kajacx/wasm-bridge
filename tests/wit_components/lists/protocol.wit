@@ -40,11 +40,11 @@ world lists {
   import push-string: func(texts: list<string>, a: string) -> list<string>;
   export push-strings: func(texts: list<string>, a: string, b: string) -> list<string>;
 
-  variant ab-variant {
-    a(s32),
-    b(s32),
-  }
-
-  import increment-bs: func(variants: list<ab-variant>) -> list<ab-variant>;
-  export increment-abs: func(variants: list<ab-variant>) -> list<ab-variant>;
+ // variant ab-variant {
+ //   a(s32),
+ //   b(s32),
+ // }
+ //
+ // import increment-bs: func(variants: list<ab-variant>) -> list<ab-variant>;
+ // export increment-abs: func(variants: list<ab-variant>) -> list<ab-variant>;
 }

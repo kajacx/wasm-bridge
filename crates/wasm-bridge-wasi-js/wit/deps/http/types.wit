@@ -1,0 +1,226 @@
+/// This interface defines all of the types and methods for implementing
+/// HTTP Requests and Responses, both incoming and outgoing, as well as
+/// their headers, trailers, and bodies.
+interface types {
+  use wasi:clocks/monotonic-clock@0.2.0-rc-2023-11-10.{duration};
+  use wasi:io/streams@0.2.0-rc-2023-11-10.{input-stream, output-stream};
+  use wasi:io/error@0.2.0-rc-2023-11-10.{error as io-error};
+  use wasi:io/poll@0.2.0-rc-2023-11-10.{pollable};
+
+  /// This type corresponds to HTTP standard Methods.
+  variant method {
+    get,
+    head,
+    post,
+    put,
+    delete,
+    connect,
+    options,
+    trace,
+    patch,
+    other(string)
+  }
+
+  /// This type corresponds to HTTP standard Related Schemes.
+  variant scheme {
+    HTTP,
+    HTTPS,
+    other(string)
+  }
+
+  /// These cases are inspired by the IANA HTTP Proxy Error Types:
+  ///   https://www.iana.org/assignments/http-proxy-status/http-proxy-status.xhtml#table-http-proxy-error-types
+  variant error-code {
+    DNS-timeout,
+    DNS-error(DNS-error-payload),
+    destination-not-found,
+    destination-unavailable,
+    destination-IP-prohibited,
+    destination-IP-unroutable,
+    connection-refused,
+    connection-terminated,
+    connection-timeout,
+    connection-read-timeout,
+    connection-write-timeout,
+    connection-limit-reached,
+    TLS-protocol-error,
+    TLS-certificate-error,
+    TLS-alert-received(TLS-alert-received-payload),
+    HTTP-request-denied,
+    HTTP-request-length-required,
+    HTTP-request-body-size(option<u64>),
+    HTTP-request-method-invalid,
+    HTTP-request-URI-invalid,
+    HTTP-request-URI-too-long,
+    HTTP-request-header-section-size(option<u32>),
+    HTTP-request-header-size(option<field-size-payload>),
+    HTTP-request-trailer-section-size(option<u32>),
+    HTTP-request-trailer-size(field-size-payload),
+    HTTP-response-incomplete,
+    HTTP-response-header-section-size(option<u32>),
+    HTTP-response-header-size(field-size-payload),
+    HTTP-response-body-size(option<u64>),
+    HTTP-response-trailer-section-size(option<u32>),
+    HTTP-response-trailer-size(field-size-payload),
+    HTTP-response-transfer-coding(option<string>),
+    HTTP-response-content-coding(option<string>),
+    HTTP-response-timeout,
+    HTTP-upgrade-failed,
+    HTTP-protocol-error,
+    loop-detected,
+    configuration-error,
+    /// This is a catch-all error for anything that doesn't fit cleanly into a
+    /// more specific case. It also includes an optional string for an
+    /// unstructured description of the error. Users should not depend on the
+    /// string for diagnosing errors, as it's not required to be consistent
+    /// between implementations.
+    internal-error(option<string>)
+  }
+
+  /// Defines the case payload type for `DNS-error` above:
+  record DNS-error-payload {
+    rcode: option<string>,
+    info-code: option<u16>
+  }
+
+  /// Defines the case payload type for `TLS-alert-received` above:
+  record TLS-alert-received-payload {
+    alert-id: option<u8>,
+    alert-message: option<string>
+  }
+
+  /// Defines the case payload type for `HTTP-response-{header,trailer}-size` above:
+  record field-size-payload {
+    field-name: option<string>,
+    field-size: option<u32>
+  }
+
+  /// Attempts to extract a http-related `error` from the wasi:io `error`
+  /// provided.
+  ///
+  /// Stream operations which return
+  /// `wasi:io/stream/stream-error::last-operation-failed` have a payload of
+  /// type `wasi:io/error/error` with more information about the operation
+  /// that failed. This payload can be passed through to this function to see
+  /// if there's http-related information about the error to return.
+  ///
+  /// Note that this function is fallible because not all io-errors are
+  /// http-related errors.
+  http-error-code: func(err: io-error) -> option<error-code>;
+
+  /// This type enumerates the different kinds of errors that may occur when
+  /// setting or appending to a `fields` resource.
+  variant header-error {
+    /// This error indicates that a `field-key` or `field-value` was
+    /// syntactically invalid when used with an operation that sets headers in a
+    /// `fields`.
+    invalid-syntax,
+
+    /// This error indicates that a forbidden `field-key` was used when trying
+    /// to set a header in a `fields`.
+    forbidden,
+
+    /// This error indicates that the operation on the `fields` was not
+    /// permitted because the fields are immutable.
+    immutable,
+  }
+
+  /// Field keys are always strings.
+  type field-key = string;
+
+  /// Field values should always be ASCII strings. However, in
+  /// reality, HTTP implementations often have to interpret malformed values,
+  /// so they are provided as a list of bytes.
+  type field-value = list<u8>;
+
+  /// This following block defines the `fields` resource which corresponds to
+  /// HTTP standard Fields. Fields are a common representation used for both
+  /// Headers and Trailers.
+  ///
+  /// A `fields` may be mutable or immutable. A `fields` created using the
+  /// constructor, `from-list`, or `clone` will be mutable, but a `fields`
+  /// resource given by other means (including, but not limited to,
+  /// `incoming-request.headers`, `outgoing-request.headers`) might be be
+  /// immutable. In an immutable fields, the `set`, `append`, and `delete`
+  /// operations will fail with `header-error.immutable`.
+  type fields = u32;
+
+  /// Headers is an alias for Fields.
+  type headers = fields;
+
+  /// Trailers is an alias for Fields.
+  type trailers = fields;
+
+  /// Represents an incoming HTTP Request.
+  type incoming-request = u32;
+
+  /// Represents an outgoing HTTP Request.
+  type outgoing-request = u32;
+
+  /// Parameters for making an HTTP Request. Each of these parameters is an
+  /// optional timeout, with the unit in milliseconds, applicable to the
+  /// transport layer of the HTTP protocol.
+  ///
+  /// These timeouts are separate from any the user may use to bound a
+  /// blocking call to `wasi:io/poll.poll`.
+  type request-options = u32; 
+
+  /// Represents the ability to send an HTTP Response.
+  ///
+  /// This resource is used by the `wasi:http/incoming-handler` interface to
+  /// allow a Response to be sent corresponding to the Request provided as the
+  /// other argument to `incoming-handler.handle`.
+  type response-outparam = u32;
+
+  /// This type corresponds to the HTTP standard Status Code.
+  type status-code = u16;
+
+  /// Represents an incoming HTTP Response.
+  type incoming-response = u32;
+
+  /// Represents an incoming HTTP Request or Response's Body.
+  ///
+  /// A body has both its contents - a stream of bytes - and a (possibly
+  /// empty) set of trailers, indicating that the full contents of the
+  /// body have been received. This resource represents the contents as
+  /// an `input-stream` and the delivery of trailers as a `future-trailers`,
+  /// and ensures that the user of this interface may only be consuming either
+  /// the body contents or waiting on trailers at any given time.
+  type incoming-body = u32;
+
+  /// Represents a future which may eventaully return trailers, or an error.
+  ///
+  /// In the case that the incoming HTTP Request or Response did not have any
+  /// trailers, this future will resolve to the empty set of trailers once the
+  /// complete Request or Response body has been received.
+  type future-trailers = u32;
+
+  /// Represents an outgoing HTTP Response.
+  type outgoing-response = u32;
+
+  /// Represents an outgoing HTTP Request or Response's Body.
+  ///
+  /// A body has both its contents - a stream of bytes - and a (possibly
+  /// empty) set of trailers, inducating the full contents of the body
+  /// have been sent. This resource represents the contents as an
+  /// `output-stream` child resource, and the completion of the body (with
+  /// optional trailers) with a static function that consumes the
+  /// `outgoing-body` resource, and ensures that the user of this interface
+  /// may not write to the body contents after the body has been finished.
+  ///
+  /// If the user code drops this resource, as opposed to calling the static
+  /// method `finish`, the implementation should treat the body as incomplete,
+  /// and that an error has occured. The implementation should propogate this
+  /// error to the HTTP protocol by whatever means it has available,
+  /// including: corrupting the body on the wire, aborting the associated
+  /// Request, or sending a late status code for the Response.
+  type outgoing-body = u32;
+
+  /// Represents a future which may eventaully return an incoming HTTP
+  /// Response, or an error.
+  ///
+  /// This resource is returned by the `wasi:http/outgoing-handler` interface to
+  /// provide the HTTP Response corresponding to the sent Request.
+  type future-incoming-response = u32;
+
+}

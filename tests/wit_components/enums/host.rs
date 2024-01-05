@@ -20,6 +20,14 @@ impl EnumsImports for HostData {
         })
     }
 
+    fn raise_temperature(&mut self, temp: Temperature) -> Result<Temperature> {
+        Ok(match temp {
+            Temperature::Cold => Temperature::LukeWarm,
+            Temperature::LukeWarm => Temperature::Warm,
+            _ => Temperature::Hot,
+        })
+    }
+
     fn rotate_cw(&mut self, way: Direction) -> Result<Direction> {
         Ok(match way {
             Direction::Left => Direction::Down,
@@ -69,40 +77,16 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let (instance, _) = Enums::instantiate(&mut store, &component, &linker)?;
 
     let result = instance.call_quadruple_shape(&mut store, Shape::Circle(2.0))?;
-    assert_eq!(
-        match result {
-            Shape::Circle(radius) => radius,
-            _ => unreachable!(),
-        },
-        8.0
-    );
+    assert_eq!(result, Shape::Circle(8.0));
 
     let result = instance.call_quadruple_shape(&mut store, Shape::Rectangle((2.0, 3.0)))?;
-    assert_eq!(
-        match result {
-            Shape::Rectangle((w, h)) => (w, h),
-            _ => unreachable!(),
-        },
-        (8.0, 12.0)
-    );
-
-    let result = instance.call_quadruple_shape(&mut store, Shape::SemiCircle((2.0, 4.0)))?;
-    assert_eq!(
-        match result {
-            Shape::SemiCircle((r, a)) => (r, a),
-            _ => unreachable!(),
-        },
-        (8.0, 4.0)
-    );
+    assert_eq!(result, Shape::Rectangle((8.0, 12.0)));
 
     let result = instance.call_quadruple_shape(&mut store, Shape::Point)?;
-    assert_eq!(
-        match result {
-            Shape::Point => (),
-            _ => unreachable!(),
-        },
-        ()
-    );
+    assert_eq!(result, Shape::Point);
+
+    let result = instance.call_raise_temperature_times(&mut store, Temperature::Cold, 2)?;
+    assert_eq!(result, Temperature::Warm);
 
     let result = instance.call_rotate_ccw(&mut store, Direction::Up)?;
     assert_eq!(result, Direction::Right);

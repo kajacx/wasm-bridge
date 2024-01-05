@@ -1,7 +1,7 @@
-package component-test:wasi-protocol
+package component-test:wasi-protocol;
 
 world io-redirect {
-  export readln-from-stdin: func() -> option<string>
-  export writeln-to-stdout: func(line: string)
-  export writeln-to-stderr: func(line: string)
+  export readln-from-stdin: func() -> option<string>;
+  export writeln-to-stdout: func(line: string);
+  export writeln-to-stderr: func(line: string);
 }

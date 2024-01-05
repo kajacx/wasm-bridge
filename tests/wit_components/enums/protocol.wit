@@ -12,6 +12,17 @@ world enums {
   import double-shape: func(shape: shape) -> shape;
   export quadruple-shape: func(shape: shape) -> shape;
 
+  // A variant with no data
+  variant temperature {
+    cold,
+    luke-warm,
+    warm,
+    hot,
+  }
+
+  import raise-temperature: func(temp: temperature) -> temperature;
+  export raise-temperature-times: func(temp: temperature, times: u32) -> temperature;
+
   // "Normal" enums
   enum direction {
     left,

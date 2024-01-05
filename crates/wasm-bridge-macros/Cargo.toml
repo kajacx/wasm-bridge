@@ -24,4 +24,3 @@ heck = "0.4"
 
 [features]
 async = []
-direct-bytes = []

@@ -1,0 +1,64 @@
+package component-test:wit-protocol;
+
+world flags-test {
+  flags colors {
+    red,
+    green,
+    blue
+  }
+
+  import import-add-green: func(color: colors) -> colors;
+  export export-add-green-and-blue: func(color: colors) -> colors;
+
+  import import-push-green: func(colors: list<colors>) -> list<colors>;
+  export export-push-green-and-blue: func(colors: list<colors>) -> list<colors>;
+
+  flags many-flags {
+    f00,
+    f01,
+    f02,
+    f03,
+    f04,
+    f05,
+    f06,
+    f07,
+    f08,
+    f09,
+    f10,
+    f11,
+    f12,
+    f13,
+    f14,
+    f15,
+    f16,
+    f17,
+    f18,
+    f19,
+    f20,
+    f21,
+    f22,
+    f23,
+    f24,
+    f25,
+    f26,
+    f27,
+    f28,
+    f29,
+    f30,
+    f31,
+    f32,
+    f33,
+    f34,
+    f35,
+    f36,
+    f37,
+    f38,
+    f39,
+  }
+
+  import import-add-first: func(values: many-flags) -> many-flags;
+  export export-add-first-and-last: func(values: many-flags) -> many-flags;
+
+  import import-push-first: func(values: list<many-flags>) -> list<many-flags>;
+  export export-push-first-and-last: func(values: list<many-flags>) -> list<many-flags>;
+}
