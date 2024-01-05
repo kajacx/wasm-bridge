@@ -10,8 +10,6 @@
       console.log("Calling [method]descriptor.read-via-stream", ...args),
     "[resource-drop]descriptor": (...args) =>
       console.log("Calling [resource-drop]descriptor", ...args),
-    "filesystem-error-code": (...args) =>
-      console.log("Calling filesystem-error-code", ...args),
   },
   "wasi:io/error@0.2.0-rc-2023-11-10": {
     "[resource-drop]error": (...args) =>
@@ -30,10 +28,6 @@
       console.log("Calling [resource-drop]input-stream", ...args),
     "[resource-drop]output-stream": (...args) =>
       console.log("Calling [resource-drop]output-stream", ...args),
-  },
-  "wasi:cli/environment@0.2.0-rc-2023-11-10": {
-    "get-environment": (...args) =>
-      console.log("Calling get-environment", ...args),
   },
   "wasi:sockets/tcp@0.2.0-rc-2023-11-10": {
     "[resource-drop]tcp-socket": (...args) =>
