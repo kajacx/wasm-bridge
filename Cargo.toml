@@ -36,5 +36,6 @@ wat = { version = "1.0" }
 js-component-bindgen = { version = "0.14" }
 anyhow = { version = "1.0" }
 rand_core = { version = "0.6", default-features = false }
+bytes = { version = "1.0" }
 heck = { version = "0.4" }
 async-trait = { version = "0.1" }

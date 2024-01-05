@@ -1,93 +1,145 @@
-use anyhow::bail;
+use anyhow::{bail, Context};
 use js_sys::Function;
 use wasm_bindgen::JsValue;
 
+use wasm_bridge::StoreContextMut;
 use wasm_bridge::{component::Linker, Result};
 
-use super::STDERR_IDENT;
-use super::STDOUT_IDENT;
+use super::{StreamError, STDOUT_IDENT};
+use super::{StreamResult, STDERR_IDENT};
 use crate::preview2::WasiView;
 
-pub trait OutputStream: Send {
-    fn as_any(&self) -> &dyn std::any::Any;
+pub trait HostOutputStream {
+    fn write(&mut self, bytes: bytes::Bytes) -> StreamResult<()>;
 
-    fn writable(&self) -> Result<()>;
+    fn flush(&mut self) -> StreamResult<()>;
 
-    fn write(&mut self, buf: &[u8]) -> Result<u64>;
+    fn check_write(&mut self) -> StreamResult<usize>;
+}
+
+pub trait StdoutStream {
+    fn stream(&self) -> Box<dyn HostOutputStream>;
+
+    fn isatty(&self) -> bool;
 }
 
 struct VoidingStream;
 
-impl OutputStream for VoidingStream {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+impl HostOutputStream for VoidingStream {
+    fn write(&mut self, _bytes: bytes::Bytes) -> StreamResult<()> {
+        Err(StreamError::Closed)
     }
 
-    fn writable(&self) -> Result<()> {
+    fn flush(&mut self) -> StreamResult<()> {
         Ok(())
     }
 
-    fn write(&mut self, buf: &[u8]) -> Result<u64> {
-        Ok(buf.len() as _)
+    fn check_write(&mut self) -> StreamResult<usize> {
+        Ok(0)
     }
 }
 
-pub(crate) fn voiding_stream() -> impl OutputStream {
+impl StdoutStream for VoidingStream {
+    fn stream(&self) -> Box<dyn HostOutputStream> {
+        Box::new(VoidingStream)
+    }
+
+    fn isatty(&self) -> bool {
+        false
+    }
+}
+
+pub(crate) fn voiding_stream() -> impl StdoutStream {
     VoidingStream
 }
 
-struct InheritStream(String);
+#[derive(Debug, Clone)]
+enum WhichOut {
+    StdOut,
+    StdErr,
+}
 
-impl OutputStream for InheritStream {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
+#[derive(Debug, Clone)]
+struct InheritStream(WhichOut);
 
-    fn writable(&self) -> Result<()> {
-        Ok(())
-    }
-
-    fn write(&mut self, buf: &[u8]) -> Result<u64> {
-        let text = String::from_utf8_lossy(buf);
+impl HostOutputStream for InheritStream {
+    fn write(&mut self, bytes: bytes::Bytes) -> StreamResult<()> {
+        let text = String::from_utf8_lossy(&bytes);
 
         // Do not store the js Function, it makes the stream not Send
-        let function: Function = js_sys::eval(&self.0)
-            .expect("TODO: user error: Eval inherit stream function")
-            .into();
-        debug_assert!(function.is_function());
+        let function: Function = js_sys::eval(match self.0 {
+            WhichOut::StdOut => "console.log",
+            WhichOut::StdErr => "console.error",
+        })
+        .expect("eval console.log or console.error")
+        .into();
 
         function
             .call1(&JsValue::UNDEFINED, &text.as_ref().into())
-            .expect("TODO: user error: Call output stream function");
+            .expect("call console.log or console.error");
 
-        Ok(buf.len() as _)
+        Ok(())
+    }
+
+    fn flush(&mut self) -> StreamResult<()> {
+        Ok(())
+    }
+
+    fn check_write(&mut self) -> StreamResult<usize> {
+        Ok(usize::MAX)
     }
 }
 
-pub(crate) fn console_log_stream() -> impl OutputStream {
-    InheritStream("console.log".into())
-}
-
-pub(crate) fn console_error_stream() -> impl OutputStream {
-    InheritStream("console.error".into())
-}
-
-wasm_bridge::component::bindgen!({
-    path: "src/preview2/wits/output_streams.wit",
-    world: "exports"
-});
-
-impl<T: WasiView> wasi::io::streams::Host for T {
-    fn write(&mut self, stream_id: u32, bytes: Vec<u8>) -> Result<u64> {
-        let bytes_written = match stream_id {
-            STDOUT_IDENT => self.ctx_mut().stdout().write(&bytes)?,
-            STDERR_IDENT => self.ctx_mut().stderr().write(&bytes)?,
-            id => bail!("unexpected write stream id: {id}"),
-        };
-        Ok(bytes_written)
+impl StdoutStream for InheritStream {
+    fn stream(&self) -> Box<dyn HostOutputStream> {
+        Box::new(self.clone())
     }
+
+    fn isatty(&self) -> bool {
+        false
+    }
+}
+
+pub(crate) fn console_log_stream() -> impl StdoutStream {
+    InheritStream(WhichOut::StdOut)
+}
+
+pub(crate) fn console_error_stream() -> impl StdoutStream {
+    InheritStream(WhichOut::StdErr)
 }
 
 pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
-    Exports::add_to_linker(linker, |d| d)
+    linker
+        .instance("wasi:cli/stdout@0.2.0-rc-2023-11-10")?
+        .func_wrap("get-stdout", |mut caller: StoreContextMut<T>, (): ()| {
+            let stream = caller.data().ctx().stdout().stream();
+            let index = caller.data_mut().table_mut().output_streams.insert(stream);
+            Ok(index)
+        })?;
+
+    linker
+        .instance("wasi:cli/stderr@0.2.0-rc-2023-11-10")?
+        .func_wrap("get-stderr", |mut caller: StoreContextMut<T>, (): ()| {
+            let stream = caller.data().ctx().stderr().stream();
+            let index = caller.data_mut().table_mut().output_streams.insert(stream);
+            Ok(index)
+        })?;
+
+    linker
+        .instance("wasi:io/streams@0.2.0-rc-2023-11-10")?
+        .func_wrap(
+            "[method]output-stream.blocking-write-and-flush",
+            |mut caller: StoreContextMut<T>, (index, bytes): (u32, Vec<u8>)| {
+                let stream = caller
+                    .data()
+                    .table()
+                    .output_streams
+                    .get(index)
+                    .context("Get output stream resource")?;
+
+                Ok(stream.write(bytes::Bytes::from(bytes)))
+            },
+        )?;
+
+    Ok(())
 }

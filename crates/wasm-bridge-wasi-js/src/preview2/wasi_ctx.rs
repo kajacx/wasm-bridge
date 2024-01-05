@@ -1,9 +1,9 @@
 use super::*;
 
 pub struct WasiCtx {
-    stdin: Box<dyn InputStream>,
-    stdout: Box<dyn OutputStream>,
-    stderr: Box<dyn OutputStream>,
+    stdin: Box<dyn StdinStream>,
+    stdout: Box<dyn StdoutStream>,
+    stderr: Box<dyn StdoutStream>,
 
     random: SecureRandom,
 
@@ -13,9 +13,9 @@ pub struct WasiCtx {
 
 impl WasiCtx {
     pub(crate) fn new(
-        stdin: Option<Box<dyn InputStream>>,
-        stdout: Option<Box<dyn OutputStream>>,
-        stderr: Option<Box<dyn OutputStream>>,
+        stdin: Option<Box<dyn StdinStream>>,
+        stdout: Option<Box<dyn StdoutStream>>,
+        stderr: Option<Box<dyn StdoutStream>>,
         random: Option<SecureRandom>,
         wall_clock: Option<Box<dyn HostWallClock>>,
         monotonic_clock: Option<Box<dyn HostMonotonicClock>>,
@@ -30,16 +30,16 @@ impl WasiCtx {
         }
     }
 
-    pub(crate) fn stdin(&mut self) -> &mut dyn InputStream {
-        &mut *self.stdin
+    pub(crate) fn stdin(&self) -> &dyn StdinStream {
+        &*self.stdin
     }
 
-    pub(crate) fn stdout(&mut self) -> &mut dyn OutputStream {
-        &mut *self.stdout
+    pub(crate) fn stdout(&self) -> &dyn StdoutStream {
+        &*self.stdout
     }
 
-    pub(crate) fn stderr(&mut self) -> &mut dyn OutputStream {
-        &mut *self.stderr
+    pub(crate) fn stderr(&self) -> &dyn StdoutStream {
+        &*self.stderr
     }
 
     pub(crate) fn random(&mut self) -> &mut dyn rand_core::RngCore {

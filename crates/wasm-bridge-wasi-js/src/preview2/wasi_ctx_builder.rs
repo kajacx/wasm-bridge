@@ -4,9 +4,9 @@ use super::*;
 
 #[derive(Default)]
 pub struct WasiCtxBuilder {
-    stdin: Option<Box<dyn InputStream>>,
-    stdout: Option<Box<dyn OutputStream>>,
-    stderr: Option<Box<dyn OutputStream>>,
+    stdin: Option<Box<dyn StdinStream>>,
+    stdout: Option<Box<dyn StdoutStream>>,
+    stderr: Option<Box<dyn StdoutStream>>,
 
     random: Option<SecureRandom>,
 
@@ -30,21 +30,21 @@ impl WasiCtxBuilder {
         )
     }
 
-    pub fn stdin(self, in_stream: impl InputStream + 'static) -> Self {
+    pub fn stdin(self, in_stream: impl StdinStream + 'static) -> Self {
         Self {
             stdin: Some(Box::new(in_stream)),
             ..self
         }
     }
 
-    pub fn stdout(self, out: impl OutputStream + 'static) -> Self {
+    pub fn stdout(self, out: impl StdoutStream + 'static) -> Self {
         Self {
             stdout: Some(Box::new(out)),
             ..self
         }
     }
 
-    pub fn stderr(self, err: impl OutputStream + 'static) -> Self {
+    pub fn stderr(self, err: impl StdoutStream + 'static) -> Self {
         Self {
             stderr: Some(Box::new(err)),
             ..self
