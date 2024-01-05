@@ -1,4 +1,3 @@
-use anyhow::bail;
 use wasm_bridge::component::Linker;
 use wasm_bridge::Result;
 use wasm_bridge::StoreContextMut;
@@ -11,6 +10,6 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
         .instance("wasi:cli/exit@0.2.0-rc-2023-11-10")?
         .func_wrap(
             "exit",
-            |caller: StoreContextMut<T>, (status,): (Result<(), ()>,)| Ok(()),
+            |_caller: StoreContextMut<T>, (_status,): (Result<(), ()>,)| Ok(()),
         )
 }

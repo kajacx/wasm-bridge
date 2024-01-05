@@ -16,6 +16,7 @@ static WASI_IMPORT_NAMES: &[&str] = &[
     "clock_time_get",
     "random_get",
     "fd_write",
+    "fd_read",
     "environ_get",
     "environ_sizes_get",
     "proc_exit",

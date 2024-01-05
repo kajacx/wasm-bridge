@@ -177,8 +177,8 @@ pub fn async_trait(
     let as_string = input.to_string();
 
     // TODO: this is a really hacky way to do it
-    // let regex = Regex::new("async\\s*fn").unwrap();
-    // let as_string = regex.replace_all(&as_string, "fn");
+    let regex = Regex::new("async\\s*fn").unwrap();
+    let as_string = regex.replace_all(&as_string, "fn");
 
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }

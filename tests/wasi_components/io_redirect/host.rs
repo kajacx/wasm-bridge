@@ -34,9 +34,9 @@ impl WasiView for State {
 }
 
 pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
-    no_config(component_bytes).await?;
-    inherit(component_bytes).await?;
-    capture(component_bytes).await?;
+    no_config(component_bytes).await.unwrap();
+    inherit(component_bytes).await.unwrap();
+    capture(component_bytes).await.unwrap();
 
     Ok(())
 }
@@ -49,21 +49,21 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     let table = Table::new();
     let wasi = WasiCtxBuilder::new().build();
 
-    let engine = Engine::new(&config)?;
+    let engine = Engine::new(&config).unwrap();
     let mut store = Store::new(&engine, State { table, wasi });
 
-    let component = Component::new(&store.engine(), &component_bytes)?;
+    let component = Component::new(&store.engine(), &component_bytes).unwrap();
 
     let mut linker = Linker::new(store.engine());
-    command::add_to_linker(&mut linker)?;
+    command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await?;
+    let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await.unwrap();
 
-    let result = instance.call_readln_from_stdin(&mut store).await?;
+    let result = instance.call_readln_from_stdin(&mut store).await.unwrap();
     assert_eq!(result, None);
 
-    instance.call_writeln_to_stdout(&mut store, "NO_PRINT").await?;
-    instance.call_writeln_to_stderr(&mut store, "NO_PRINT").await?;
+    instance.call_writeln_to_stdout(&mut store, "NO_PRINT").await.unwrap();
+    instance.call_writeln_to_stderr(&mut store, "NO_PRINT").await.unwrap();
 
     Ok(())
 }
@@ -76,22 +76,22 @@ async fn inherit(component_bytes: &[u8]) -> Result<()> {
     let table = Table::new();
     let wasi = WasiCtxBuilder::new().inherit_stdio().build();
 
-    let engine = Engine::new(&config)?;
+    let engine = Engine::new(&config).unwrap();
     let mut store = Store::new(&engine, State { table, wasi });
 
-    let component = Component::new(&store.engine(), &component_bytes)?;
+    let component = Component::new(&store.engine(), &component_bytes).unwrap();
 
     let mut linker = Linker::new(store.engine());
-    command::add_to_linker(&mut linker)?;
+    command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await?;
+    let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await.unwrap();
 
     // Cannot really read a line in js when inheriting
-    // let result = instance.call_readln_from_stdin(&mut store).await?;
+    // let result = instance.call_readln_from_stdin(&mut store).await.unwrap();
     // assert_eq!(result, None);
 
-    instance.call_writeln_to_stdout(&mut store, "PRINT_OUT_1").await?;
-    instance.call_writeln_to_stderr(&mut store, "PRINT_ERR_1").await?;
+    instance.call_writeln_to_stdout(&mut store, "PRINT_OUT_1").await.unwrap();
+    instance.call_writeln_to_stderr(&mut store, "PRINT_ERR_1").await.unwrap();
 
     Ok(())
 }
@@ -117,32 +117,32 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
         .stderr(err_stream)
         .build();
 
-    let engine = Engine::new(&config)?;
+    let engine = Engine::new(&config).unwrap();
     let mut store = Store::new(&engine, State { table, wasi });
 
-    let component = Component::new(&store.engine(), &component_bytes)?;
+    let component = Component::new(&store.engine(), &component_bytes).unwrap();
 
     let mut linker = Linker::new(store.engine());
-    command::add_to_linker(&mut linker)?;
+    command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await?;
+    let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await.unwrap();
 
-    let result = instance.call_readln_from_stdin(&mut store).await?;
+    let result = instance.call_readln_from_stdin(&mut store).await.unwrap();
     assert_eq!(result, Some("PRINT_IN_2".into()));
 
-    let result = instance.call_readln_from_stdin(&mut store).await?;
+    let result = instance.call_readln_from_stdin(&mut store).await.unwrap();
     assert_eq!(result, None);
 
-    instance.call_writeln_to_stdout(&mut store, "PRINT_OUT_2").await?;
-    instance.call_writeln_to_stdout(&mut store, "NO_PRINT").await?; // Test that output is not duplicated to stdout
+    instance.call_writeln_to_stdout(&mut store, "PRINT_OUT_2").await.unwrap();
+    instance.call_writeln_to_stdout(&mut store, "NO_PRINT").await.unwrap(); // Test that output is not duplicated to stdout
 
-    instance.call_writeln_to_stderr(&mut store, "PRINT_ERR_2").await?;
-    instance.call_writeln_to_stderr(&mut store, "NO_PRINT").await?;
+    instance.call_writeln_to_stderr(&mut store, "PRINT_ERR_2").await.unwrap();
+    instance.call_writeln_to_stderr(&mut store, "NO_PRINT").await.unwrap();
 
-    let text = String::from_utf8(out_bytes.try_lock().unwrap().clone())?;
+    let text = String::from_utf8(out_bytes.try_lock().unwrap().clone()).unwrap();
     assert!(text.contains("PRINT_OUT_2"), "stdout is captured");
 
-    let text = String::from_utf8(err_bytes.try_lock().unwrap().clone())?;
+    let text = String::from_utf8(err_bytes.try_lock().unwrap().clone()).unwrap();
     assert!(text.contains("PRINT_ERR_2"), "stderr is captured");
 
     Ok(())
