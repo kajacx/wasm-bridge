@@ -1,72 +1,69 @@
 (() => ({
-  //   wasi_snapshot_preview1: {
-  //     clock_time_get: (a, b, c, d) => {
-  //       console.log("HOW????", a, b, c, d);
-  //       return 0;
-  //     },
-  //     fd_write: () => {},
-  //     environ_get: () => [],
-  //     environ_sizes_get: () => [],
-  //     proc_exit: () => {},
-  //   },
-  env: {},
   "wasi:filesystem/preopens@0.2.0-rc-2023-11-10": {
-    "get-directories": () => [],
+    "get-directories": (...args) =>
+      console.log("Calling get-directories", ...args),
   },
-  //   "wasi:clocks/wall-clock@0.2.0-rc-2023-11-10": {},
-  //   "wasi:clocks/monotonic-clock@0.2.0-rc-2023-11-10": {},
   "wasi:filesystem/types@0.2.0-rc-2023-11-10": {
-    "[method]descriptor.append-via-stream": () => {},
-    "[method]descriptor.get-type": () => {},
-    "[method]descriptor.write-via-stream": () => {},
-    "[method]descriptor.read-via-stream": () => {},
-    "[resource-drop]descriptor": () => {},
-    "filesystem-error-code": () => {},
+    "[method]descriptor.append-via-stream": (...args) =>
+      console.log("Calling [method]descriptor.append-via-stream", ...args),
+    "[method]descriptor.get-type": (...args) =>
+      console.log("Calling [method]descriptor.get-type", ...args),
+    "[method]descriptor.write-via-stream": (...args) =>
+      console.log("Calling [method]descriptor.write-via-stream", ...args),
+    "[method]descriptor.read-via-stream": (...args) =>
+      console.log("Calling [method]descriptor.read-via-stream", ...args),
+    "[resource-drop]descriptor": (...args) =>
+      console.log("Calling [resource-drop]descriptor", ...args),
+    "filesystem-error-code": (...args) =>
+      console.log("Calling filesystem-error-code", ...args),
   },
   "wasi:io/error@0.2.0-rc-2023-11-10": {
-    "[resource-drop]error": () => {},
+    "[resource-drop]error": (...args) =>
+      console.log("Calling [resource-drop]error", ...args),
   },
   "wasi:io/streams@0.2.0-rc-2023-11-10": {
-    "[method]output-stream.blocking-flush": () => {},
-    "[method]output-stream.blocking-write-and-flush": () => {},
-    "[method]output-stream.check-write": () => {},
-    "[method]output-stream.write": () => {},
-    "[method]input-stream.read": () => {},
-    "[resource-drop]input-stream": () => {},
-    "[resource-drop]output-stream": () => {},
+    "[method]output-stream.blocking-flush": (...args) =>
+      console.log("Calling [method]output-stream.blocking-flush", ...args),
+    "[method]output-stream.check-write": (...args) =>
+      console.log("Calling [method]output-stream.check-write", ...args),
+    "[method]output-stream.write": (...args) =>
+      console.log("Calling [method]output-stream.write", ...args),
+    "[method]input-stream.read": (...args) =>
+      console.log("Calling [method]input-stream.read", ...args),
+    "[resource-drop]input-stream": (...args) =>
+      console.log("Calling [resource-drop]input-stream", ...args),
+    "[resource-drop]output-stream": (...args) =>
+      console.log("Calling [resource-drop]output-stream", ...args),
   },
-  __main_module__: {},
   "wasi:cli/environment@0.2.0-rc-2023-11-10": {
-    "get-environment": () => {},
+    "get-environment": (...args) =>
+      console.log("Calling get-environment", ...args),
   },
   "wasi:sockets/tcp@0.2.0-rc-2023-11-10": {
-    "[resource-drop]tcp-socket": () => {},
+    "[resource-drop]tcp-socket": (...args) =>
+      console.log("Calling [resource-drop]tcp-socket", ...args),
   },
   "wasi:cli/exit@0.2.0-rc-2023-11-10": {
-    exit: () => {},
-  },
-  "wasi:cli/stdin@0.2.0-rc-2023-11-10": {
-    "get-stdin": () => {},
-  },
-  "wasi:cli/stdout@0.2.0-rc-2023-11-10": {
-    "get-stdout": () => {},
-  },
-  "wasi:cli/stderr@0.2.0-rc-2023-11-10": {
-    "get-stderr": () => {},
+    exit: (...args) => console.log("Calling exit", ...args),
   },
   "wasi:cli/terminal-stdin@0.2.0-rc-2023-11-10": {
-    "get-terminal-stdin": () => {},
+    "get-terminal-stdin": (...args) =>
+      console.log("Calling get-terminal-stdin", ...args),
   },
   "wasi:cli/terminal-stdout@0.2.0-rc-2023-11-10": {
-    "get-terminal-stdout": () => {},
+    "get-terminal-stdout": (...args) =>
+      console.log("Calling get-terminal-stdout", ...args),
   },
   "wasi:cli/terminal-stderr@0.2.0-rc-2023-11-10": {
-    "get-terminal-stderr": () => {},
+    "get-terminal-stderr": (...args) =>
+      console.log("Calling get-terminal-stderr", ...args),
   },
   "wasi:cli/terminal-input@0.2.0-rc-2023-11-10": {
-    "[resource-drop]terminal-input": () => {},
+    "[resource-drop]terminal-input": (...args) =>
+      console.log("Calling [resource-drop]terminal-input", ...args),
   },
   "wasi:cli/terminal-output@0.2.0-rc-2023-11-10": {
-    "[resource-drop]terminal-output": () => {},
+    "[resource-drop]terminal-output": (...args) =>
+      console.log("Calling [resource-drop]terminal-output", ...args),
   },
 }))();
