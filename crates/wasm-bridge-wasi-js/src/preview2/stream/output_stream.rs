@@ -111,7 +111,6 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
     linker
         .instance("wasi:cli/stdout@0.2.0-rc-2023-11-10")?
         .func_wrap("get-stdout", |mut caller: StoreContextMut<T>, (): ()| {
-            wasm_bridge::helpers::console_log("CALLING GET STDOUT");
             let stream = caller.data().ctx().stdout().stream();
             let index = caller.data_mut().table_mut().output_streams.insert(stream);
             Ok(index)
@@ -120,7 +119,6 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
     linker
         .instance("wasi:cli/stderr@0.2.0-rc-2023-11-10")?
         .func_wrap("get-stderr", |mut caller: StoreContextMut<T>, (): ()| {
-            wasm_bridge::helpers::console_log("CALLING GET STDERR");
             let stream = caller.data().ctx().stderr().stream();
             let index = caller.data_mut().table_mut().output_streams.insert(stream);
             Ok(index)
@@ -131,8 +129,6 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
         .func_wrap(
             "[method]output-stream.blocking-write-and-flush",
             |mut caller: StoreContextMut<T>, (index, bytes): (u32, Vec<u8>)| {
-                wasm_bridge::helpers::console_log("CALLING OUTPUT STREAM BLOCKING WRITE");
-                wasm_bridge::helpers::console_log(String::from_utf8_lossy(&bytes));
                 let stream = caller
                     .data_mut()
                     .table_mut()

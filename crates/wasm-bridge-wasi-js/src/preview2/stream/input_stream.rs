@@ -40,7 +40,6 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
     linker
         .instance("wasi:cli/stdin@0.2.0-rc-2023-11-10")?
         .func_wrap("get-stdin", |mut caller: StoreContextMut<T>, (): ()| {
-            wasm_bridge::helpers::console_log("CALLING GET STDIN");
             let stream = caller.data().ctx().stdin().stream();
             let index = caller.data_mut().table_mut().input_streams.insert(stream);
             Ok(index)
@@ -51,7 +50,6 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
         .func_wrap(
             "[method]input-stream.blocking-read",
             |mut caller: StoreContextMut<T>, (index, len): (u32, u64)| {
-                wasm_bridge::helpers::console_log("CALLING INPUT STREAM BLOCKING READ");
                 let stream = caller
                     .data_mut()
                     .table_mut()
@@ -60,8 +58,6 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
                     .context("Get input stream resource")?;
 
                 let result = stream.read(len as usize);
-                wasm_bridge::helpers::console_log("RESULT FROM READ:");
-                wasm_bridge::helpers::console_log(&result);
 
                 Ok(result.map(|bytes| bytes.to_vec()))
             },
