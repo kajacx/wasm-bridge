@@ -11,10 +11,6 @@
     "[resource-drop]descriptor": (...args) =>
       console.log("Calling [resource-drop]descriptor", ...args),
   },
-  "wasi:io/error@0.2.0-rc-2023-11-10": {
-    "[resource-drop]error": (...args) =>
-      console.log("Calling [resource-drop]error", ...args),
-  },
   "wasi:io/streams@0.2.0-rc-2023-11-10": {
     "[method]output-stream.blocking-flush": (...args) =>
       console.log("Calling [method]output-stream.blocking-flush", ...args),
@@ -32,9 +28,6 @@
   "wasi:sockets/tcp@0.2.0-rc-2023-11-10": {
     "[resource-drop]tcp-socket": (...args) =>
       console.log("Calling [resource-drop]tcp-socket", ...args),
-  },
-  "wasi:cli/exit@0.2.0-rc-2023-11-10": {
-    exit: (...args) => console.log("Calling exit", ...args),
   },
   "wasi:cli/terminal-input@0.2.0-rc-2023-11-10": {
     "[resource-drop]terminal-input": (...args) =>

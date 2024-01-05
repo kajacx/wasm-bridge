@@ -26,7 +26,7 @@ struct VoidingStream;
 
 impl HostOutputStream for VoidingStream {
     fn write(&mut self, _bytes: bytes::Bytes) -> StreamResult<()> {
-        Err(StreamError::Closed)
+        Ok(())
     }
 
     fn flush(&mut self) -> StreamResult<()> {
@@ -34,7 +34,7 @@ impl HostOutputStream for VoidingStream {
     }
 
     fn check_write(&mut self) -> StreamResult<usize> {
-        Ok(0)
+        Ok(usize::MAX)
     }
 }
 
@@ -132,6 +132,7 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
             "[method]output-stream.blocking-write-and-flush",
             |mut caller: StoreContextMut<T>, (index, bytes): (u32, Vec<u8>)| {
                 wasm_bridge::helpers::console_log("CALLING OUTPUT STREAM BLOCKING WRITE");
+                wasm_bridge::helpers::console_log(String::from_utf8_lossy(&bytes));
                 let stream = caller
                     .data_mut()
                     .table_mut()

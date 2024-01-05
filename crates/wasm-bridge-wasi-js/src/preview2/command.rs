@@ -2,7 +2,7 @@ use crate::preview2::{clocks, WasiView};
 use wasm_bridge::component::Linker;
 use wasm_bridge::Result;
 
-use super::{cli, filesystem, random, stream};
+use super::{cli, error, filesystem, random, stream};
 
 pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
     linker.set_wasi_object(get_wasi_object);
@@ -12,6 +12,7 @@ pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()
     clocks::add_to_linker(linker)?;
     cli::add_to_linker(linker)?;
     filesystem::add_to_linker(linker)?;
+    error::add_to_linker(linker)?;
 
     Ok(())
 }

@@ -21,6 +21,7 @@ pub use clocks::*;
 pub mod filesystem;
 
 mod cli;
+mod error;
 
 mod random;
 pub(crate) use random::{js_rand, SecureRandom};
