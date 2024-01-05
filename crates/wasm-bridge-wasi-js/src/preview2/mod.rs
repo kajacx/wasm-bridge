@@ -18,6 +18,9 @@ pub use stream::*;
 pub mod clocks;
 pub use clocks::*;
 
+pub mod filesystem;
+pub use filesystem::*;
+
 mod cli;
 
 mod random;

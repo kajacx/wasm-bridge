@@ -1,8 +1,4 @@
 (() => ({
-  "wasi:filesystem/preopens@0.2.0-rc-2023-11-10": {
-    "get-directories": (...args) =>
-      console.log("Calling get-directories", ...args),
-  },
   "wasi:filesystem/types@0.2.0-rc-2023-11-10": {
     "[method]descriptor.append-via-stream": (...args) =>
       console.log("Calling [method]descriptor.append-via-stream", ...args),
