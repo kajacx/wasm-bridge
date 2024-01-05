@@ -162,6 +162,19 @@ impl SizeDescription for ResourceAny {
     }
 }
 
+impl SizeDescription for anyhow::Error {
+    const ALIGNMENT: usize = 4;
+    const BYTE_SIZE: usize = 4;
+    const NUM_ARGS: usize = 1;
+
+    type StructLayout = SimpleStructLayout;
+
+    #[inline]
+    fn layout() -> Self::StructLayout {
+        simple_layout(Self::BYTE_SIZE)
+    }
+}
+
 impl SizeDescription for () {
     const ALIGNMENT: usize = 1;
     const BYTE_SIZE: usize = 0;

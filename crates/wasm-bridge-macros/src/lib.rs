@@ -113,8 +113,8 @@ pub fn derive_size_description(input: proc_macro::TokenStream) -> proc_macro::To
 
     let tokens = match derive_input.data {
         syn::Data::Struct(data) => direct_impl::size_description_struct(name, data),
-        syn::Data::Enum(data) => match struct_style.expect("TODO: better error message") {
-            Style::Record => unreachable!("TODO: better error message"),
+        syn::Data::Enum(data) => match struct_style.expect("cannot find attribute style") {
+            Style::Record => unreachable!("enum is not a record"),
             Style::Variant(VariantStyle::Enum) => direct_impl::size_description_enum(name, data),
             Style::Variant(VariantStyle::Variant) => {
                 direct_impl::size_description_variant(name, data)
@@ -136,8 +136,8 @@ pub fn derive_lift(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let tokens = match derive_input.data {
         syn::Data::Struct(data) => direct_impl::lift_struct(name, data),
-        syn::Data::Enum(data) => match struct_style.expect("TODO: better error message") {
-            Style::Record => unreachable!("TODO: better error message"),
+        syn::Data::Enum(data) => match struct_style.expect("cannot find attribute style") {
+            Style::Record => unreachable!("enum is not a record"),
             Style::Variant(VariantStyle::Enum) => direct_impl::lift_enum(name, data),
             Style::Variant(VariantStyle::Variant) => direct_impl::lift_variant(name, data),
         },
@@ -157,8 +157,8 @@ pub fn derive_lower(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let tokens = match derive_input.data {
         syn::Data::Struct(data) => direct_impl::lower_struct(name, data),
-        syn::Data::Enum(data) => match struct_style.expect("TODO: better error message") {
-            Style::Record => unreachable!("TODO: better error message"),
+        syn::Data::Enum(data) => match struct_style.expect("cannot find attribute style") {
+            Style::Record => unreachable!("enum is not a record"),
             Style::Variant(VariantStyle::Enum) => direct_impl::lower_enum(name, data),
             Style::Variant(VariantStyle::Variant) => direct_impl::lower_variant(name, data),
         },

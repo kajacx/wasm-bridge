@@ -3,11 +3,13 @@ use wasm_bridge::Result;
 
 use super::WasiView;
 
-pub(crate) const STDIN_IDENT: u32 = 0;
-pub(crate) const STDOUT_IDENT: u32 = 1;
-pub(crate) const STDERR_IDENT: u32 = 2;
-
-#[derive(Debug)]
+#[derive(
+    Debug,
+    wasm_bridge_macros::SizeDescription,
+    // wasm_bridge_macros::LiftJs,
+    wasm_bridge_macros::LowerJs,
+)]
+#[component(variant)]
 pub enum StreamError {
     Closed,
     LastOperationFailed(anyhow::Error),

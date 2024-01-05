@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use super::*;
 
-#[derive(Debug, Clone, Default)]
 pub struct Table {
     pub(crate) input_streams: ResourceTable<Box<dyn HostInputStream>>,
     pub(crate) output_streams: ResourceTable<Box<dyn HostOutputStream>>,
@@ -17,8 +16,7 @@ impl Table {
     }
 }
 
-#[derive(Debug, Clone, Default)]
-struct ResourceTable<T> {
+pub(crate) struct ResourceTable<T> {
     items: HashMap<u32, T>,
     next_index: u32,
 }
@@ -40,5 +38,9 @@ impl<T> ResourceTable<T> {
 
     pub(crate) fn get(&self, index: u32) -> Option<&T> {
         self.items.get(&index)
+    }
+
+    pub(crate) fn get_mut(&mut self, index: u32) -> Option<&mut T> {
+        self.items.get_mut(&index)
     }
 }

@@ -49,12 +49,12 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
         .instance("wasi:io/streams@0.2.0-rc-2023-11-10")?
         .func_wrap(
             "[method]input-stream.blocking-read",
-            |caller: StoreContextMut<T>, (index, len): (u32, u32)| {
+            |mut caller: StoreContextMut<T>, (index, len): (u32, u32)| {
                 let stream = caller
-                    .data()
-                    .table()
+                    .data_mut()
+                    .table_mut()
                     .input_streams
-                    .get(index)
+                    .get_mut(index)
                     .context("Get input stream resource")?;
 
                 let result = stream.read(len as usize);

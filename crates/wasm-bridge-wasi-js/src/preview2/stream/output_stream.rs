@@ -1,12 +1,11 @@
-use anyhow::{bail, Context};
+use anyhow::Context;
 use js_sys::Function;
 use wasm_bindgen::JsValue;
 
 use wasm_bridge::StoreContextMut;
 use wasm_bridge::{component::Linker, Result};
 
-use super::{StreamError, STDOUT_IDENT};
-use super::{StreamResult, STDERR_IDENT};
+use super::{StreamError, StreamResult};
 use crate::preview2::WasiView;
 
 pub trait HostOutputStream {
@@ -131,10 +130,10 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
             "[method]output-stream.blocking-write-and-flush",
             |mut caller: StoreContextMut<T>, (index, bytes): (u32, Vec<u8>)| {
                 let stream = caller
-                    .data()
-                    .table()
+                    .data_mut()
+                    .table_mut()
                     .output_streams
-                    .get(index)
+                    .get_mut(index)
                     .context("Get output stream resource")?;
 
                 Ok(stream.write(bytes::Bytes::from(bytes)))

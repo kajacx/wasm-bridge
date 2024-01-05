@@ -1,24 +1,16 @@
 use anyhow::bail;
 use wasm_bridge::component::Linker;
 use wasm_bridge::Result;
+use wasm_bridge::StoreContextMut;
 
-use crate::preview2::wasi;
 use crate::preview2::WasiView;
 
-// wasm_bridge::component::bindgen!({
-//     path: "src/preview2/wits/exit.wit",
-//     world: "exports"
-// });
-
-impl<T: WasiView + 'static> wasi::cli::exit::Host for T {
-    fn exit(&mut self, status: Result<(), ()>) -> Result<()> {
-        match status {
-            Ok(()) => Ok(()),
-            Err(()) => bail!("Guest called exit"),
-        }
-    }
-}
-
+// TODO: implement and test exit properly
 pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
-    wasi::cli::exit::add_to_linker(linker, |d| d)
+    linker
+        .instance("wasi:cli/exit@0.2.0-rc-2023-11-10")?
+        .func_wrap(
+            "exit",
+            |caller: StoreContextMut<T>, (status,): (Result<(), ()>,)| Ok(()),
+        )
 }

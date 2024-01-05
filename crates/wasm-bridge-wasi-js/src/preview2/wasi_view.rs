@@ -1,6 +1,6 @@
 use super::*;
 
-pub trait WasiView: Send {
+pub trait WasiView {
     fn table(&self) -> &Table;
 
     fn table_mut(&mut self) -> &mut Table;

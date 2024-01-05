@@ -297,6 +297,22 @@ impl Lower for ResourceAny {
     }
 }
 
+// TODO: kind of hacky, but it's needed for deriving LowerJs for StreamError
+impl Lower for anyhow::Error {
+    fn to_js_args<M: WriteableMemory>(&self, args: &mut JsArgsWriter, memory: &M) -> Result<()> {
+        args.push(&self.to_js_return(memory)?);
+        Ok(())
+    }
+
+    fn to_js_return<M: WriteableMemory>(&self, _memory: &M) -> Result<JsValue> {
+        Ok(0.to_js_value())
+    }
+
+    fn write_to<M: WriteableMemory>(&self, buffer: &mut ByteBuffer, memory: &M) -> Result<()> {
+        buffer.write(&0, memory)
+    }
+}
+
 impl Lower for () {
     fn to_js_args<M: WriteableMemory>(&self, _args: &mut JsArgsWriter, _memory: &M) -> Result<()> {
         Ok(())
