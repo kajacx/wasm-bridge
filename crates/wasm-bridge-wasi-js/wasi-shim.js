@@ -46,18 +46,6 @@
   "wasi:cli/exit@0.2.0-rc-2023-11-10": {
     exit: (...args) => console.log("Calling exit", ...args),
   },
-  "wasi:cli/terminal-stdin@0.2.0-rc-2023-11-10": {
-    "get-terminal-stdin": (...args) =>
-      console.log("Calling get-terminal-stdin", ...args),
-  },
-  "wasi:cli/terminal-stdout@0.2.0-rc-2023-11-10": {
-    "get-terminal-stdout": (...args) =>
-      console.log("Calling get-terminal-stdout", ...args),
-  },
-  "wasi:cli/terminal-stderr@0.2.0-rc-2023-11-10": {
-    "get-terminal-stderr": (...args) =>
-      console.log("Calling get-terminal-stderr", ...args),
-  },
   "wasi:cli/terminal-input@0.2.0-rc-2023-11-10": {
     "[resource-drop]terminal-input": (...args) =>
       console.log("Calling [resource-drop]terminal-input", ...args),
