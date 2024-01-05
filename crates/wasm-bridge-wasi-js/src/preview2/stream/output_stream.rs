@@ -5,7 +5,7 @@ use wasm_bindgen::JsValue;
 use wasm_bridge::StoreContextMut;
 use wasm_bridge::{component::Linker, Result};
 
-use super::{StreamError, StreamResult};
+use super::StreamResult;
 use crate::preview2::WasiView;
 
 pub trait HostOutputStream: Send {
@@ -140,7 +140,21 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
                     .get_mut(index)
                     .context("Get output stream resource")?;
 
-                Ok(stream.write(bytes::Bytes::from(bytes)))
+                let mut start = 0;
+                while start < bytes.len() {
+                    let max_size = match stream.check_write() {
+                        Ok(size) => size,
+                        Err(err) => return Ok(Err(err)),
+                    };
+                    let end = usize::min(start + max_size, bytes.len());
+                    let result = stream.write(bytes::Bytes::copy_from_slice(&bytes[start..end]));
+                    if result.is_err() {
+                        return Ok(result);
+                    }
+                    start = end;
+                }
+
+                Ok(Ok(()))
             },
         )?;
 
