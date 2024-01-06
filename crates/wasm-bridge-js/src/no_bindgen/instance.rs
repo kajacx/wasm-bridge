@@ -14,7 +14,7 @@ use wasm_bindgen_futures::JsFuture;
 
 pub struct Instance {
     exports: HashMap<String, JsValue>,
-    closures: Rc<Vec<DropHandle>>, // TODO: use Rc<Vec<..>> or Rc<[..]> ?
+    closures: Rc<Vec<DropHandle>>,
 }
 
 impl Instance {
@@ -63,7 +63,7 @@ impl Instance {
 
         Ok(Self {
             exports: process_exports(exports)?,
-            closures: Rc::new(closures), // TODO: do we need to keep this?
+            closures: Rc::new(closures),
         })
     }
 
@@ -123,7 +123,6 @@ fn process_exports(js_exports: JsValue) -> Result<HashMap<String, JsValue>> {
         );
     }
 
-    // TODO: this is duplicated somewhere, but here ...
     let js_exports: Object = js_exports.into();
     let names = Object::get_own_property_names(&js_exports);
     let len = names.length();

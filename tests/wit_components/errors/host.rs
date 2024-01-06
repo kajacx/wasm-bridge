@@ -13,7 +13,6 @@ struct HostData;
 impl ErrorsImports for HostData {
     fn simple_fail_host(&mut self, fail: WhereFail) -> Result<WhereFail> {
         match fail {
-            // TODO: hacky import ...
             WhereFail::HostErr => Err(wasm_bridge::component::__internal::anyhow::anyhow!(
                 "host err"
             )),
@@ -23,7 +22,6 @@ impl ErrorsImports for HostData {
 
     fn full_fail_host(&mut self, fail: WhereFail) -> Result<Result<WhereFail, WhereFail>> {
         match fail {
-            // TODO: hacky import ...
             WhereFail::HostErr => Err(wasm_bridge::component::__internal::anyhow::anyhow!(
                 "host err"
             )),
