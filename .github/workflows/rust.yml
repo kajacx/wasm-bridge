@@ -29,10 +29,10 @@ jobs:
         run: rustup target add wasm32-wasi
 
       - name: Install wasm-pack
-        run: cargo install -f --version 0.12.1 wasm-pack
+        run: cargo install --version 0.12.1 wasm-pack
 
       - name: Install cargo component
-        run: cargo install -f --version 0.5.0 cargo-component
+        run: cargo install --version 0.5.0 cargo-component
 
       - uses: actions/checkout@v3
 
