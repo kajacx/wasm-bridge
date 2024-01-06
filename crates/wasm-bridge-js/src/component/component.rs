@@ -27,7 +27,7 @@ impl Component {
         let module_core2 = if let Some(core2) = files.core2 {
             Some(
                 WebAssembly::Module::new(&core2.to_js_value())
-                    .map_err(map_js_error("Synchronously compile main core"))?,
+                    .map_err(map_js_error("Synchronously compile wasi core"))?,
             )
         } else {
             None
@@ -52,7 +52,7 @@ impl Component {
             let promise = WebAssembly::compile(&core2.to_js_value());
             let module = JsFuture::from(promise)
                 .await
-                .map_err(map_js_error("Asynchronously compile main core"))?;
+                .map_err(map_js_error("Asynchronously compile wasi core"))?;
             Some(module.into())
         } else {
             None
