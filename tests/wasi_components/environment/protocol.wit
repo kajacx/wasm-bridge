@@ -1,0 +1,5 @@
+package component-test:wasi-protocol;
+
+world environment {
+  export get-env-var: func(name: string) -> option<string>;
+}
