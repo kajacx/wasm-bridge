@@ -6,6 +6,7 @@ pub struct WasiCtx {
     stderr: Box<dyn StdoutStream>,
 
     random: SecureRandom,
+    env_variables: Vec<(String, String)>,
 
     wall_clock: Box<dyn HostWallClock>,
     monotonic_clock: Box<dyn HostMonotonicClock>,
@@ -17,6 +18,7 @@ impl WasiCtx {
         stdout: Option<Box<dyn StdoutStream>>,
         stderr: Option<Box<dyn StdoutStream>>,
         random: Option<SecureRandom>,
+        env_variables: Vec<(String, String)>,
         wall_clock: Option<Box<dyn HostWallClock>>,
         monotonic_clock: Option<Box<dyn HostMonotonicClock>>,
     ) -> Self {
@@ -25,6 +27,7 @@ impl WasiCtx {
             stdout: stdout.unwrap_or_else(|| Box::new(voiding_stream())),
             stderr: stderr.unwrap_or_else(|| Box::new(voiding_stream())),
             random: random.unwrap_or_else(js_rand),
+            env_variables,
             wall_clock: wall_clock.unwrap_or_else(|| Box::new(real_wall_clock())),
             monotonic_clock: monotonic_clock.unwrap_or_else(|| Box::new(default_monotonic_clock())),
         }
@@ -44,6 +47,10 @@ impl WasiCtx {
 
     pub(crate) fn random(&mut self) -> &mut dyn rand_core::RngCore {
         &mut *self.random
+    }
+
+    pub(crate) fn env_variables(&self) -> &[(String, String)] {
+        &self.env_variables
     }
 
     pub(crate) fn wall_clock(&self) -> &dyn HostWallClock {

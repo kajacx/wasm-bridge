@@ -9,6 +9,7 @@ pub struct WasiCtxBuilder {
     stderr: Option<Box<dyn StdoutStream>>,
 
     random: Option<SecureRandom>,
+    env_variables: Vec<(String, String)>,
 
     wall_clock: Option<Box<dyn HostWallClock>>,
     monotonic_clock: Option<Box<dyn HostMonotonicClock>>,
@@ -25,6 +26,7 @@ impl WasiCtxBuilder {
             self.stdout,
             self.stderr,
             self.random,
+            self.env_variables,
             self.wall_clock,
             self.monotonic_clock,
         )
@@ -79,6 +81,19 @@ impl WasiCtxBuilder {
             random: Some(Box::new(random)),
             ..self
         }
+    }
+
+    pub fn env(mut self, name: impl AsRef<str>, value: impl AsRef<str>) -> Self {
+        self.env_variables
+            .push((name.as_ref().to_string(), value.as_ref().to_string()));
+        self
+    }
+
+    pub fn envs(mut self, envs: &[(impl AsRef<str>, impl AsRef<str>)]) -> Self {
+        for (name, value) in envs {
+            self = self.env(name, value);
+        }
+        self
     }
 
     pub fn wall_clock(self, wall_clock: impl HostWallClock + 'static) -> Self {
