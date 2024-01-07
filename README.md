@@ -33,21 +33,9 @@ In general, you would use this crate the same way wou would use `wasmtime`, and 
 
 Alternatively, you can take a look at these examples:
 
- - **No bindgen:** Text tutorial, Video tutorial
- - **Component model:** Text tutorial, Video tutorial
- - **Component model with WASI:** Text tutorial, Video tutorial
-
-## Component model
-
-The main focus is to support [wasmtime's component model](https://github.com/WebAssembly/component-model).
-See the [Component model](/docs/component_model.md) page on how to get started.
-
-
-## Non-component model use
-
-The provided API is identical to wasmtime's API, so read [wasmtime's documentation](https://docs.wasmtime.dev/) on how to use this crate.
-
-See [this page](/docs/wasm_modules.md) for an example usage.
+ - **No bindgen:** Read the [text tutorial](/docs/wasm_modules.md), watch the video showcase, or see a full example.
+ - **Component model:** Read the [text tutorial](/docs/wit_components.md), watch the video showcase, or see a full example.
+ - **Component model with WASI:** Read the [text tutorial](/docs/wasi_compnents.md), watch the video showcase, or see a full example.
 
 
 ## License

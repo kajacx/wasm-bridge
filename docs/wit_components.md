@@ -7,10 +7,11 @@ It is possible to use the [wit component model](https://github.com/WebAssembly/c
 1. [Install Rust](https://www.rust-lang.org/tools/install)
 2. Add WASM target with `rustup target add wasm32-unknown-unknown`
 3. [Install `wasm-component`](https://github.com/bytecodealliance/cargo-component)
-   with `cargo install --git https://github.com/bytecodealliance/cargo-component cargo-component`
+   with `cargo install --version 0.5.0 cargo-component`
 
+Newer versions of cargo component have not been tested, so using `0.5.0` will cause less problems.
 
-These steps are the same when running a wit component in wasmtime normally.
+Otherwise, these steps are the same when running a wit component in wasmtime normally.
 
 ## Project setup
 
@@ -26,7 +27,7 @@ If your world has imports, you can read [WIT imports](CM/wit_imports.md) on how 
 - All primitive types (numbers, char, bool, string) supported
 - Exported and imported functions with 0-N arguments and 0-N return values
 - Built-in `list`, `option`, `tuple` and `result` types
-- Custom `record`, `enum` and `variant` types
+- Custom `record`, `enum`, `variant` and `flags` types
 - Imported and exported interfaces
 
 See the [`wit_components`](/tests/wit_components) test folder for supported example usages.

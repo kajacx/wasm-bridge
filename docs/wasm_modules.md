@@ -2,12 +2,13 @@
 
 You can use wasm-bridge without the component model, but not many features are implemented.
 
+The provided API is identical to wasmtime's API, so read [wasmtime's documentation](https://docs.wasmtime.dev/) on how to use this crate.
 
 ## Implemented features
 
 - Load a module from bytes or from WAT text
 - Instantiate a module with or without imports
-- Get (typed) exported function and call it
+- Get typed or untyped exported function and call it
 - Multivalue returns from exported and imported functions
 - Supported value types: `i32`, `i64`, `u32`, `u64`, `f32`, `f64`
 - Access store's data from Caller (imported fn)
@@ -17,7 +18,7 @@ See the [`no_bindgen`](/tests/no_bindgen) test folder for supported example usag
 
 ## Example usage
 
-Here is an example of adding three using a WASM module compiled from WAT, using `wasm-bridge` version `0.1.1`:
+Here is an example of adding three using a WASM module compiled from WAT, using `wasm-bridge` version `0.3.0`:
 
 ```rust
 use wasm_bride::*;
