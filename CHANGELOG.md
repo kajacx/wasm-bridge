@@ -16,7 +16,7 @@ making passing objects much more efficient.
 
 - Updated to wasmtime 15.0. This changed the custom IO redirection traits.
 - Moved the `wasm_bridge::wasi` module to a separate `wasm_bridge_wasi` crate.
-- Async user function are not unsupported, use `async: { only_imports: [] }` to make your world imports synchronous.
+- Async user imported functions are not unsupported, use `async: { only_imports: [] }` to make your world imports synchronous.
 
 ## [0.2.2] 2023-08-03
 

@@ -14,7 +14,7 @@ exclude = [
 resolver = "2"
 
 [workspace.package]
-version = "0.2.2"
+version = "0.3.0"
 edition = "2021"
 repository = "https://github.com/kajacx/wasm-bridge"
 license = "MIT"
@@ -22,9 +22,9 @@ keywords = ["WASM", "wasmtime", "web"]
 categories = ["wasm", "web-programming"]
 
 [workspace.dependencies]
-wasm-bridge = { path = "crates/wasm-bridge", version = "0.2.2" }
-wasm-bridge-js = { path = "crates/wasm-bridge-js", version = "0.2.2" }
-wasm-bridge-macros = { path = "crates/wasm-bridge-macros", version = "0.2.2" }
+wasm-bridge = { path = "crates/wasm-bridge", version = "0.3.0" }
+wasm-bridge-js = { path = "crates/wasm-bridge-js", version = "0.3.0" }
+wasm-bridge-macros = { path = "crates/wasm-bridge-macros", version = "0.3.0" }
 
 wasmtime = { version = "15.0", default-features = false, features = ["cranelift"] }
 wasmtime-wasi = { version = "15.0", default-features = false, features = ["preview2"] }
