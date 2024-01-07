@@ -1,15 +1,13 @@
 #!/usr/bin/sh
 set -e
 
-version=$(grep version Cargo.toml | sed -E 's#.*?"(.*?)".*#\1#')
+version=$(grep '^version' Cargo.toml | sed -E 's#.*?"(.*?)".*#\1#')
 
 echo You are about to release version $version.
 echo
 
-echo Please check that all version references have been updated.
-grep wasm-bridge-macros\ = crates/wasm-bridge/Cargo.toml
-grep wasm-bridge-js\ = crates/wasm-bridge/Cargo.toml
-grep wasm-bridge-macros\ = crates/wasm-bridge-js/Cargo.toml
+echo Please check that all version references have been updated:
+grep '^wasm-bridge' Cargo.toml
 echo
 
 echo Please make sure that the CHANGELOG has today"'"s date
@@ -43,6 +41,7 @@ echo Releasing crates
 cargo publish -p wasm-bridge-macros
 cargo publish -p wasm-bridge-js
 cargo publish -p wasm-bridge
+cargo publish -p wasm-bridge-wasi
 echo
 
 echo Creating git tag
