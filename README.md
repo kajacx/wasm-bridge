@@ -27,6 +27,16 @@ With `wasm-bridge`, you can write a *single source code in Rust* that you would 
 but it works on desktop as well as on the web.
 
 
+## How do I use this?
+
+In general, you would use this crate the same way wou would use `wasmtime`, and just replace `wasmtime` with `wasm_bride`.
+
+Alternatively, you can take a look at these examples:
+
+ - **No bindgen:** Text tutorial, Video tutorial
+ - **Component model:** Text tutorial, Video tutorial
+ - **Component model with WASI:** Text tutorial, Video tutorial
+
 ## Component model
 
 The main focus is to support [wasmtime's component model](https://github.com/WebAssembly/component-model).
