@@ -43,7 +43,7 @@ jobs:
             Cargo.lock
             target
             tests/instance
-          key: ${{ runner.os }}-build-folders-${{ hashFiles('crates/*/Cargo.toml') }}
+          key: ${{ runner.os }}-build-folders-${{ hashFiles('Cargo.toml', 'crates/*/Cargo.toml') }}
           restore-keys: ${{ runner.os }}-build-folders
 
       - name: Run unit tests
