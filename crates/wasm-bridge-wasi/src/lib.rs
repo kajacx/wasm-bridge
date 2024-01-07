@@ -2,4 +2,4 @@
 pub use wasmtime_wasi::*;
 
 #[cfg(target_arch = "wasm32")]
-pub use wasm_bridge_wasi_js::*;
+pub mod preview2;

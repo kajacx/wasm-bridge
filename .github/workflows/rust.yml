@@ -54,7 +54,7 @@ jobs:
       - name: Run wasi unit tests
         env:
           RUSTFLAGS: "-D warnings"
-        run: cd crates/wasm-bridge-wasi-js && wasm-pack test --node -- --all-features
+        run: cd crates/wasm-bridge-wasi && wasm-pack test --node -- --all-features
 
       - name: Check formatting
         env:

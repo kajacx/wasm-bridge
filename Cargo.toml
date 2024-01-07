@@ -4,7 +4,6 @@ members = [
   "crates/wasm-bridge",
   "crates/wasm-bridge-js",
   "crates/wasm-bridge-wasi",
-  "crates/wasm-bridge-wasi-js",
   "crates/wasm-bridge-macros",
 ]
 
@@ -25,10 +24,9 @@ categories = ["wasm", "web-programming"]
 [workspace.dependencies]
 wasm-bridge = { path = "crates/wasm-bridge", version = "0.2.2" }
 wasm-bridge-js = { path = "crates/wasm-bridge-js", version = "0.2.2" }
-wasm-bridge-wasi-js = { path = "crates/wasm-bridge-wasi-js", version = "0.2.2" }
 wasm-bridge-macros = { path = "crates/wasm-bridge-macros", version = "0.2.2" }
 
-wasmtime = { version = "15.0", features = ["cratelift"] }
+wasmtime = { version = "15.0", features = ["cranelift"] }
 wasmtime-wasi = { version = "15.0" }
 wasmtime-component-util = { version = "15.0" }
 wasmtime-wit-bindgen = { version = "15.0" }

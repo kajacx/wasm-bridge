@@ -6,7 +6,7 @@ cd crates/wasm-bridge-js
 wasm-pack test --node -- --all-features
 cd ../..
 
-cd crates/wasm-bridge-wasi-js
+cd crates/wasm-bridge-wasi
 wasm-pack test --node -- --all-features
 cd ../..
 
