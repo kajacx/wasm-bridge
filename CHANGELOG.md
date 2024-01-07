@@ -1,5 +1,22 @@
 # wasm-bridge change log
 
+## [0.3.0] 2024-01-07
+
+### Added
+
+- Fixed WASI examples, tested with `cargo component` version `0.5.0`.
+- Environment variables support for WASI.
+
+### Changes
+
+- Objects are now sent directly to wasm modules as bytes instead of creating a JS object for the jco-generate code,
+making passing objects much more efficient.
+
+### <b style="color: red">Breaking changes:</b>
+
+- Updated to wasmtime 15.0. This changed the custom IO redirection traits.
+- Moved the `wasm_bridge::wasi` module to a separate `wasm_bridge_wasi` crate.
+- Async user function are not unsupported, use `async: { only_imports: [] }` to make your world imports synchronous.
 
 ## [0.2.2] 2023-08-03
 
@@ -34,7 +51,7 @@
 - Updated wasmtime to version `11.0.0` on sys
 - `Component::new()` now takes the same component bytes on desktop and on the web
 
-### <b style="color: red">Breaking changes</b>:
+### <b style="color: red">Breaking changes:</b>
 
 - `wasm-bridge-cli` is removed, as you can load components with `Component::new()` directly
 - Loading "zipped" components created with earlier version of `wasm-bridge-cli` will not work
