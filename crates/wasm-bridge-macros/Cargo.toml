@@ -16,11 +16,10 @@ anyhow = "1.0"
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "2.0.25", features = ["extra-traits"] }
-wasmtime-component-util = { version = "15.0.0" }
-wasmtime-wit-bindgen = { version = "15.0.0" }
+wasmtime-component-util = { workspace = true }
+wasmtime-wit-bindgen = { workspace = true }
 wit-parser = { version = "0.13.0" }
 regex = "1.8"
-heck = "0.4"
 
 [features]
 async = []

@@ -28,6 +28,11 @@ wasm-bridge-js = { path = "crates/wasm-bridge-js", version = "0.2.2" }
 wasm-bridge-wasi-js = { path = "crates/wasm-bridge-wasi-js", version = "0.2.2" }
 wasm-bridge-macros = { path = "crates/wasm-bridge-macros", version = "0.2.2" }
 
+wasmtime = { version = "15.0", features = ["cratelift"] }
+wasmtime-wasi = { version = "15.0" }
+wasmtime-component-util = { version = "15.0" }
+wasmtime-wit-bindgen = { version = "15.0" }
+
 js-sys = { version = "0.3" }
 wasm-bindgen = { version = "0.2.89" } # See https://users.rust-lang.org/t/very-strange-trait-bounds-error/104028
 wasm-bindgen-futures = { version = "0.4" }
@@ -37,5 +42,4 @@ js-component-bindgen = { version = "0.14" }
 anyhow = { version = "1.0" }
 rand_core = { version = "0.6", default-features = false }
 bytes = { version = "1.0" }
-heck = { version = "0.4" }
 async-trait = { version = "0.1" }

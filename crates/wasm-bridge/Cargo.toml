@@ -9,7 +9,7 @@ keywords.workspace = true
 categories.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-wasmtime = { version = "15.0.0",  features = ["cranelift"] }
+wasmtime = { workspace = true }
 wasm-bridge-macros = { workspace = true, optional = true }
 async-trait = { workspace = true, optional = true }
 

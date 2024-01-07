@@ -1,6 +1,5 @@
 use std::{collections::HashMap, future::Future, rc::Rc};
 
-use heck::ToLowerCamelCase;
 use js_sys::{Array, Function, Object, Reflect};
 use wasm_bindgen::JsValue;
 
@@ -241,7 +240,6 @@ struct PreparedFn<T> {
 impl<T> PreparedFn<T> {
     fn new(name: &str, creator: MakeClosure<T>) -> Self {
         Self {
-            // name: name.to_lower_camel_case(), // Import name is in kebab-case on purpose
             name: name.into(),
             creator,
         }
@@ -270,8 +268,7 @@ impl<T> PreparedFn<T> {
     ) -> DropHandle {
         let (js_val, handler) = (self.creator)(handle, memory);
 
-        Reflect::set(imports, &self.name.to_lower_camel_case().into(), &js_val)
-            .expect("imports is object");
+        Reflect::set(imports, &self.name.as_str().into(), &js_val).expect("imports is object");
 
         handler
     }
@@ -286,7 +283,7 @@ fn create_dyn_fn(name: &str) -> (Function, Array) {
 
     (
         Reflect::get_u32(&result, 0)
-            .expect("result us array")
+            .expect("result is array")
             .into(),
         Reflect::get_u32(&result, 1)
             .expect("result is array")
