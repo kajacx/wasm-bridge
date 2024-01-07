@@ -58,29 +58,9 @@ size_description_primitive!(f64, 8);
 size_description_primitive!(bool, 1);
 size_description_primitive!(char, 4);
 
-macro_rules! size_description_fat_ptr_gen {
-    ($ty: ty) => {
-        impl<T: SizeDescription> SizeDescription for $ty {
-            const ALIGNMENT: usize = 4;
-            const BYTE_SIZE: usize = 8;
-            const NUM_ARGS: usize = 2;
-
-            type StructLayout = SimpleStructLayout;
-
-            #[inline]
-            fn layout() -> Self::StructLayout {
-                simple_layout(Self::BYTE_SIZE)
-            }
-        }
-    };
-}
-
-size_description_fat_ptr_gen!(&[T]);
-size_description_fat_ptr_gen!(Vec<T>);
-
 macro_rules! size_description_fat_ptr {
-    ($ty: ty) => {
-        impl SizeDescription for $ty {
+    ([$($name: ident),*], $ty: ty) => {
+        impl<$($name: SizeDescription),*> SizeDescription for $ty {
             const ALIGNMENT: usize = 4;
             const BYTE_SIZE: usize = 8;
             const NUM_ARGS: usize = 2;
@@ -95,8 +75,10 @@ macro_rules! size_description_fat_ptr {
     };
 }
 
-size_description_fat_ptr!(&str);
-size_description_fat_ptr!(String);
+size_description_fat_ptr!([T], &[T]);
+size_description_fat_ptr!([T], Vec<T>);
+size_description_fat_ptr!([], &str);
+size_description_fat_ptr!([], String);
 
 impl<T: SizeDescription> SizeDescription for &T {
     const ALIGNMENT: usize = T::ALIGNMENT;
