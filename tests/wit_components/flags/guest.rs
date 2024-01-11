@@ -20,12 +20,12 @@ impl Guest for MyGuest {
     }
 
     fn export_add_first_and_last(values: ManyFlags) -> ManyFlags {
-        import_add_first(values).union(ManyFlags::F39)
+        import_add_first(values).union(ManyFlags::FLAG39)
     }
 
     fn export_push_first_and_last(values: Vec<ManyFlags>) -> Vec<ManyFlags> {
         let mut values = import_push_first(&values);
-        values.push(ManyFlags::F39);
+        values.push(ManyFlags::FLAG39);
         values
     }
 }

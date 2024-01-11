@@ -21,11 +21,11 @@ impl FlagsTestImports for Host {
     }
 
     fn import_add_first(&mut self, values: ManyFlags) -> Result<ManyFlags> {
-        Ok(values | ManyFlags::F01)
+        Ok(values | ManyFlags::FLAG01)
     }
 
     fn import_push_first(&mut self, mut values: Vec<ManyFlags>) -> Result<Vec<ManyFlags>> {
-        values.push(ManyFlags::F01);
+        values.push(ManyFlags::FLAG01);
         Ok(values)
     }
 }
@@ -54,16 +54,16 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         .unwrap();
     assert_eq!(result, vec![Colors::RED, Colors::GREEN, Colors::BLUE]);
 
-    let flags56 = ManyFlags::F05 | ManyFlags::F06;
+    let flags56 = ManyFlags::FLAG05 | ManyFlags::FLAG06;
     let result = instance
         .call_export_add_first_and_last(&mut store, flags56)
         .unwrap();
-    assert_eq!(result, flags56 | ManyFlags::F01 | ManyFlags::F39);
+    assert_eq!(result, flags56 | ManyFlags::FLAG01 | ManyFlags::FLAG39);
 
     let result = instance
         .call_export_push_first_and_last(&mut store, &[flags56])
         .unwrap();
-    assert_eq!(result, vec![flags56, ManyFlags::F01, ManyFlags::F39]);
+    assert_eq!(result, vec![flags56, ManyFlags::FLAG01, ManyFlags::FLAG39]);
 
     Ok(())
 }
