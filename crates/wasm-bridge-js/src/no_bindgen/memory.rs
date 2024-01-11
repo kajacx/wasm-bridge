@@ -9,7 +9,7 @@ use crate::{
 
 #[derive(Clone, Debug)]
 pub struct Memory {
-    memory: WebAssembly::Memory,
+    pub(crate) memory: WebAssembly::Memory,
 }
 
 impl Memory {

@@ -41,12 +41,13 @@ impl<T> Linker<T> {
         store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
-        let (imports, drop_handles, memory, wasi_info) = self.prepare_imports(store, component)?;
+        let (imports, drop_handles, inflating_fns, wasi_info) =
+            self.prepare_imports(store, component)?;
 
         if let Some(wasi_info) = wasi_info {
-            component.instantiate_wasi(&imports, drop_handles, &memory, wasi_info)
+            component.instantiate_wasi(&imports, drop_handles, &inflating_fns, wasi_info)
         } else {
-            component.instantiate(&imports, drop_handles, &memory)
+            component.instantiate(&imports, drop_handles, &inflating_fns)
         }
     }
 
@@ -55,15 +56,16 @@ impl<T> Linker<T> {
         store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
-        let (imports, drop_handles, memory, wasi_info) = self.prepare_imports(store, component)?;
+        let (imports, drop_handles, inflating_fns, wasi_info) =
+            self.prepare_imports(store, component)?;
 
         if let Some(wasi_info) = wasi_info {
             component
-                .instantiate_wasi_async(&imports, drop_handles, &memory, wasi_info)
+                .instantiate_wasi_async(&imports, drop_handles, &inflating_fns, wasi_info)
                 .await
         } else {
             component
-                .instantiate_async(&imports, drop_handles, &memory)
+                .instantiate_async(&imports, drop_handles, &inflating_fns)
                 .await
         }
     }
@@ -72,17 +74,23 @@ impl<T> Linker<T> {
         &self,
         mut store: impl AsContextMut<Data = T>,
         component: &Component,
-    ) -> Result<(Object, DropHandles, ModuleMemory, Option<WasiInfo>)> {
+    ) -> Result<(
+        Object,
+        DropHandles,
+        HashMap<String, InflatingDynFns>,
+        Option<WasiInfo>,
+    )> {
         let mut closures = Vec::new();
 
         let (imports, wasi_info) = if let (Some(wasi_object), Some(_wasi_core)) =
             (&self.wasi_object, &component.module_core2)
         {
             let wasi_imports = wasi_object();
-            let wasi_memory = ModuleMemory::new();
+            let mut inflating_wasi_imports = HashMap::<String, InflatingDynFns>::new();
 
             for (name, interface) in self.wasi_interfaces.iter() {
                 let name_js: JsValue = name.into();
+                let mut wasi_dyn_fns = InflatingDynFns::new();
 
                 let mut imports_obj =
                     Reflect::get(&wasi_imports, &name_js).expect("imports is an object");
@@ -90,12 +98,9 @@ impl<T> Linker<T> {
                     imports_obj = Object::new().into();
                 }
 
-                interface.prepare_imports(
-                    &mut store,
-                    &mut closures,
-                    &imports_obj,
-                    wasi_memory.clone(),
-                );
+                interface.prepare_imports(&imports_obj, &mut wasi_dyn_fns);
+                inflating_wasi_imports.insert(name.to_owned(), wasi_dyn_fns);
+
                 Reflect::set(&wasi_imports, &name_js, &imports_obj).expect("imports is an object");
             }
 
@@ -115,12 +120,15 @@ impl<T> Linker<T> {
             )
             .expect("imports is object");
 
-            (imports, Some((wasi_imports, setters, wasi_memory)))
+            (
+                imports,
+                Some((wasi_imports, setters, inflating_wasi_imports)),
+            )
         } else {
             (Object::new(), None)
         };
 
-        let memory = ModuleMemory::new();
+        let mut inflating_imports = HashMap::<String, InflatingDynFns>::new();
 
         for (name, interface) in self.interfaces.iter() {
             let name_js: JsValue = name.into();
@@ -130,11 +138,14 @@ impl<T> Linker<T> {
                 imports_obj = Object::new().into();
             }
 
-            interface.prepare_imports(&mut store, &mut closures, &imports_obj, memory.clone());
+            let mut dyn_fns = InflatingDynFns::new();
+            interface.prepare_imports(&imports_obj, &mut dyn_fns);
+            inflating_imports.insert(name.to_owned(), dyn_fns);
+
             Reflect::set(&imports, &name_js, &imports_obj).expect("imports is an object");
         }
 
-        Ok((imports, Rc::new(closures), memory, wasi_info))
+        Ok((imports, Rc::new(closures), inflating_imports, wasi_info))
     }
 
     pub fn root(&mut self) -> &mut LinkerInterface<T> {
@@ -214,17 +225,24 @@ impl<T> LinkerInterface<T> {
         Ok(())
     }
 
-    fn prepare_imports(
+    fn prepare_imports(&self, imports: &JsValue, dyn_fns: &mut InflatingDynFns) {
+        for function in self.fns.iter() {
+            let drop_handle = function.prepare_import(imports, dyn_fns);
+        }
+    }
+
+    fn finalize_imports(
         &self,
-        mut store: impl AsContextMut<Data = T>,
+        mut store: impl AsContextMut<Data = T>, // TODO: this argument looks suspicious
+        dyn_fns: &InflatingDynFns,
         drop_handles: &mut Vec<DropHandle>,
-        imports: &JsValue,
-        memory: ModuleMemory,
+        memory: &ModuleMemory,
     ) {
         let data_handle = store.as_context_mut().data_handle();
 
         for function in self.fns.iter() {
-            let drop_handle = function.add_to_imports(imports, data_handle.clone(), memory.clone());
+            let drop_handle =
+                function.finalize_import(dyn_fns, data_handle.clone(), memory.clone());
             drop_handles.push(drop_handle);
         }
     }
@@ -245,30 +263,26 @@ impl<T> PreparedFn<T> {
         }
     }
 
-    #[must_use]
-    fn add_to_imports(
-        &self,
-        imports: &JsValue,
-        handle: DataHandle<T>,
-        memory: ModuleMemory,
-    ) -> DropHandle {
-        let (js_val, handler) = (self.creator)(handle, memory);
+    fn prepare_import(&self, imports: &JsValue, dyn_fns: &mut InflatingDynFns) {
+        let (imported_fn, array) = create_inflating_dyn_fn(&self.name);
 
-        Reflect::set(imports, &self.name.as_str().into(), &js_val).expect("imports is object");
+        dyn_fns.insert(self.name.clone(), array);
 
-        handler
+        Reflect::set(imports, &self.name.as_str().into(), &imported_fn)
+            .expect("imports is an object");
     }
 
     #[must_use]
-    fn add_to_instance_imports(
+    fn finalize_import(
         &self,
-        imports: &JsValue,
+        dyn_fns: &InflatingDynFns,
         handle: DataHandle<T>,
         memory: ModuleMemory,
     ) -> DropHandle {
         let (js_val, handler) = (self.creator)(handle, memory);
 
-        Reflect::set(imports, &self.name.as_str().into(), &js_val).expect("imports is object");
+        Reflect::set_u32(dyn_fns.get(&self.name).expect("get dyn fn"), 0, &js_val)
+            .expect("dyn fn setter is an array");
 
         handler
     }
@@ -278,7 +292,24 @@ pub(crate) type DynFns = HashMap<&'static str, Array>;
 
 fn create_dyn_fn(name: &str) -> (Function, Array) {
     let result =
-        js_sys::eval(&format!("(() => {{ let arr = [() => {{ throw Error('Not bound: {name}'); }}]; return [(...args) => arr[0](...args), arr]; }})()"))
+        js_sys::eval(&format!("(() => {{ let arr = [() => {{ throw Error(`Not bound: {name}`); }}]; return [(...args) => arr[0](...args), arr]; }})()"))
+            .expect("eval create dyn fn");
+
+    (
+        Reflect::get_u32(&result, 0)
+            .expect("result is array")
+            .into(),
+        Reflect::get_u32(&result, 1)
+            .expect("result is array")
+            .into(),
+    )
+}
+
+pub(crate) type InflatingDynFns = HashMap<String, Array>;
+
+fn create_inflating_dyn_fn(name: &str) -> (Function, Array) {
+    let result =
+        js_sys::eval(&format!("(() => {{ let arr = [() => {{ throw Error(`Not bound: {name}`); }}]; return [(...args) => arr[0](args), arr]; }})()"))
             .expect("eval create dyn fn");
 
     (
@@ -315,6 +346,25 @@ mod tests {
             .unwrap();
         assert_eq!(result.as_f64().unwrap(), 2.0);
     }
+
+    #[wasm_bindgen_test::wasm_bindgen_test]
+    fn test_create_inflating_dyn_fn() {
+        let (func, arr) = create_inflating_dyn_fn("foo");
+        assert!(func.is_function(), "dyn function is actually a function");
+        assert!(arr.is_array(), "dyn array us actually an array");
+
+        Reflect::set_u32(&arr, 0, &eval("(args) => args[0] + args[1]").unwrap()).unwrap();
+        let result = func
+            .call2(&JsValue::UNDEFINED, &5.into(), &3.into())
+            .unwrap();
+        assert_eq!(result.as_f64().unwrap(), 8.0);
+
+        Reflect::set_u32(&arr, 0, &eval("(args) => args[0] - args[1]").unwrap()).unwrap();
+        let result = func
+            .call2(&JsValue::UNDEFINED, &5.into(), &3.into())
+            .unwrap();
+        assert_eq!(result.as_f64().unwrap(), 2.0);
+    }
 }
 
-pub(crate) type WasiInfo = (Object, DynFns, ModuleMemory);
+pub(crate) type WasiInfo = (Object, DynFns, HashMap<String, InflatingDynFns>);

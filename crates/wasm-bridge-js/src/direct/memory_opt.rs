@@ -8,8 +8,8 @@ use super::{Lower, ReadableMemory, WriteableMemory};
 
 #[derive(Debug, Clone)]
 pub struct ModuleMemoryInner {
-    memory: crate::Memory,
-    realloc: Function,
+    pub(crate) memory: crate::Memory,
+    pub(crate) realloc: Function,
 }
 
 // #[derive(Debug, Clone)]

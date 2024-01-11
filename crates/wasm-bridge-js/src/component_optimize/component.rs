@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::{bail, Context};
 use js_sys::{Function, Object, Reflect, WebAssembly};
 use wasm_bindgen_futures::JsFuture;
@@ -68,21 +70,21 @@ impl Component {
         &self,
         imports: &Object,
         drop_handles: DropHandles,
-        memory: &ModuleMemory,
+        inflating_fns: &HashMap<String, InflatingDynFns>,
     ) -> Result<Instance> {
         let instance_core = WebAssembly::Instance::new(&self.module_core, imports)
             .map_err(map_js_error("Synchronously instantiate main core"))?;
 
-        Self::set_memory_and_realloc(&instance_core, "cabi_realloc", memory)?;
+        let module_memory = Self::create_module_memory(&instance_core, "cabi_realloc")?;
 
-        Instance::new(instance_core, drop_handles, memory)
+        Instance::new(instance_core, drop_handles, &module_memory)
     }
 
     pub(crate) async fn instantiate_async(
         &self,
         imports: &Object,
         drop_handles: DropHandles,
-        memory: &ModuleMemory,
+        inflating_fns: &HashMap<String, InflatingDynFns>,
     ) -> Result<Instance> {
         let promise = WebAssembly::instantiate_module(&self.module_core, imports);
         let instance = JsFuture::from(promise)
@@ -90,22 +92,24 @@ impl Component {
             .map_err(map_js_error("Asynchronously instantiate main core"))?;
         let instance_core = instance.into();
 
-        Self::set_memory_and_realloc(&instance_core, "cabi_realloc", memory)?;
+        let module_memory = Self::create_module_memory(&instance_core, "cabi_realloc")?;
 
-        Instance::new(instance_core, drop_handles, memory)
+        Instance::new(instance_core, drop_handles, &module_memory)
     }
 
     pub(crate) fn instantiate_wasi(
         &self,
         imports: &Object,
         drop_handles: DropHandles,
-        memory: &ModuleMemory,
-        (wasi_imports, dyn_fns, wasi_memory): WasiInfo,
+        inflating_fns: &HashMap<String, InflatingDynFns>,
+        (wasi_imports, dyn_fns, wasi_inflating_fns): WasiInfo,
     ) -> Result<Instance> {
         let instance_core = WebAssembly::Instance::new(&self.module_core, imports)
             .map_err(map_js_error("Synchronously instantiate main core"))?;
 
-        let js_memory = Self::prepare_wasi_imports(&instance_core, &wasi_imports, memory)?;
+        let memory = Self::create_module_memory(&instance_core, "cabi_realloc")?;
+
+        let js_memory = Self::prepare_wasi_imports(&instance_core, &wasi_imports, &memory)?;
 
         let wasi_core = WebAssembly::Instance::new(
             self.module_core2.as_ref().context("Get wasi core")?,
@@ -113,23 +117,18 @@ impl Component {
         )
         .map_err(map_js_error("Synchronously instantiate wasi core"))?;
 
-        Self::set_existing_memory_and_realloc(
-            &wasi_core,
-            "cabi_import_realloc",
-            &wasi_memory,
-            &js_memory,
-        )?;
+        Self::create_module_memory_from_existing(&wasi_core, "cabi_import_realloc", &js_memory)?;
 
         Self::link_wasi_exports(&wasi_core, &dyn_fns)?;
 
-        Instance::new(instance_core, drop_handles, memory)
+        Instance::new(instance_core, drop_handles, &memory)
     }
 
     pub(crate) async fn instantiate_wasi_async(
         &self,
         imports: &Object,
         drop_handles: DropHandles,
-        memory: &ModuleMemory,
+        inflating_fns: &HashMap<String, InflatingDynFns>,
         (wasi_imports, dyn_fns, wasi_memory): WasiInfo,
     ) -> Result<Instance> {
         let promise = WebAssembly::instantiate_module(&self.module_core, imports);
@@ -138,7 +137,8 @@ impl Component {
             .map_err(map_js_error("Asynchronously instantiate main core"))?;
         let instance_core: WebAssembly::Instance = instance.into();
 
-        let js_memory = Self::prepare_wasi_imports(&instance_core, &wasi_imports, memory)?;
+        let memory = Self::create_module_memory(&instance_core, "cabi_realloc")?;
+        let js_memory = Self::prepare_wasi_imports(&instance_core, &wasi_imports, &memory)?;
 
         let promise = WebAssembly::instantiate_module(
             self.module_core2.as_ref().context("Get wasi core")?,
@@ -149,16 +149,11 @@ impl Component {
             .map_err(map_js_error("Asynchronously instantiate wasi core"))?;
         let wasi_core: WebAssembly::Instance = instance.into();
 
-        Self::set_existing_memory_and_realloc(
-            &wasi_core,
-            "cabi_import_realloc",
-            &wasi_memory,
-            &js_memory,
-        )?;
+        Self::create_module_memory_from_existing(&wasi_core, "cabi_import_realloc", &js_memory)?;
 
         Self::link_wasi_exports(&wasi_core, &dyn_fns)?;
 
-        Instance::new(instance_core, drop_handles, memory)
+        Instance::new(instance_core, drop_handles, &memory)
     }
 
     fn prepare_wasi_imports(
@@ -166,8 +161,8 @@ impl Component {
         wasi_imports: &Object,
         main_memory: &ModuleMemory,
     ) -> Result<WebAssembly::Memory> {
-        let (js_memory, cabi_realloc) =
-            Self::set_memory_and_realloc(instance_core, "cabi_realloc", main_memory)?;
+        let js_memory = &main_memory.memory.memory;
+        let cabi_realloc = &main_memory.realloc;
 
         let main_module_obj = Object::new();
         Reflect::set(
@@ -189,7 +184,7 @@ impl Component {
         Reflect::set(wasi_imports, static_str_to_js("env"), &env_obj)
             .expect("wasi imports is an object");
 
-        Ok(js_memory)
+        Ok(js_memory.clone())
     }
 
     fn link_wasi_exports(wasi_core: &WebAssembly::Instance, dyn_fns: &DynFns) -> Result<()> {
@@ -208,11 +203,10 @@ impl Component {
         Ok(())
     }
 
-    fn set_memory_and_realloc(
+    fn create_module_memory(
         instance: &WebAssembly::Instance,
         realloc_name: &'static str,
-        module_memory: &ModuleMemory,
-    ) -> Result<(WebAssembly::Memory, Function)> {
+    ) -> Result<ModuleMemory> {
         let exports = instance.exports();
 
         let memory = Reflect::get(&exports, static_str_to_js("memory"))
@@ -222,18 +216,14 @@ impl Component {
         }
         let memory: WebAssembly::Memory = memory.into();
 
-        let realloc =
-            Self::set_existing_memory_and_realloc(instance, realloc_name, module_memory, &memory)?;
-
-        Ok((memory, realloc))
+        Self::create_module_memory_from_existing(instance, realloc_name, &memory)
     }
 
-    fn set_existing_memory_and_realloc(
+    fn create_module_memory_from_existing(
         instance: &WebAssembly::Instance,
         realloc_name: &'static str,
-        module_memory: &ModuleMemory,
         existing_memory: &WebAssembly::Memory,
-    ) -> Result<Function> {
+    ) -> Result<ModuleMemory> {
         let exports = instance.exports();
 
         let realloc = Reflect::get(&exports, static_str_to_js(realloc_name))
@@ -245,9 +235,10 @@ impl Component {
         }
         let realloc: Function = realloc.into();
 
-        module_memory.set(crate::Memory::new(existing_memory.clone()), realloc.clone());
-
-        Ok(realloc)
+        Ok(ModuleMemory::new(
+            crate::Memory::new(existing_memory.clone()),
+            realloc.clone(),
+        ))
     }
 }
 
