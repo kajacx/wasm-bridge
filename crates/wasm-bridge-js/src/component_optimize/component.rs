@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 use anyhow::{bail, Context};
 use js_sys::{Function, Object, Reflect, WebAssembly};
@@ -7,7 +7,7 @@ use wasm_bindgen_futures::JsFuture;
 use crate::{
     direct::ModuleMemory,
     helpers::{map_js_error, static_str_to_js},
-    DropHandles, Engine, Result, ToJsValue,
+    DataHandle, DropHandles, Engine, Result, ToJsValue,
 };
 
 use super::*;
@@ -66,24 +66,31 @@ impl Component {
         })
     }
 
-    pub(crate) fn instantiate(
+    pub(crate) fn instantiate<T>(
         &self,
+        data_handle: &DataHandle<T>,
+        linker: &Linker<T>,
         imports: &Object,
-        drop_handles: DropHandles,
         inflating_fns: &HashMap<String, InflatingDynFns>,
     ) -> Result<Instance> {
         let instance_core = WebAssembly::Instance::new(&self.module_core, imports)
             .map_err(map_js_error("Synchronously instantiate main core"))?;
 
-        let module_memory = Self::create_module_memory(&instance_core, "cabi_realloc")?;
+        let (module_memory, drop_handles) = Self::create_memory_and_link_dyn_fns(
+            data_handle,
+            linker,
+            &instance_core,
+            inflating_fns,
+        )?;
 
         Instance::new(instance_core, drop_handles, &module_memory)
     }
 
-    pub(crate) async fn instantiate_async(
+    pub(crate) async fn instantiate_async<T>(
         &self,
+        data_handle: &DataHandle<T>,
+        linker: &Linker<T>,
         imports: &Object,
-        drop_handles: DropHandles,
         inflating_fns: &HashMap<String, InflatingDynFns>,
     ) -> Result<Instance> {
         let promise = WebAssembly::instantiate_module(&self.module_core, imports);
@@ -92,9 +99,35 @@ impl Component {
             .map_err(map_js_error("Asynchronously instantiate main core"))?;
         let instance_core = instance.into();
 
-        let module_memory = Self::create_module_memory(&instance_core, "cabi_realloc")?;
+        let (module_memory, drop_handles) = Self::create_memory_and_link_dyn_fns(
+            data_handle,
+            linker,
+            &instance_core,
+            inflating_fns,
+        )?;
 
         Instance::new(instance_core, drop_handles, &module_memory)
+    }
+
+    fn create_memory_and_link_dyn_fns<T>(
+        data_handle: &DataHandle<T>,
+        linker: &Linker<T>,
+        instance_core: &WebAssembly::Instance,
+        inflating_fns: &HashMap<String, InflatingDynFns>,
+    ) -> Result<(ModuleMemory, DropHandles)> {
+        let module_memory = Self::create_module_memory(&instance_core, "cabi_realloc")?;
+
+        let mut drop_handles = Vec::new();
+        for (name, dyn_fns) in inflating_fns.iter() {
+            linker.get_instance(name)?.finalize_imports(
+                data_handle,
+                dyn_fns,
+                &mut drop_handles,
+                &module_memory,
+            );
+        }
+
+        Ok((module_memory, Rc::new(drop_handles)))
     }
 
     pub(crate) fn instantiate_wasi(

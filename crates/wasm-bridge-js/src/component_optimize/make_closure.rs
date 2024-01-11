@@ -29,6 +29,11 @@ where
 
             let closure =
                 Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
+                    crate::helpers::log_js_value(
+                        "ARR RAW:",
+                        &Array::of2(&JsValue::UNDEFINED, &JsValue::NULL),
+                    );
+                    crate::helpers::log_js_value("ARGS RAW:", &args);
                     let mut args_iter = JsArgsReader::new(args);
                     let args = if P::NUM_ARGS <= 16 {
                         P::from_js_args(&mut args_iter, &memory).map_err(|err| {
@@ -70,25 +75,24 @@ where
                     }
                 });
 
-            let (function, drop_handle) = DropHandle::from_closure(closure);
-            (inflate_js_fn_args(&function), drop_handle)
+            DropHandle::from_closure(closure)
         };
 
         Box::new(make_closure)
     }
 }
 
-/**
- * Takes a JS function that takes one Array argument
- * and returns a JS function that takes many arguments,
- * but calls the original function with those arguments.
- */
-fn inflate_js_fn_args(function: &JsValue) -> JsValue {
-    let converter: Function = js_sys::eval("(inner_fn) => (...outer_args) => inner_fn(outer_args)")
-        .expect("eval converter")
-        .into();
+// /**
+//  * Takes a JS function that takes one Array argument
+//  * and returns a JS function that takes many arguments,
+//  * but calls the original function with those arguments.
+//  */
+// fn inflate_js_fn_args(function: &JsValue) -> JsValue {
+//     let converter: Function = js_sys::eval("(inner_fn) => (...outer_args) => inner_fn(outer_args)")
+//         .expect("eval converter")
+//         .into();
 
-    converter
-        .call1(&JsValue::UNDEFINED, function)
-        .expect("call converter")
-}
+//     converter
+//         .call1(&JsValue::UNDEFINED, function)
+//         .expect("call converter")
+// }

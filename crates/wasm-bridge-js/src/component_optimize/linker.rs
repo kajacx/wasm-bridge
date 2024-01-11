@@ -1,5 +1,6 @@
 use std::{collections::HashMap, future::Future, rc::Rc};
 
+use anyhow::Context;
 use js_sys::{Array, Function, Object, Reflect};
 use wasm_bindgen::JsValue;
 
@@ -41,13 +42,13 @@ impl<T> Linker<T> {
         store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
-        let (imports, drop_handles, inflating_fns, wasi_info) =
-            self.prepare_imports(store, component)?;
+        let (imports, inflating_fns, wasi_info) = self.prepare_imports(component)?;
+        let data_handle = store.as_context().data_handle();
 
         if let Some(wasi_info) = wasi_info {
-            component.instantiate_wasi(&imports, drop_handles, &inflating_fns, wasi_info)
+            component.instantiate_wasi(&imports, todo!(), &inflating_fns, wasi_info)
         } else {
-            component.instantiate(&imports, drop_handles, &inflating_fns)
+            component.instantiate(data_handle, self, &imports, &inflating_fns)
         }
     }
 
@@ -56,32 +57,24 @@ impl<T> Linker<T> {
         store: impl AsContextMut<Data = T>,
         component: &Component,
     ) -> Result<Instance> {
-        let (imports, drop_handles, inflating_fns, wasi_info) =
-            self.prepare_imports(store, component)?;
+        let (imports, inflating_fns, wasi_info) = self.prepare_imports(component)?;
+        let data_handle = store.as_context().data_handle();
 
         if let Some(wasi_info) = wasi_info {
             component
-                .instantiate_wasi_async(&imports, drop_handles, &inflating_fns, wasi_info)
+                .instantiate_wasi_async(&imports, todo!(), &inflating_fns, wasi_info)
                 .await
         } else {
             component
-                .instantiate_async(&imports, drop_handles, &inflating_fns)
+                .instantiate_async(data_handle, self, &imports, &inflating_fns)
                 .await
         }
     }
 
     fn prepare_imports(
         &self,
-        mut store: impl AsContextMut<Data = T>,
         component: &Component,
-    ) -> Result<(
-        Object,
-        DropHandles,
-        HashMap<String, InflatingDynFns>,
-        Option<WasiInfo>,
-    )> {
-        let mut closures = Vec::new();
-
+    ) -> Result<(Object, HashMap<String, InflatingDynFns>, Option<WasiInfo>)> {
         let (imports, wasi_info) = if let (Some(wasi_object), Some(_wasi_core)) =
             (&self.wasi_object, &component.module_core2)
         {
@@ -145,7 +138,7 @@ impl<T> Linker<T> {
             Reflect::set(&imports, &name_js, &imports_obj).expect("imports is an object");
         }
 
-        Ok((imports, Rc::new(closures), inflating_imports, wasi_info))
+        Ok((imports, inflating_imports, wasi_info))
     }
 
     pub fn root(&mut self) -> &mut LinkerInterface<T> {
@@ -163,6 +156,10 @@ impl<T> Linker<T> {
             .interfaces
             .entry(name.to_owned())
             .or_insert_with(LinkerInterface::new))
+    }
+
+    pub(crate) fn get_instance<'a>(&'a self, name: &str) -> Result<&'a LinkerInterface<T>> {
+        self.interfaces.get(name).context("get linker instance")
     }
 
     pub fn instance_wasi<'a>(&'a mut self, name: &str) -> Result<&'a mut LinkerInterface<T>> {
@@ -227,19 +224,17 @@ impl<T> LinkerInterface<T> {
 
     fn prepare_imports(&self, imports: &JsValue, dyn_fns: &mut InflatingDynFns) {
         for function in self.fns.iter() {
-            let drop_handle = function.prepare_import(imports, dyn_fns);
+            function.prepare_import(imports, dyn_fns);
         }
     }
 
-    fn finalize_imports(
+    pub(crate) fn finalize_imports(
         &self,
-        mut store: impl AsContextMut<Data = T>, // TODO: this argument looks suspicious
+        data_handle: &DataHandle<T>,
         dyn_fns: &InflatingDynFns,
         drop_handles: &mut Vec<DropHandle>,
         memory: &ModuleMemory,
     ) {
-        let data_handle = store.as_context_mut().data_handle();
-
         for function in self.fns.iter() {
             let drop_handle =
                 function.finalize_import(dyn_fns, data_handle.clone(), memory.clone());
@@ -248,7 +243,6 @@ impl<T> LinkerInterface<T> {
     }
 }
 
-#[allow(unused)]
 struct PreparedFn<T> {
     name: String,
     creator: MakeClosure<T>,
