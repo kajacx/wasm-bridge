@@ -44,11 +44,14 @@ fn add_three(number: i32) -> Result<i32> {
 }
 ```
 
+This example is *very* simple and uses the not recommended sync methods (see bellow).
+For a full example, see [`wbtutor-wasm-modules`](https://github.com/kajacx/wasm-tutorials/tree/wbtutor-wasm-modules) branch in the tutorials repo with [nicely organized commits](https://github.com/kajacx/wasm-tutorials/commits/wbtutor-wasm-modules).
+
 Alternatively, watch the [video tutorial](https://youtu.be/CqpZjouAOvg):
 
 [![Youtube video](https://img.youtube.com/vi/CqpZjouAOvg/0.jpg)](https://youtu.be/CqpZjouAOvg)
 
-## Sync vs async methods
+## <b style="color: orange">Warning!</b> Do not use synchronous methods
 
 When running on the web, compiling and instantiation WASM modules syncly can result in an error.
 
@@ -68,10 +71,6 @@ These are, however, slightly different from the "normal" async functions that wa
 | `linker.instantiate` | sync | *none* | Calls wasmtime's `linker.instantiate` | Calls the sync `new WebAssembly.Instance()` constructor ❌ |
 | `linker.instantiate_async` | async | `async` | Calls wasmtime's `linker.instantiate_async` | Calls the async `new WebAssembly.instantiate()` function ✅ |
 | `wasm_bridge::instantiate_async` | async | *none* | Calls wasmtime's `linker.instantiate` | Calls the async `new WebAssembly.instantiate()` function ✅ |
-| --- | --- | --- | --- | --- |
-| `Component::new` | sync | *none* | Calls wasmtime's `Component::new` | Calls the sync `new WebAssembly.Module()` constructor ❌ |
-| `wasm_bridge::component::new_component_async` | async | *none* | Calls wasmtime's `Component::new` | Calls the async `WebAssembly.compile()` function ✅ |
 
 The advantage of the "custom" wasm-bridge methods is that they work even without the `async` feature flag.
 
-The component functions require the `component-model` feature, but that would not fit into the table.

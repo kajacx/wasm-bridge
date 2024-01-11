@@ -33,7 +33,7 @@ In general, you would use this crate the same way wou would use `wasmtime`, and 
 
 Alternatively, you can take a look at these examples:
 
- - **No bindgen:** Read the [text tutorial](/docs/wasm_modules.md), watch the video showcase, or see a full example.
+ - **No bindgen:** Read the [text tutorial](/docs/wasm_modules.md), watch the video showcase, or see a [full example](https://github.com/kajacx/wasm-tutorials/tree/wbtutor-wasm-modules).
  - **Component model:** Read the [text tutorial](/docs/wit_components.md), watch the video showcase, or see a full example.
  - **Component model with WASI:** Read the [text tutorial](/docs/wasi_compnents.md), watch the video showcase, or see a full example.
 
