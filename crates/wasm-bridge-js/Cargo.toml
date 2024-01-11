@@ -25,3 +25,4 @@ wasm-bindgen-test = { workspace = true }
 component-model = ["wasm-bridge-macros", "js-component-bindgen", "async-trait"]
 async = ["wasm-bridge-macros/async"]
 error-logging = []
+optimize = []
