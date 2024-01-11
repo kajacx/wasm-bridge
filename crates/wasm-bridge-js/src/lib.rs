@@ -26,8 +26,13 @@ pub use anyhow::Context;
 
 pub mod helpers;
 
-#[cfg(feature = "component-model")]
+#[cfg(all(feature = "component-model", not(feature = "optimize")))]
 pub mod component;
+
+#[cfg(all(feature = "component-model", feature = "optimize"))]
+pub mod component_optimize;
+#[cfg(all(feature = "component-model", feature = "optimize"))]
+pub use component_optimize as component;
 
 #[cfg(feature = "component-model")]
 pub mod direct;
