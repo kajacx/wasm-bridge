@@ -1,4 +1,4 @@
-use std::{collections::HashMap, future::Future, rc::Rc};
+use std::{collections::HashMap, future::Future};
 
 use anyhow::Context;
 use js_sys::{Array, Function, Object, Reflect};
@@ -7,7 +7,7 @@ use wasm_bindgen::JsValue;
 use crate::{
     direct::{Lift, Lower, ModuleMemory},
     helpers::static_str_to_js,
-    AsContextMut, DataHandle, DropHandle, DropHandles, Engine, Result, StoreContextMut,
+    AsContextMut, DataHandle, DropHandle, Engine, Result, StoreContextMut,
 };
 
 use super::*;

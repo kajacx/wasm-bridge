@@ -6,7 +6,7 @@ use wasm_bindgen::{prelude::*, JsValue};
 use crate::conversions::FromJsValue;
 use crate::direct::*;
 use crate::{DataHandle, DropHandle, Result, StoreContextMut};
-use js_sys::{Array, Function};
+use js_sys::Array;
 
 pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>, ModuleMemory) -> (JsValue, DropHandle)>;
 
