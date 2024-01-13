@@ -27,16 +27,26 @@ impl ModuleMemoryInner {
     }
 
     fn malloc(&self, align: usize, size: usize) -> Result<usize> {
-        let zero: JsValue = 0.into();
+        thread_local! {
+            static ARGS: Array = {
+                let array = Array::new_with_length(4);
+                array.set(0, 0.into());
+                array.set(1, 0.into());
+                array
+            };
+        }
 
-        // TODO: probably could re-use the same array
-        let args = Array::of4(&zero, &zero, &(align as u32).into(), &(size as u32).into());
-        let result = self
-            .realloc
-            .apply(&JsValue::UNDEFINED, &args)
-            .map_err(map_js_error("call capi_realloc"))?;
+        ARGS.with(|args| {
+            args.set(2, (align as u32).into());
+            args.set(3, (size as u32).into());
 
-        Ok(result.as_f64().context("realloc should return a number")? as usize)
+            let result = self
+                .realloc
+                .apply(&JsValue::UNDEFINED, args)
+                .map_err(map_js_error("call capi_realloc"))?;
+
+            Ok(result.as_f64().context("realloc should return a number")? as usize)
+        })
     }
 }
 
