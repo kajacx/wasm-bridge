@@ -54,10 +54,11 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
             y: 1.0,
             z: 1.0,
         },
+        tag: 10,
     };
 
     let result = instance
-        .call_move_players(&mut store, &[player.clone()], 2.0)
+        .call_move_players(&mut store, &[player.clone(), player.clone()], 2.0)
         .unwrap();
     assert_eq!(
         result[0].position,

@@ -9,9 +9,12 @@ world records {
 
   record player {
     name: string,
-    health: u64,
+    health: u16,
+    // Force a "gap" in the middle
     position: vector,
     velocity: vector,
+    tag: u8,
+    // Forge a "gap" at the end
   }
 
   import move-player: func(p: player, d: float32) -> player;
