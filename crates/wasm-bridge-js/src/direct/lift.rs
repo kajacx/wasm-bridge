@@ -35,8 +35,7 @@ pub trait ReadableMemory {
     fn read_to_slice(&self, addr: usize, target: &mut [u8]);
 
     fn read_to_vec(&self, addr: usize, len: usize) -> Vec<u8> {
-        // TODO: could do uninit memory with unsafe code
-        let mut vec: Vec<u8> = (0..len).map(|_| 0).collect();
+        let mut vec = vec![0; len];
         self.read_to_slice(addr, &mut vec);
         vec
     }

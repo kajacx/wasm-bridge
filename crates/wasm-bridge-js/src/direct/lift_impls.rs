@@ -185,8 +185,6 @@ impl<T: Lift, E: Lift> Lift for Result<T, E> {
         if Self::NUM_ARGS == 1 {
             let variant = u8::from_js_value(value)?;
             match variant {
-                // TODO: The (T/E)::from_js_return are not really needed,
-                // since we know both T and E are the unit.
                 0 => Ok(Self::Ok(T::from_js_return(value, memory)?)),
                 1 => Ok(Self::Err(E::from_js_return(value, memory)?)),
                 other => bail!("Invalid result variant tag: {other}"),

@@ -91,7 +91,6 @@ impl ByteBuffer {
     }
 
     pub fn skip(&mut self, num_bytes: usize) {
-        // TODO: could just skip instead of writing 0s with some unsafe magic
         self.data.extend((0..num_bytes).map(|_| 0));
     }
 
