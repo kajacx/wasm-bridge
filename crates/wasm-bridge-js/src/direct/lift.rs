@@ -1,4 +1,4 @@
-use crate::{helpers, Result};
+use crate::Result;
 use js_sys::Array;
 use wasm_bindgen::JsValue;
 
@@ -69,13 +69,9 @@ impl Iterator for JsArgsReader {
     type Item = JsValue;
 
     fn next(&mut self) -> Option<Self::Item> {
-        helpers::log_js_value("GETTING FROM:", &self.args);
-        helpers::console_log(self.args.is_array());
-        helpers::console_log(self.args.length());
         if self.index < self.length {
             let value = self.args.get(self.index);
             self.index += 1;
-            helpers::log_js_value("GETTING VAL", &value);
             Some(value)
         } else {
             Option::None

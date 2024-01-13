@@ -29,11 +29,6 @@ where
 
             let closure =
                 Closure::<dyn Fn(Array) -> Result<JsValue, JsValue>>::new(move |args: Array| {
-                    crate::helpers::log_js_value(
-                        "ARR RAW:",
-                        &Array::of2(&JsValue::UNDEFINED, &JsValue::NULL),
-                    );
-                    crate::helpers::log_js_value("ARGS RAW:", &args);
                     let mut args_iter = JsArgsReader::new(args);
                     let args = if P::NUM_ARGS <= 16 {
                         P::from_js_args(&mut args_iter, &memory).map_err(|err| {

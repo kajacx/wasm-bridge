@@ -92,7 +92,6 @@ impl<T: Lift> Lift for Vec<T> {
 
     fn from_js_args<M: ReadableMemory>(args: &mut JsArgsReader, memory: &M) -> Result<Self> {
         let addr = args.next().context("Get addr in from_js_args for Vec")?;
-        crate::helpers::log_js_value("ADDRESS", &addr);
         let len = args.next().context("Get len in from_js_args for Vec")?;
 
         let addr = u32::from_js_value(&addr)? as usize;
