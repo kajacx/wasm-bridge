@@ -42,26 +42,31 @@ impl<Params, Return> TypedFunc<Params, Return> {
         Params: Lower,
         Return: Lift,
     {
-        // TODO: re-use same vec and JS array?
-        // Local static variable should be different for each monomorphization?
+        thread_local! {
+            static ARGS_ARRAY: Array = Array::new_with_length(16);
+        }
+
+        let function = &self.func.function;
         let memory = &self.func.memory;
 
-        let arguments = if Params::NUM_ARGS <= 16 {
-            let mut args = JsArgsWriter::new(Params::NUM_ARGS as u32);
-            params.to_js_args(&mut args, &memory)?;
-            args.close()
+        let result_js = if Params::NUM_ARGS <= 16 {
+            ARGS_ARRAY.with(|args_array| {
+                let mut args = JsArgsWriter::new(args_array);
+                params.to_js_args(&mut args, &memory)?;
+
+                function
+                    .apply(&JsValue::UNDEFINED, args_array)
+                    .map_err(map_js_error("Error inside exported function"))
+            })?
         } else {
             let mut buffer = memory.allocate(Params::ALIGNMENT, Params::BYTE_SIZE)?;
             params.write_to(&mut buffer, memory)?;
             let addr = memory.flush(buffer) as u32;
-            Array::of1(&addr.into())
-        };
 
-        let result_js = self
-            .func
-            .function
-            .apply(&JsValue::UNDEFINED, &arguments)
-            .map_err(map_js_error("Error inside exported function"))?;
+            function
+                .call1(&JsValue::UNDEFINED, &addr.into())
+                .map_err(map_js_error("Error inside exported function"))?
+        };
 
         let result = Return::from_js_return(&result_js, &self.func.memory)
             .context("Cannot cast return type to correct ABI type")?;

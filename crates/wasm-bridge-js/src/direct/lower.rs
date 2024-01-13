@@ -44,17 +44,14 @@ impl<T: WriteableMemory> WriteableMemory for &T {
     }
 }
 
-pub struct JsArgsWriter {
-    args: Array,
+pub struct JsArgsWriter<'a> {
+    args: &'a Array,
     index: u32,
 }
 
-impl JsArgsWriter {
-    pub fn new(num_args: u32) -> Self {
-        Self {
-            args: Array::new_with_length(num_args),
-            index: 0,
-        }
+impl<'a> JsArgsWriter<'a> {
+    pub fn new(args: &'a Array) -> Self {
+        Self { args, index: 0 }
     }
 
     pub fn push(&mut self, arg: &JsValue) {
@@ -64,14 +61,5 @@ impl JsArgsWriter {
 
     pub fn skip(&mut self, num: usize) {
         self.index += num as u32;
-    }
-
-    pub fn close(self) -> Array {
-        debug_assert_eq!(
-            self.index,
-            self.args.length(),
-            "All arguments must be filled"
-        );
-        self.args
     }
 }
