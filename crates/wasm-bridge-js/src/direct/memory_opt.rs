@@ -21,16 +21,21 @@ impl ModuleMemory {
 
     fn malloc(&self, align: usize, size: usize) -> Result<usize> {
         thread_local! {
-            static ARGS: Array = {
+            static ARGS: [Array; 9] = [0,1,2,3,4,5,6,7,8].map(|align| {
                 let array = Array::new_with_length(4);
                 array.set(0, 0.into());
                 array.set(1, 0.into());
+                array.set(2, align.into());
                 array
-            };
+            });
         }
 
-        ARGS.with(|args| {
-            args.set(2, (align as u32).into());
+        if align > 8 {
+            bail!("Align must be at most 8, it is {align} instead");
+        }
+
+        ARGS.with(|align_args| {
+            let args = &align_args[align];
             args.set(3, (size as u32).into());
 
             let result = self
