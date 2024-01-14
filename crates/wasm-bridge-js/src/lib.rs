@@ -26,13 +26,8 @@ pub use anyhow::Context;
 
 pub mod helpers;
 
-#[cfg(all(feature = "component-model", not(feature = "optimize")))]
+#[cfg(feature = "component-model")]
 pub mod component;
-
-#[cfg(all(feature = "component-model", feature = "optimize"))]
-pub mod component_optimize;
-#[cfg(all(feature = "component-model", feature = "optimize"))]
-pub use component_optimize as component;
 
 #[cfg(feature = "component-model")]
 pub mod direct;
@@ -43,7 +38,6 @@ pub use direct::usize_max;
 
 #[cfg(feature = "async")]
 pub use wasm_bridge_macros::async_trait;
-// pub use async_trait::async_trait;
 
 pub use js_sys;
 pub use wasm_bindgen;
