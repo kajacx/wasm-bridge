@@ -1,11 +1,9 @@
 // From this PR https://github.com/kajacx/wasm-bridge/pull/3 by zimond
 
 use js_sys::{Reflect, Uint8Array, WebAssembly};
+use wasm_bindgen::JsValue;
 
-use crate::{
-    helpers::{map_js_error, static_str_to_js},
-    AsContextMut, Result,
-};
+use crate::{helpers::map_js_error, AsContextMut, Result};
 
 #[derive(Clone, Debug)]
 pub struct Memory {
@@ -23,14 +21,15 @@ impl Memory {
     }
 
     pub(crate) fn write_impl(&self, offset: usize, buffer: &[u8]) -> Result<()> {
-        let memory = Reflect::get(&self.memory, static_str_to_js("buffer"))
-            .map_err(map_js_error("Memory has no buffer field"))?;
+        let memory = self.get_memory_buffer()?;
+
         let mem = Uint8Array::new_with_byte_offset_and_length(
             &memory,
             offset as u32,
             buffer.len() as u32,
         );
         mem.copy_from(buffer);
+
         Ok(())
     }
 
@@ -40,14 +39,26 @@ impl Memory {
     }
 
     pub(crate) fn read_impl(&self, offset: usize, buffer: &mut [u8]) -> Result<()> {
-        let memory = Reflect::get(&self.memory, static_str_to_js("buffer"))
-            .map_err(map_js_error("Memory has no buffer field"))?;
+        let memory = self.get_memory_buffer()?;
+
         let mem = Uint8Array::new_with_byte_offset_and_length(
             &memory,
             offset as u32,
             buffer.len() as u32,
         );
         mem.copy_to(buffer);
+
         Ok(())
+    }
+
+    fn get_memory_buffer(&self) -> Result<JsValue> {
+        thread_local! {
+            static BUFFER_NAME: JsValue = "buffer".into();
+        }
+
+        BUFFER_NAME.with(|buffer_name| {
+            Reflect::get(&self.memory, buffer_name)
+                .map_err(map_js_error("Memory has no buffer field"))
+        })
     }
 }
