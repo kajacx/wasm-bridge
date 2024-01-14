@@ -230,7 +230,6 @@ impl<T> LinkerInterface<T> {
     }
 }
 
-#[allow(unused)]
 struct PreparedFn<T> {
     name: String,
     creator: MakeClosure<T>,
@@ -278,7 +277,7 @@ pub(crate) type DynFns = HashMap<&'static str, Array>;
 
 fn create_dyn_fn(name: &str) -> (Function, Array) {
     let result =
-        js_sys::eval(&format!("(() => {{ let arr = [() => {{ throw Error('Not bound: {name}'); }}]; return [(...args) => arr[0](...args), arr]; }})()"))
+        js_sys::eval(&format!("(() => {{ let arr = [() => {{ throw Error(`Not bound: {name}`); }}]; return [(...args) => arr[0](...args), arr]; }})()"))
             .expect("eval create dyn fn");
 
     (
