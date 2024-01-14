@@ -19,7 +19,7 @@ where
     T: 'static,
     F: Fn(Caller<T>) -> R + 'static,
     R: ToJsValue + 'static,
-    Result<R::ReturnAbi, JsValue>: ReturnWasmAbi, // TODO: unnecessary return bound?
+    Result<R::ReturnAbi, JsValue>: ReturnWasmAbi,
 {
     fn into_make_closure(self) -> MakeClosure<T> {
         let self_rc = Rc::new(self);
@@ -46,7 +46,7 @@ macro_rules! into_make_closure_single {
             T: 'static,
             F: Fn(Caller<T>, $ty) -> R + 'static,
             R: ToJsValue + 'static,
-            Result<R::ReturnAbi, JsValue>: ReturnWasmAbi, // TODO: unnecessary return bound?
+            Result<R::ReturnAbi, JsValue>: ReturnWasmAbi,
         {
             fn into_make_closure(self) -> MakeClosure<T> {
                 let self_rc = Rc::new(self);
@@ -82,7 +82,7 @@ where
     P0: FromWasmAbi + 'static,
     P1: FromWasmAbi + 'static,
     R: ToJsValue + 'static,
-    Result<R::ReturnAbi, JsValue>: ReturnWasmAbi, // TODO: unnecessary return bound?
+    Result<R::ReturnAbi, JsValue>: ReturnWasmAbi,
 {
     fn into_make_closure(self) -> MakeClosure<T> {
         let self_rc = Rc::new(self);
@@ -110,7 +110,7 @@ macro_rules! into_make_closure_many {
             F: Fn(Caller<T>, $($name),*) -> R + 'static,
             $($name: FromWasmAbi + 'static,)*
             R: ToJsValue + 'static,
-            Result<R::ReturnAbi, JsValue>: ReturnWasmAbi, // TODO: unnecessary return bound?
+            Result<R::ReturnAbi, JsValue>: ReturnWasmAbi,
         {
             fn into_make_closure(self) -> MakeClosure<T> {
                 let self_rc = Rc::new(self);
@@ -147,15 +147,3 @@ into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P
 into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6));
 #[rustfmt::skip]
 into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7));
-
-// js-sys doesn't support closures with more than 8 arguments
-// TODO: a workaround can exist though
-
-// #[rustfmt::skip]
-// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7), (p8, P8));
-// #[rustfmt::skip]
-// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7), (p8, P8), (p9, P9));
-// #[rustfmt::skip]
-// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7), (p8, P8), (p9, P9), (p10, P10));
-// #[rustfmt::skip]
-// into_make_closure_many!((p0, P0), (p1, P1), (p2, P2), (p3, P3), (p4, P4), (p5, P5), (p6, P6), (p7, P7), (p8, P8), (p9, P9), (p10, P10), (p11, P11));
