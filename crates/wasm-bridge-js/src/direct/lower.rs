@@ -55,7 +55,7 @@ impl<'a> JsArgsWriter<'a> {
     }
 
     pub fn push(&mut self, arg: &JsValue) {
-        Reflect::set_u32(&self.args, self.index, arg).expect("args in an array");
+        Reflect::set_u32(self.args, self.index, arg).expect("args in an array");
         self.index += 1;
     }
 
