@@ -1,4 +1,6 @@
-use anyhow::Context;
+use std::{cell::RefCell, ops::Deref, rc::Rc};
+
+use anyhow::{bail, Context};
 use js_sys::{Array, Function};
 use wasm_bindgen::JsValue;
 
@@ -7,21 +9,12 @@ use crate::{helpers::map_js_error, Result};
 use super::{Lower, ReadableMemory, WriteableMemory};
 
 #[derive(Debug, Clone)]
-pub struct ModuleMemoryInner {
+pub(crate) struct ModuleMemory {
     pub(crate) memory: crate::Memory,
     pub(crate) realloc: Function,
 }
 
-// #[derive(Debug, Clone)]
-pub type ModuleMemory = ModuleMemoryInner;
-
-// impl ModuleMemory {
-//     pub(crate) fn new(memory: crate::Memory, realloc: Function) -> Self {
-//         Self(ModuleMemoryInner::new(memory, realloc))
-//     }
-// }
-
-impl ModuleMemoryInner {
+impl ModuleMemory {
     pub(crate) fn new(memory: crate::Memory, realloc: Function) -> Self {
         Self { memory, realloc }
     }
@@ -70,6 +63,48 @@ impl ReadableMemory for ModuleMemory {
         self.memory
             .read_impl(addr, target)
             .expect("read bytes from memory")
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub(crate) struct LazyModuleMemory(Rc<RefCell<Option<ModuleMemory>>>);
+
+impl LazyModuleMemory {
+    pub(crate) fn new() -> Self {
+        Self(Rc::new(RefCell::new(Option::None)))
+    }
+
+    pub(crate) fn get(&self) -> impl Deref<Target = Option<ModuleMemory>> + '_ {
+        self.0.borrow()
+    }
+
+    pub(crate) fn set(&self, module_memory: ModuleMemory) {
+        *self.0.borrow_mut() = Some(module_memory);
+    }
+}
+
+impl WriteableMemory for LazyModuleMemory {
+    fn allocate(&self, align: usize, size: usize) -> Result<ByteBuffer> {
+        self.get()
+            .as_ref()
+            .expect("initialized lazy memory")
+            .allocate(align, size)
+    }
+
+    fn flush(&self, buffer: ByteBuffer) -> usize {
+        self.get()
+            .as_ref()
+            .expect("initialized lazy memory")
+            .flush(buffer)
+    }
+}
+
+impl ReadableMemory for LazyModuleMemory {
+    fn read_to_slice(&self, addr: usize, target: &mut [u8]) {
+        self.get()
+            .as_ref()
+            .expect("initialized lazy memory")
+            .read_to_slice(addr, target)
     }
 }
 
