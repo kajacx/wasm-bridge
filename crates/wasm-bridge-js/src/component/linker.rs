@@ -4,7 +4,7 @@ use js_sys::{Array, Function, Object, Reflect};
 use wasm_bindgen::JsValue;
 
 use crate::{
-    direct::{Lift, Lower, ModuleMemory},
+    direct::{LazyModuleMemory, Lift, Lower, ModuleMemory},
     helpers::static_str_to_js,
     AsContextMut, DataHandle, DropHandle, DropHandles, Engine, Result, StoreContextMut,
 };
@@ -316,4 +316,4 @@ mod tests {
     }
 }
 
-pub(crate) type WasiInfo = (Object, DynFns, ModuleMemory);
+pub(crate) type WasiInfo = (Object, DynFns, LazyModuleMemory);

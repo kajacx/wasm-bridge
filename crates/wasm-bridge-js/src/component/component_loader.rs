@@ -4,8 +4,8 @@ use js_component_bindgen::{transpile, InstantiationMode, TranspileOpts};
 use crate::Result;
 
 pub(crate) struct ComponentFiles {
-    pub(crate) core: Vec<u8>,
-    pub(crate) core2: Option<Vec<u8>>,
+    pub(crate) main_core: Vec<u8>,
+    pub(crate) wasi_core: Option<Vec<u8>>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -21,19 +21,28 @@ impl ComponentLoader {
         let transpiled = transpile(bytes, opts)?;
         let files = transpiled.files;
 
-        let mut core = Option::<Vec<u8>>::None;
-        let mut core2 = Option::<Vec<u8>>::None;
+        let mut main_core = Option::<Vec<u8>>::None;
+        let mut wasi_core = Option::<Vec<u8>>::None;
+        let mut is_wasi = false;
 
         for (name, bytes) in files.into_iter() {
             if name.ends_with("core.wasm") {
-                core = Some(bytes);
+                main_core = Some(bytes);
             } else if name.ends_with("core2.wasm") {
-                core2 = Some(bytes);
+                wasi_core = Some(bytes);
+            } else if name.ends_with("core4.wasm") {
+                is_wasi = true;
             }
         }
 
-        let core = core.context("JCO transpile should generate a main .core.wasm file")?;
+        let main_core =
+            main_core.context("JCO transpile should generate a main .core.wasm file")?;
 
-        Ok(ComponentFiles { core, core2 })
+        let wasi_core = wasi_core.filter(|_| is_wasi);
+
+        Ok(ComponentFiles {
+            main_core,
+            wasi_core,
+        })
     }
 }
