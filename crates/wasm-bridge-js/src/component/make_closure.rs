@@ -8,7 +8,8 @@ use crate::direct::*;
 use crate::{DataHandle, DropHandle, Result, StoreContextMut};
 use js_sys::{Array, Function};
 
-pub(crate) type MakeClosure<T> = Box<dyn Fn(DataHandle<T>, ModuleMemory) -> (JsValue, DropHandle)>;
+pub(crate) type MakeClosure<T> =
+    Box<dyn Fn(DataHandle<T>, LazyModuleMemory) -> (JsValue, DropHandle)>;
 
 pub trait IntoMakeClosure<T, Params, Results> {
     fn into_make_closure(self) -> MakeClosure<T>;
@@ -24,7 +25,7 @@ where
     fn into_make_closure(self) -> MakeClosure<T> {
         let self_rc = Rc::new(self);
 
-        let make_closure = move |handle: DataHandle<T>, memory: ModuleMemory| {
+        let make_closure = move |handle: DataHandle<T>, memory: LazyModuleMemory| {
             let self_clone = self_rc.clone();
 
             let closure =

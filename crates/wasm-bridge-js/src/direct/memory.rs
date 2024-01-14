@@ -72,7 +72,7 @@ impl ReadableMemory for ModuleMemory {
 }
 
 #[derive(Debug, Clone, Default)]
-pub(crate) struct LazyModuleMemory(Rc<RefCell<Option<ModuleMemory>>>);
+pub struct LazyModuleMemory(Rc<RefCell<Option<ModuleMemory>>>);
 
 impl LazyModuleMemory {
     pub(crate) fn new() -> Self {

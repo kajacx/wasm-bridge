@@ -1,10 +1,11 @@
 use std::{collections::HashMap, future::Future, rc::Rc};
 
+use anyhow::Context;
 use js_sys::{Array, Function, Object, Reflect};
 use wasm_bindgen::JsValue;
 
 use crate::{
-    direct::{LazyModuleMemory, Lift, Lower, ModuleMemory},
+    direct::{LazyModuleMemory, Lift, Lower},
     helpers::static_str_to_js,
     AsContextMut, DataHandle, DropHandle, DropHandles, Engine, Result, StoreContextMut,
 };
@@ -72,14 +73,12 @@ impl<T> Linker<T> {
         &self,
         mut store: impl AsContextMut<Data = T>,
         component: &Component,
-    ) -> Result<(Object, DropHandles, ModuleMemory, Option<WasiInfo>)> {
+    ) -> Result<(Object, DropHandles, LazyModuleMemory, Option<WasiInfo>)> {
         let mut closures = Vec::new();
 
-        let (imports, wasi_info) = if let (Some(wasi_object), Some(_wasi_core)) =
-            (&self.wasi_object, &component.module_core2)
-        {
-            let wasi_imports = wasi_object();
-            let wasi_memory = ModuleMemory::new();
+        let (imports, wasi_info) = if component.is_wasi() {
+            let wasi_imports = self.wasi_object.as_ref().context("Get wasi shim object")?();
+            let wasi_memory = LazyModuleMemory::new();
 
             for (name, interface) in self.wasi_interfaces.iter() {
                 let name_js: JsValue = name.into();
@@ -90,12 +89,7 @@ impl<T> Linker<T> {
                     imports_obj = Object::new().into();
                 }
 
-                interface.prepare_imports(
-                    &mut store,
-                    &mut closures,
-                    &imports_obj,
-                    wasi_memory.clone(),
-                );
+                interface.prepare_imports(&mut store, &mut closures, &imports_obj, &wasi_memory);
                 Reflect::set(&wasi_imports, &name_js, &imports_obj).expect("imports is an object");
             }
 
@@ -103,7 +97,7 @@ impl<T> Linker<T> {
             let mut setters = HashMap::<&'static str, Array>::new();
             for name in WASI_IMPORT_NAMES {
                 let (func, setter) = create_dyn_fn(name);
-                Reflect::set(&preview, &(*name).into(), &func).expect("preview is object");
+                Reflect::set(&preview, &(*name).into(), &func).expect("preview is an object");
                 setters.insert(name, setter);
             }
 
@@ -113,14 +107,14 @@ impl<T> Linker<T> {
                 static_str_to_js("wasi_snapshot_preview1"),
                 &preview,
             )
-            .expect("imports is object");
+            .expect("imports is an object");
 
             (imports, Some((wasi_imports, setters, wasi_memory)))
         } else {
             (Object::new(), None)
         };
 
-        let memory = ModuleMemory::new();
+        let memory = LazyModuleMemory::new();
 
         for (name, interface) in self.interfaces.iter() {
             let name_js: JsValue = name.into();
@@ -130,7 +124,7 @@ impl<T> Linker<T> {
                 imports_obj = Object::new().into();
             }
 
-            interface.prepare_imports(&mut store, &mut closures, &imports_obj, memory.clone());
+            interface.prepare_imports(&mut store, &mut closures, &imports_obj, &memory);
             Reflect::set(&imports, &name_js, &imports_obj).expect("imports is an object");
         }
 
@@ -219,7 +213,7 @@ impl<T> LinkerInterface<T> {
         mut store: impl AsContextMut<Data = T>,
         drop_handles: &mut Vec<DropHandle>,
         imports: &JsValue,
-        memory: ModuleMemory,
+        memory: &LazyModuleMemory,
     ) {
         let data_handle = store.as_context_mut().data_handle();
 
@@ -249,21 +243,7 @@ impl<T> PreparedFn<T> {
         &self,
         imports: &JsValue,
         handle: DataHandle<T>,
-        memory: ModuleMemory,
-    ) -> DropHandle {
-        let (js_val, handler) = (self.creator)(handle, memory);
-
-        Reflect::set(imports, &self.name.as_str().into(), &js_val).expect("imports is object");
-
-        handler
-    }
-
-    #[must_use]
-    fn add_to_instance_imports(
-        &self,
-        imports: &JsValue,
-        handle: DataHandle<T>,
-        memory: ModuleMemory,
+        memory: LazyModuleMemory,
     ) -> DropHandle {
         let (js_val, handler) = (self.creator)(handle, memory);
 

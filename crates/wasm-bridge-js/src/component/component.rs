@@ -62,6 +62,10 @@ impl Component {
         })
     }
 
+    pub(crate) fn is_wasi(&self) -> bool {
+        self.wasi_module.is_some()
+    }
+
     pub(crate) fn instantiate(
         &self,
         imports: &Object,
@@ -106,7 +110,7 @@ impl Component {
             .map_err(map_js_error("Synchronously instantiate main module"))?;
 
         let main_memory = Self::prepare_wasi_imports(&main_instance, &wasi_imports)?;
-        lazy_memory.set(main_memory);
+        lazy_memory.set(main_memory.clone());
 
         let wasi_instance = WebAssembly::Instance::new(
             self.wasi_module.as_ref().context("Get wasi module")?,

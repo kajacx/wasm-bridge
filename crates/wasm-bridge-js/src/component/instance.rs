@@ -11,7 +11,7 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub fn new(
+    pub(crate) fn new(
         instance: WebAssembly::Instance,
         drop_handles: DropHandles,
         memory: &ModuleMemory,
