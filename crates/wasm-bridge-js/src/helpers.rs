@@ -14,8 +14,7 @@ pub(crate) fn warn(msg: &str) {
         .unwrap();
 }
 
-#[allow(unused)]
-pub(crate) fn log_js_value(name: &str, value: &JsValue) {
+pub fn log_js_value(name: &str, value: &JsValue) {
     let console_log: Function = js_sys::eval("console.log").unwrap().into();
 
     console_log

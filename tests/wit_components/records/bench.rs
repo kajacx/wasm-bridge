@@ -78,5 +78,68 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         assert_eq!(result, Single { value: 7 });
     });
 
+    test_wrappers();
+
     Ok(())
 }
+
+#[cfg(target_arch = "wasm32")]
+fn test_wrappers() {
+    let five: wasm_bridge::wasm_bindgen::JsValue = 5.into();
+    let three: wasm_bridge::wasm_bindgen::JsValue = 3.into();
+
+    let native: wasm_bridge::js_sys::Function = wasm_bridge::js_sys::eval("(a, b) => a + b")
+        .expect("eval native")
+        .into();
+
+    super::bench("native", || {
+        native
+            .call2(
+                &wasm_bridge::wasm_bindgen::JsValue::UNDEFINED,
+                &five,
+                &three,
+            )
+            .expect("call native")
+    });
+
+    let wrapping: wasm_bridge::js_sys::Function =
+        wasm_bridge::js_sys::eval("inner => (a, b) => inner(a, b)")
+            .expect("eval wrapping")
+            .into();
+    let wrapping: wasm_bridge::js_sys::Function = wrapping
+        .call1(&wasm_bridge::wasm_bindgen::JsValue::UNDEFINED, &native)
+        .expect("wrap fn")
+        .into();
+
+    super::bench("wrapping", || {
+        wrapping
+            .call2(
+                &wasm_bridge::wasm_bindgen::JsValue::UNDEFINED,
+                &five,
+                &three,
+            )
+            .expect("call wrapping")
+    });
+
+    let expanding: wasm_bridge::js_sys::Function =
+        wasm_bridge::js_sys::eval("inner => (...args) => inner(...args)")
+            .expect("eval expanding")
+            .into();
+    let expanding: wasm_bridge::js_sys::Function = expanding
+        .call1(&wasm_bridge::wasm_bindgen::JsValue::UNDEFINED, &native)
+        .expect("expand fn")
+        .into();
+
+    super::bench("expanding", || {
+        expanding
+            .call2(
+                &wasm_bridge::wasm_bindgen::JsValue::UNDEFINED,
+                &five,
+                &three,
+            )
+            .expect("call expanding")
+    });
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn test_wrappers() {}
