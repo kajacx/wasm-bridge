@@ -87,23 +87,23 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
 fn test_wrappers() {
     let five: wasm_bridge::wasm_bindgen::JsValue = 5.into();
     let three: wasm_bridge::wasm_bindgen::JsValue = 3.into();
+    let arr = wasm_bridge::js_sys::Array::of2(&five, &three);
 
-    let native: wasm_bridge::js_sys::Function = wasm_bridge::js_sys::eval("(a, b) => a + b")
-        .expect("eval native")
-        .into();
+    let native: wasm_bridge::js_sys::Function =
+        wasm_bridge::js_sys::eval("(args) => args[0] + args[1]")
+            .expect("eval native")
+            .into();
 
     super::bench("native", || {
-        native
-            .call2(
-                &wasm_bridge::wasm_bindgen::JsValue::UNDEFINED,
-                &five,
-                &three,
-            )
-            .expect("call native")
+        let _result = native
+            .call1(&wasm_bridge::wasm_bindgen::JsValue::UNDEFINED, &arr)
+            .expect("call native");
+        // result
+        // wasm_bridge::helpers::log_js_value("native result", &result);
     });
 
     let wrapping: wasm_bridge::js_sys::Function =
-        wasm_bridge::js_sys::eval("inner => (a, b) => inner(a, b)")
+        wasm_bridge::js_sys::eval("inner => (...args) => inner(args)")
             .expect("eval wrapping")
             .into();
     let wrapping: wasm_bridge::js_sys::Function = wrapping
@@ -112,32 +112,45 @@ fn test_wrappers() {
         .into();
 
     super::bench("wrapping", || {
-        wrapping
+        let _result = wrapping
             .call2(
                 &wasm_bridge::wasm_bindgen::JsValue::UNDEFINED,
                 &five,
                 &three,
             )
-            .expect("call wrapping")
+            .expect("call wrapping");
+        // result
+        // wasm_bridge::helpers::log_js_value("wrapping result", &result);
     });
 
-    let expanding: wasm_bridge::js_sys::Function =
-        wasm_bridge::js_sys::eval("inner => (...args) => inner(...args)")
-            .expect("eval expanding")
-            .into();
+    let expanding: wasm_bridge::js_sys::Function = wasm_bridge::js_sys::eval(
+        r#"inner => {
+            let args = [0, 0];
+            function doIt(a, b) {
+                args[0] = a;
+                args[1] = b;
+                return inner(args); 
+            }
+            return doIt;
+        }"#,
+    )
+    .expect("eval expanding")
+    .into();
     let expanding: wasm_bridge::js_sys::Function = expanding
         .call1(&wasm_bridge::wasm_bindgen::JsValue::UNDEFINED, &native)
         .expect("expand fn")
         .into();
 
     super::bench("expanding", || {
-        expanding
+        let _result = expanding
             .call2(
                 &wasm_bridge::wasm_bindgen::JsValue::UNDEFINED,
                 &five,
                 &three,
             )
-            .expect("call expanding")
+            .expect("call expanding");
+        // result
+        // wasm_bridge::helpers::log_js_value("expanding result", &result);
     });
 }
 

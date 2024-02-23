@@ -48,7 +48,7 @@ cp -r skeletons/wit_components/bench_js_opt instance
 # copy the host code
 cp $test/bench.rs instance/bench_js_opt/src/host.rs
 
-# run the js bench test
+# run the js optimized bench test
 cd instance/bench_js_opt && wasm-pack test --release --node && cd ../..
 if [ $? -ne 0 ]; then
   echo
