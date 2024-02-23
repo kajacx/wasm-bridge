@@ -1,11 +1,7 @@
-use anyhow::Context;
 use js_sys::Reflect;
 use wasm_bindgen::{convert::FromWasmAbi, JsValue};
 
-use crate::{
-    helpers::{map_js_error, static_str_to_js},
-    *,
-};
+use crate::{helpers::map_js_error, *};
 
 pub trait FromJsValue: Sized {
     type WasmAbi: FromWasmAbi;
@@ -38,21 +34,6 @@ impl FromJsValue for () {
 
     fn from_wasm_abi(_abi: Self::WasmAbi) -> Result<Self> {
         Ok(())
-    }
-}
-
-impl FromJsValue for bool {
-    type WasmAbi = Self;
-
-    fn from_js_value(value: &JsValue) -> Result<Self> {
-        match value.as_bool() {
-            Some(value) => Ok(value),
-            None => Err(map_js_error("Expected a boolean value")(value)),
-        }
-    }
-
-    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
-        Ok(abi)
     }
 }
 
@@ -134,130 +115,8 @@ impl FromJsValue for u64 {
     }
 }
 
-// TODO: not the best name, but it works
 from_js_value_signed!(f32);
 from_js_value_signed!(f64);
-
-impl FromJsValue for char {
-    type WasmAbi = Self;
-
-    fn from_js_value(value: &JsValue) -> Result<Self> {
-        match value.as_string() {
-            Some(text) if !text.is_empty() => Ok(text.chars().next().unwrap()),
-            _ => Err(map_js_error("Expected a single-character string")(value)),
-        }
-    }
-
-    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
-        Ok(abi)
-    }
-}
-
-impl FromJsValue for String {
-    type WasmAbi = Self;
-
-    fn from_js_value(value: &JsValue) -> Result<Self, crate::Error> {
-        match value.as_string() {
-            Some(value) => Ok(value),
-            None => Err(map_js_error("Expected a string")(value)),
-        }
-    }
-
-    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
-        Ok(abi)
-    }
-}
-
-impl<T: FromJsValue> FromJsValue for Option<T> {
-    type WasmAbi = JsValue; // TODO: better ABI?
-
-    fn from_js_value(value: &JsValue) -> Result<Self> {
-        if value.is_undefined() || value.is_null() {
-            Ok(None)
-        } else {
-            Ok(Some(T::from_js_value(value)?))
-        }
-    }
-
-    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
-        Self::from_js_value(&abi)
-    }
-}
-
-impl<T: FromJsValue, E: FromJsValue> FromJsValue for Result<T, E> {
-    type WasmAbi = JsValue;
-
-    fn from_js_value(value: &JsValue) -> Result<Self> {
-        // TODO: better error handling
-        let tag = Reflect::get(value, static_str_to_js("tag"))
-            .map_err(map_js_error("Get tag from result"))?
-            .as_string()
-            .context("Result tag should be string")?;
-
-        let val = Reflect::get(value, static_str_to_js("val"))
-            .map_err(map_js_error("Get val from result"))?;
-
-        if tag == "ok" {
-            Ok(Ok(T::from_js_value(&val)?))
-        } else if tag == "err" {
-            Ok(Err(E::from_js_value(&val)?))
-        } else {
-            Err(map_js_error("Unknown result tag")(value))
-        }
-    }
-
-    fn from_fn_result(result: &Result<JsValue, JsValue>) -> Result<Self> {
-        Ok(match result {
-            Ok(val) => Ok(T::from_js_value(val)?),
-            Err(err) => {
-                let payload = Reflect::get(err, static_str_to_js("payload"))
-                    .map_err(map_js_error("Get result error payload"))?;
-                Err(E::from_js_value(&payload)?)
-            }
-        })
-    }
-
-    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
-        Self::from_js_value(&abi)
-    }
-}
-
-impl<T: FromJsValue> FromJsValue for Vec<T> {
-    type WasmAbi = JsValue;
-
-    fn from_js_value(value: &JsValue) -> Result<Self> {
-        let length = Reflect::get(value, static_str_to_js("length"))
-            .map_err(map_js_error("Get length of array"))?
-            .as_f64()
-            .context("Array length should be a number")? as u32;
-
-        let mut result = Vec::with_capacity(length as usize);
-
-        for index in 0..length {
-            let item = Reflect::get_u32(value, index)
-                .map_err(map_js_error("Get array value at an index"))?;
-            result.push(T::from_js_value(&item)?);
-        }
-
-        Ok(result)
-    }
-
-    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
-        Self::from_js_value(&abi)
-    }
-}
-
-impl FromJsValue for JsValue {
-    type WasmAbi = Self;
-
-    fn from_js_value(value: &JsValue) -> Result<Self> {
-        Ok(value.clone())
-    }
-
-    fn from_wasm_abi(abi: Self::WasmAbi) -> Result<Self> {
-        Ok(abi)
-    }
-}
 
 impl FromJsValue for Val {
     type WasmAbi = JsValue;

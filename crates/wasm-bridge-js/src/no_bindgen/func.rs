@@ -33,7 +33,6 @@ impl Func {
         let js_rets = self
             .function
             .apply(&JsValue::UNDEFINED, &js_args)
-            // TODO: could really use name of the function in the error here
             .map_err(map_js_error("call untyped exported function"))?;
 
         match rets.len() {

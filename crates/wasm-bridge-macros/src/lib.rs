@@ -67,7 +67,6 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let regex = Regex::new("new_unchecked\\(self\\.([^)]*)\\)").unwrap();
     let as_string = regex.replace_all(&as_string, "new_unchecked(self.$1.clone())");
 
-    // TODO: these static bounds are not great
     let regex = Regex::new("add_to_linker\\s*<\\s*T").unwrap();
     let as_string = regex.replace_all(&as_string, "add_to_linker<T: 'static");
 
@@ -88,17 +87,6 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     // Replace the "Lower" trait with out Lower trait
     let regex = Regex::new("#\\[derive\\([^)]*Lower\\)\\]").unwrap();
     let as_string = regex.replace_all(&as_string, "#[derive(wasm_bridge::component::LowerJs)]");
-
-    // Remove asynchrony
-    // let as_string = if cfg!(feature = "async") {
-    //     let regex = Regex::new("Box[^:]*::[^n]*new[^(]*\\([^a]*async[^m]*move").unwrap();
-    //     let as_string = regex.replace_all(&as_string, "(");
-
-    //     // TODO: this removes "await"s even in places where it isn't supposed to
-    //     as_string.replace(".await", "")
-    // } else {
-    //     as_string.to_string()
-    // };
 
     // eprintln!("bindgen IMPL: {as_string}");
     proc_macro::TokenStream::from_str(&as_string).unwrap()
@@ -176,7 +164,7 @@ pub fn async_trait(
 ) -> proc_macro::TokenStream {
     let as_string = input.to_string();
 
-    // TODO: this is a really hacky way to do it
+    // FIXME: this will break user's "async fn" str slices for example, implement it properly!
     let regex = Regex::new("async\\s*fn").unwrap();
     let as_string = regex.replace_all(&as_string, "fn");
 
@@ -204,9 +192,8 @@ fn style_from_attributes(attributes: &[Attribute]) -> Option<Style> {
         .iter()
         .find(|attr| attr.path().is_ident("component"))
         .map(|attr| {
-            // TODO: Better error message
             attr.parse_args()
-                .expect("Attribute should be correct style")
+                .expect("Failed to parse Style from Attribute")
         })
 }
 

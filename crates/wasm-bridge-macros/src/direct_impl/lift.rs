@@ -33,6 +33,7 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
         read_from_impl.extend(line);
     }
 
+    // FIXME: This will fail if two names differ only in "word separation" (e.g. "username" and "user-name")
     let name_impl = format_ident!("impl_lift_{}", name.to_string().to_lowercase());
     quote!(
       mod #name_impl {

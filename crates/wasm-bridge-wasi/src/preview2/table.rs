@@ -37,7 +37,7 @@ impl<T> ResourceTable<T> {
         index
     }
 
-    #[allow(unused)] // TODO: actually use it somewhere
+    #[allow(unused)]
     pub(crate) fn get(&self, index: u32) -> Option<&T> {
         self.items.get(&index)
     }

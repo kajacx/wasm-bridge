@@ -57,7 +57,7 @@ impl WriteableMemory for ModuleMemory {
     fn flush(&self, slice: ByteBuffer) -> usize {
         self.memory
             .write_impl(slice.address, &slice.data)
-            .expect("write bytes to buffer"); // TODO: Can this fail? If so, why?
+            .expect("write bytes to buffer");
 
         slice.address
     }

@@ -7,7 +7,7 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
         .func_wrap(
             "filesystem-error-code",
             |_caller: StoreContextMut<T>, (_index,): (u32,)| {
-                // TODO: this should be an enum, but it has the same size as an u8
+                // This should be an enum, but it has the same size as an u8
                 Ok(Option::<u8>::None)
             },
         )

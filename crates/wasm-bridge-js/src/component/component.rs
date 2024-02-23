@@ -1,11 +1,12 @@
 use anyhow::{bail, Context};
-use js_sys::{Function, Object, Reflect, WebAssembly};
+use js_sys::{Function, Object, Reflect, Uint8Array, WebAssembly};
+use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
 
 use crate::{
     direct::{LazyModuleMemory, ModuleMemory},
     helpers::{map_js_error, static_str_to_js},
-    DropHandles, Engine, Result, ToJsValue,
+    DropHandles, Engine, Result,
 };
 
 use super::*;
@@ -19,12 +20,12 @@ impl Component {
     pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
         let files = ComponentLoader::generate_files(bytes.as_ref())?;
 
-        let main_module = WebAssembly::Module::new(&files.main_core.to_js_value())
+        let main_module = WebAssembly::Module::new(&bytes_to_js_value(&files.main_core))
             .map_err(map_js_error("Synchronously compile main core module"))?;
 
         let wasi_module = if let Some(wasi_core) = files.wasi_core {
             Some(
-                WebAssembly::Module::new(&wasi_core.to_js_value())
+                WebAssembly::Module::new(&bytes_to_js_value(&wasi_core))
                     .map_err(map_js_error("Synchronously compile wasi core module"))?,
             )
         } else {
@@ -40,14 +41,14 @@ impl Component {
     pub async fn new_async(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
         let files = ComponentLoader::generate_files(bytes.as_ref())?;
 
-        let promise = WebAssembly::compile(&files.main_core.to_js_value());
+        let promise = WebAssembly::compile(&bytes_to_js_value(&files.main_core));
         let module = JsFuture::from(promise)
             .await
             .map_err(map_js_error("Asynchronously compile main core module"))?;
         let main_module = module.into();
 
         let wasi_module = if let Some(wasi_core) = files.wasi_core {
-            let promise = WebAssembly::compile(&wasi_core.to_js_value());
+            let promise = WebAssembly::compile(&bytes_to_js_value(&wasi_core));
             let module = JsFuture::from(promise)
                 .await
                 .map_err(map_js_error("Asynchronously compile wasi core module"))?;
@@ -261,4 +262,8 @@ impl Component {
 
 pub async fn new_component_async(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Component> {
     Component::new_async(engine, bytes).await
+}
+
+fn bytes_to_js_value(bytes: &[u8]) -> JsValue {
+    Uint8Array::from(bytes).into()
 }

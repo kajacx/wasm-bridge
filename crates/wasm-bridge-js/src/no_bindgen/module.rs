@@ -44,23 +44,22 @@ impl Module {
     }
 
     fn from_bytes(bytes: &[u8]) -> Result<Self> {
-        // TODO: view might be faster than from, but its unsafe
-        // Uint8Array::view(bytes.as_ref());
         let byte_array = Uint8Array::from(bytes);
 
-        let module = WebAssembly::Module::new(&byte_array.into())
-            .map_err(map_js_error("Failed to compile bytes to a WASM module"))?;
+        let module = WebAssembly::Module::new(&byte_array.into()).map_err(map_js_error(
+            "Failed to synchronously compile bytes to a WASM module",
+        ))?;
 
         Ok(Self { module })
     }
 
     async fn from_bytes_async(bytes: &[u8]) -> Result<Self> {
         let byte_array = Uint8Array::from(bytes);
-        let promise = WebAssembly::compile(&byte_array);
 
-        let module = JsFuture::from(promise)
-            .await
-            .map_err(map_js_error("Failed to compile bytes to a WASM module"))?;
+        let promise = WebAssembly::compile(&byte_array);
+        let module = JsFuture::from(promise).await.map_err(map_js_error(
+            "Failed to asynchronously compile bytes to a WASM module",
+        ))?;
 
         Ok(Self {
             module: module.into(),
