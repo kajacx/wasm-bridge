@@ -26,4 +26,8 @@ impl Guest for MyGuest {
         }
         single
     }
+
+    fn use_multiword(_m: Multiword) -> MultiWord {
+        todo!()
+    }
 }

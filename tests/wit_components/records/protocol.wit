@@ -35,4 +35,14 @@ world records {
 
   import increment-single: func(s: single) -> single;
   export increment-single-times: func(s: single, times: u32) -> single;
+
+  // Force a "name conflict" when using naive "to lower case" module name
+  record multiword {
+    value: s32,
+  }
+  record multi-word {
+    value: s32,
+  }
+
+  export use-multiword: func(m: multiword) -> multi-word;
 }
