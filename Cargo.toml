@@ -41,3 +41,4 @@ anyhow = { version = "1.0", default-features = false, features = ["std"] }
 rand_core = { version = "0.6", default-features = false }
 bytes = { version = "1.0", default-features = false }
 async-trait = { version = "0.1", default-features = false }
+heck = { version = "0.4", default-features = false }
