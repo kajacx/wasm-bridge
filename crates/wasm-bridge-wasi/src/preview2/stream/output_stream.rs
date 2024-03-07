@@ -8,7 +8,7 @@ use wasm_bridge::{component::Linker, Result};
 use super::StreamResult;
 use crate::preview2::WasiView;
 
-pub trait HostOutputStream: Send {
+pub trait HostOutputStream: Send + Sync {
     fn write(&mut self, bytes: bytes::Bytes) -> StreamResult<()>;
 
     fn flush(&mut self) -> StreamResult<()>;
@@ -16,7 +16,7 @@ pub trait HostOutputStream: Send {
     fn check_write(&mut self) -> StreamResult<usize>;
 }
 
-pub trait StdoutStream: Send {
+pub trait StdoutStream: Send + Sync {
     fn stream(&self) -> Box<dyn HostOutputStream>;
 
     fn isatty(&self) -> bool;

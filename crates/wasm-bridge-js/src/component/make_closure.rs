@@ -44,7 +44,7 @@ where
                     };
 
                     let result =
-                        self_clone(StoreContextMut::new(&mut handle.borrow_mut()), args)
+                        self_clone(StoreContextMut::new(&mut handle.write().unwrap()), args)
                             .map_err(|err| format!("host imported fn returned error: {err:?}"))?;
 
                     if R::NUM_ARGS <= 1 {

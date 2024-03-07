@@ -4,11 +4,11 @@ use wasm_bridge::{component::Linker, Result, StoreContextMut};
 use super::{StreamError, StreamResult};
 use crate::preview2::WasiView;
 
-pub trait HostInputStream: Send {
+pub trait HostInputStream: Send + Sync {
     fn read(&mut self, size: usize) -> StreamResult<bytes::Bytes>;
 }
 
-pub trait StdinStream: Send {
+pub trait StdinStream: Send + Sync {
     fn stream(&self) -> Box<dyn HostInputStream>;
 
     fn isatty(&self) -> bool;

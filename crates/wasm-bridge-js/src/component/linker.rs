@@ -270,6 +270,8 @@ fn create_dyn_fn(name: &str) -> (Function, Array) {
     )
 }
 
+pub(crate) type WasiInfo = (Object, DynFns, LazyModuleMemory);
+
 #[cfg(test)]
 mod tests {
     use js_sys::eval;
@@ -295,5 +297,3 @@ mod tests {
         assert_eq!(result.as_f64().unwrap(), 2.0);
     }
 }
-
-pub(crate) type WasiInfo = (Object, DynFns, LazyModuleMemory);
