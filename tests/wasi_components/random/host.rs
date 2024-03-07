@@ -12,12 +12,12 @@ wasm_bridge::component::bindgen!({
 });
 
 struct State {
-    table: Table,
+    table: ResourceTable,
     wasi: WasiCtx,
 }
 
 impl WasiView for State {
-    fn table(&mut self) -> &mut Table {
+    fn table(&mut self) -> &mut ResourceTable {
         &mut self.table
     }
     fn ctx(&mut self) -> &mut WasiCtx {
@@ -37,7 +37,7 @@ async fn default_random(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let table = Table::new();
+    let table = ResourceTable::new();
     let wasi = WasiCtxBuilder::new().build();
 
     let engine = Engine::new(&config).unwrap();
@@ -77,7 +77,7 @@ async fn custom_random(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let table = Table::new();
+    let table = ResourceTable::new();
     let wasi = WasiCtxBuilder::new().secure_random(ZeroRng).build();
 
     let engine = Engine::new(&config).unwrap();

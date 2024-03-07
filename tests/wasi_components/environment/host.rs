@@ -13,12 +13,12 @@ wasm_bridge::component::bindgen!({
 });
 
 struct State {
-    table: Table,
+    table: ResourceTable,
     wasi: WasiCtx,
 }
 
 impl WasiView for State {
-    fn table(&mut self) -> &mut Table {
+    fn table(&mut self) -> &mut ResourceTable {
         &mut self.table
     }
     fn ctx(&mut self) -> &mut WasiCtx {
@@ -31,7 +31,7 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let table = Table::new();
+    let table = ResourceTable::new();
     let wasi = WasiCtxBuilder::new()
         .env("env0", "val0")
         .envs(&[("env1", "val1"), ("env2", "val2")])

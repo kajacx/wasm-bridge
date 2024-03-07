@@ -14,12 +14,12 @@ wasm_bridge::component::bindgen!({
 });
 
 struct State {
-    table: Table,
+    table: ResourceTable,
     wasi: WasiCtx,
 }
 
 impl WasiView for State {
-    fn table(&mut self) -> &mut Table {
+    fn table(&mut self) -> &mut ResourceTable {
         &mut self.table
     }
     fn ctx(&mut self) -> &mut WasiCtx {
@@ -40,7 +40,7 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let table = Table::new();
+    let table = ResourceTable::new();
     let wasi = WasiCtxBuilder::new().build();
 
     let engine = Engine::new(&config).unwrap();
@@ -75,7 +75,7 @@ async fn inherit(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let table = Table::new();
+    let table = ResourceTable::new();
     let wasi = WasiCtxBuilder::new().inherit_stdio().build();
 
     let engine = Engine::new(&config).unwrap();
@@ -130,7 +130,7 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
         max: 3,
     };
 
-    let table = Table::new();
+    let table = ResourceTable::new();
     let wasi = WasiCtxBuilder::new()
         .stdin(in_stream)
         .stdout(out_stream)
