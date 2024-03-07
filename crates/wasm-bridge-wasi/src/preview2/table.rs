@@ -2,21 +2,6 @@ use std::collections::HashMap;
 
 use super::*;
 
-#[derive(Default)]
-pub struct Table {
-    pub(crate) input_streams: ResourceTable<Box<dyn HostInputStream>>,
-    pub(crate) output_streams: ResourceTable<Box<dyn HostOutputStream>>,
-}
-
-impl Table {
-    pub fn new() -> Self {
-        Self {
-            input_streams: ResourceTable::new(),
-            output_streams: ResourceTable::new(),
-        }
-    }
-}
-
 pub(crate) struct ResourceTable<T> {
     items: HashMap<u32, T>,
     next_index: u32,
