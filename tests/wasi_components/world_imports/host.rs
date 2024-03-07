@@ -1,5 +1,5 @@
 use wasm_bridge::{
-    component::{Linker, new_component_async},
+    component::{new_component_async, Linker},
     Config, Engine, Result, Store,
 };
 
@@ -14,21 +14,15 @@ wasm_bridge::component::bindgen!({
 });
 
 struct State {
-    table: Table,
+    table: ResourceTable,
     wasi: WasiCtx,
 }
 
 impl WasiView for State {
-    fn table(&self) -> &Table {
-        &self.table
-    }
-    fn table_mut(&mut self) -> &mut Table {
+    fn table(&mut self) -> &mut ResourceTable {
         &mut self.table
     }
-    fn ctx(&self) -> &WasiCtx {
-        &self.wasi
-    }
-    fn ctx_mut(&mut self) -> &mut WasiCtx {
+    fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.wasi
     }
 }
@@ -49,7 +43,7 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let table = Table::new();
+    let table = ResourceTable::new();
     let wasi = WasiCtxBuilder::new().build();
 
     let engine = Engine::new(&config)?;
@@ -66,7 +60,9 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance.call_add_three(&mut store, 5).await?;
     assert_eq!(result, 8);
 
-    let result = instance.call_push_strings(&mut store, &["a".into(), "b".into()], "c", "d").await?;
+    let result = instance
+        .call_push_strings(&mut store, &["a".into(), "b".into()], "c", "d")
+        .await?;
     assert_eq!(result, vec!["a", "b", "c", "d"]);
 
     Ok(())

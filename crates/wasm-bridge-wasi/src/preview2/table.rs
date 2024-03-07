@@ -3,26 +3,26 @@ use std::collections::HashMap;
 use super::*;
 
 #[derive(Default)]
-pub struct Table {
-    pub(crate) input_streams: ResourceTable<Box<dyn HostInputStream>>,
-    pub(crate) output_streams: ResourceTable<Box<dyn HostOutputStream>>,
+pub struct ResourceTable {
+    pub(crate) input_streams: ResourceTableInner<Box<dyn HostInputStream>>,
+    pub(crate) output_streams: ResourceTableInner<Box<dyn HostOutputStream>>,
 }
 
-impl Table {
+impl ResourceTable {
     pub fn new() -> Self {
         Self {
-            input_streams: ResourceTable::new(),
-            output_streams: ResourceTable::new(),
+            input_streams: ResourceTableInner::new(),
+            output_streams: ResourceTableInner::new(),
         }
     }
 }
 
-pub(crate) struct ResourceTable<T> {
+pub(crate) struct ResourceTableInner<T> {
     items: HashMap<u32, T>,
     next_index: u32,
 }
 
-impl<T> ResourceTable<T> {
+impl<T> ResourceTableInner<T> {
     pub(crate) fn new() -> Self {
         Self {
             items: HashMap::new(),
@@ -47,7 +47,7 @@ impl<T> ResourceTable<T> {
     }
 }
 
-impl<T> Default for ResourceTable<T> {
+impl<T> Default for ResourceTableInner<T> {
     fn default() -> Self {
         Self::new()
     }

@@ -5,9 +5,8 @@ use wasm_bridge::{
     Config, Engine, Result, Store,
 };
 
-use wasm_bridge_wasi::preview2::*;
 use wasm_bridge_wasi::preview2::command;
-
+use wasm_bridge_wasi::preview2::*;
 
 wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
@@ -16,21 +15,15 @@ wasm_bridge::component::bindgen!({
 });
 
 struct State {
-    table: Table,
+    table: ResourceTable,
     wasi: WasiCtx,
 }
 
 impl WasiView for State {
-    fn table(&self) -> &Table {
-        &self.table
-    }
-    fn table_mut(&mut self) -> &mut Table {
+    fn table(&mut self) -> &mut ResourceTable {
         &mut self.table
     }
-    fn ctx(&self) -> &WasiCtx {
-        &self.wasi
-    }
-    fn ctx_mut(&mut self) -> &mut WasiCtx {
+    fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.wasi
     }
 }
@@ -47,7 +40,7 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let table = Table::new();
+    let table = ResourceTable::new();
     let wasi = WasiCtxBuilder::new().build();
 
     let engine = Engine::new(&config).unwrap();
@@ -58,7 +51,9 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     let mut linker = Linker::new(store.engine());
     command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker)
+        .await
+        .unwrap();
 
     let seconds_real = seconds_since_epoch();
     let seconds_guest = instance.call_seconds_since_epoch(&mut store).await.unwrap();
@@ -81,7 +76,7 @@ async fn custom_clock(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let table = Table::new();
+    let table = ResourceTable::new();
     let wasi = WasiCtxBuilder::new()
         .wall_clock(FiveMinutesAfterEpoch)
         .monotonic_clock(FiveSecondsBetweenCalls(Mutex::new(0)))
@@ -95,7 +90,9 @@ async fn custom_clock(component_bytes: &[u8]) -> Result<()> {
     let mut linker = Linker::new(store.engine());
     command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker)
+        .await
+        .unwrap();
 
     let seconds_real = 5 * 60; // 5 minutes
     let seconds_guest = instance.call_seconds_since_epoch(&mut store).await.unwrap();
@@ -105,7 +102,8 @@ async fn custom_clock(component_bytes: &[u8]) -> Result<()> {
     );
 
     let bench = instance.call_nanoseconds_bench(&mut store).await.unwrap();
-    assert_eq!(bench, 5_000_000_000,
+    assert_eq!(
+        bench, 5_000_000_000,
         "bench should think it took exactly 5 seconds"
     );
 
@@ -119,7 +117,7 @@ fn seconds_since_epoch() -> u64 {
         .duration_since(std::time::SystemTime::UNIX_EPOCH)
         .unwrap();
     interval.as_secs()
-} 
+}
 
 #[cfg(target_arch = "wasm32")]
 fn seconds_since_epoch() -> u64 {

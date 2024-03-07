@@ -26,10 +26,10 @@ wasm-bridge = { path = "crates/wasm-bridge", version = "0.3.0" }
 wasm-bridge-js = { path = "crates/wasm-bridge-js", version = "0.3.0" }
 wasm-bridge-macros = { path = "crates/wasm-bridge-macros", version = "0.3.0" }
 
-wasmtime = { version = "15.0", default-features = false, features = ["cranelift"] }
-wasmtime-wasi = { version = "15.0", default-features = false, features = ["preview2"] }
-wasmtime-component-util = { version = "15.0", default-features = false }
-wasmtime-wit-bindgen = { version = "15.0", default-features = false }
+wasmtime = { version = "18.0", default-features = false, features = ["cranelift"] }
+wasmtime-wasi = { version = "18.0", default-features = false, features = ["preview2"] }
+wasmtime-component-util = { version = "18.0", default-features = false }
+wasmtime-wit-bindgen = { version = "18.0", default-features = false }
 
 js-sys = { version = "0.3", default-features = false }
 wasm-bindgen = { version = "0.2.89", default-features = false } # See https://users.rust-lang.org/t/very-strange-trait-bounds-error/104028

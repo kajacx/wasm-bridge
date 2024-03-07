@@ -4,11 +4,11 @@ use wasm_bridge::{component::Linker, Result, StoreContextMut};
 use super::{StreamError, StreamResult};
 use crate::preview2::WasiView;
 
-pub trait HostInputStream: Send {
+pub trait HostInputStream: Send + Sync {
     fn read(&mut self, size: usize) -> StreamResult<bytes::Bytes>;
 }
 
-pub trait StdinStream: Send {
+pub trait StdinStream: Send + Sync {
     fn stream(&self) -> Box<dyn HostInputStream>;
 
     fn isatty(&self) -> bool;
@@ -37,31 +37,30 @@ pub(crate) fn void_stream() -> impl StdinStream {
 }
 
 pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
-    linker
-        .instance("wasi:cli/stdin@0.2.0-rc-2023-11-10")?
-        .func_wrap("get-stdin", |mut caller: StoreContextMut<T>, (): ()| {
-            let stream = caller.data().ctx().stdin().stream();
-            let index = caller.data_mut().table_mut().input_streams.insert(stream);
+    linker.instance("wasi:cli/stdin@0.2.0")?.func_wrap(
+        "get-stdin",
+        |mut caller: StoreContextMut<T>, (): ()| {
+            let stream = caller.data_mut().ctx().stdin().stream();
+            let index = caller.data_mut().table().input_streams.insert(stream);
             Ok(index)
-        })?;
+        },
+    )?;
 
-    linker
-        .instance("wasi:io/streams@0.2.0-rc-2023-11-10")?
-        .func_wrap(
-            "[method]input-stream.blocking-read",
-            |mut caller: StoreContextMut<T>, (index, len): (u32, u64)| {
-                let stream = caller
-                    .data_mut()
-                    .table_mut()
-                    .input_streams
-                    .get_mut(index)
-                    .context("Get input stream resource")?;
+    linker.instance("wasi:io/streams@0.2.0")?.func_wrap(
+        "[method]input-stream.blocking-read",
+        |mut caller: StoreContextMut<T>, (index, len): (u32, u64)| {
+            let stream = caller
+                .data_mut()
+                .table()
+                .input_streams
+                .get_mut(index)
+                .context("Get input stream resource")?;
 
-                let result = stream.read(len as usize);
+            let result = stream.read(len as usize);
 
-                Ok(result.map(|bytes| bytes.to_vec()))
-            },
-        )?;
+            Ok(result.map(|bytes| bytes.to_vec()))
+        },
+    )?;
 
     Ok(())
 }
