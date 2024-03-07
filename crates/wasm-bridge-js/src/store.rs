@@ -1,7 +1,6 @@
 use std::{
-    cell::RefCell,
     ops::{Deref, DerefMut},
-    sync::Arc,
+    sync::{Arc, RwLock},
 };
 
 use crate::*;
@@ -16,7 +15,7 @@ impl<T> Store<T> {
     pub fn new(engine: &Engine, data: T) -> Self {
         Self {
             engine: engine.clone(),
-            data: Arc::new(RefCell::new(data)),
+            data: Arc::new(RwLock::new(data)),
         }
     }
 
@@ -32,11 +31,11 @@ impl<T> Store<T> {
     }
 
     pub fn data(&self) -> impl Deref<Target = T> + '_ {
-        self.data.borrow()
+        self.data.read().unwrap()
     }
 
     pub fn data_mut(&mut self) -> impl DerefMut<Target = T> + '_ {
-        self.data.borrow_mut()
+        self.data.write().unwrap()
     }
 
     pub(crate) fn data_handle(&self) -> &DataHandle<T> {
@@ -44,7 +43,7 @@ impl<T> Store<T> {
     }
 }
 
-pub(crate) type DataHandle<T> = Arc<RefCell<T>>;
+pub(crate) type DataHandle<T> = Arc<RwLock<T>>;
 
 pub struct StoreContext<'a, T>(&'a T);
 
