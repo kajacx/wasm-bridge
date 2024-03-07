@@ -1,12 +1,10 @@
-
 use wasm_bridge::{
     component::{Component, Linker},
     Config, Engine, Result, Store,
 };
 
-use wasm_bridge_wasi::preview2::*;
 use wasm_bridge_wasi::preview2::command;
-
+use wasm_bridge_wasi::preview2::*;
 
 wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
@@ -20,16 +18,10 @@ struct State {
 }
 
 impl WasiView for State {
-    fn table(&self) -> &Table {
-        &self.table
-    }
-    fn table_mut(&mut self) -> &mut Table {
+    fn table(&mut self) -> &mut Table {
         &mut self.table
     }
-    fn ctx(&self) -> &WasiCtx {
-        &self.wasi
-    }
-    fn ctx_mut(&mut self) -> &mut WasiCtx {
+    fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.wasi
     }
 }
@@ -53,20 +45,33 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     let mut linker = Linker::new(store.engine());
     command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = Environment::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let (instance, _) = Environment::instantiate_async(&mut store, &component, &linker)
+        .await
+        .unwrap();
 
-    let result = instance.call_get_env_var(&mut store, &"env0").await.unwrap();
+    let result = instance
+        .call_get_env_var(&mut store, &"env0")
+        .await
+        .unwrap();
     assert_eq!(result, Some("val0".to_string()));
 
-    let result = instance.call_get_env_var(&mut store, &"env1").await.unwrap();
+    let result = instance
+        .call_get_env_var(&mut store, &"env1")
+        .await
+        .unwrap();
     assert_eq!(result, Some("val1".to_string()));
 
-    let result = instance.call_get_env_var(&mut store, &"env2").await.unwrap();
+    let result = instance
+        .call_get_env_var(&mut store, &"env2")
+        .await
+        .unwrap();
     assert_eq!(result, Some("val2".to_string()));
 
-    let result = instance.call_get_env_var(&mut store, &"env3").await.unwrap();
+    let result = instance
+        .call_get_env_var(&mut store, &"env3")
+        .await
+        .unwrap();
     assert_eq!(result, None);
-    
+
     Ok(())
 }
-

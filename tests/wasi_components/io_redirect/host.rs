@@ -19,16 +19,10 @@ struct State {
 }
 
 impl WasiView for State {
-    fn table(&self) -> &Table {
-        &self.table
-    }
-    fn table_mut(&mut self) -> &mut Table {
+    fn table(&mut self) -> &mut Table {
         &mut self.table
     }
-    fn ctx(&self) -> &WasiCtx {
-        &self.wasi
-    }
-    fn ctx_mut(&mut self) -> &mut WasiCtx {
+    fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.wasi
     }
 }
@@ -57,13 +51,21 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     let mut linker = Linker::new(store.engine());
     command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker)
+        .await
+        .unwrap();
 
     let result = instance.call_readln_from_stdin(&mut store).await.unwrap();
     assert_eq!(result, None);
 
-    instance.call_writeln_to_stdout(&mut store, "NO_PRINT").await.unwrap();
-    instance.call_writeln_to_stderr(&mut store, "NO_PRINT").await.unwrap();
+    instance
+        .call_writeln_to_stdout(&mut store, "NO_PRINT")
+        .await
+        .unwrap();
+    instance
+        .call_writeln_to_stderr(&mut store, "NO_PRINT")
+        .await
+        .unwrap();
 
     Ok(())
 }
@@ -84,14 +86,22 @@ async fn inherit(component_bytes: &[u8]) -> Result<()> {
     let mut linker = Linker::new(store.engine());
     command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker)
+        .await
+        .unwrap();
 
     // Cannot really read a line in js when inheriting
     // let result = instance.call_readln_from_stdin(&mut store).await.unwrap();
     // assert_eq!(result, None);
 
-    instance.call_writeln_to_stdout(&mut store, "PRINT_OUT_1").await.unwrap();
-    instance.call_writeln_to_stderr(&mut store, "PRINT_ERR_1").await.unwrap();
+    instance
+        .call_writeln_to_stdout(&mut store, "PRINT_OUT_1")
+        .await
+        .unwrap();
+    instance
+        .call_writeln_to_stderr(&mut store, "PRINT_ERR_1")
+        .await
+        .unwrap();
 
     Ok(())
 }
@@ -102,13 +112,23 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
     config.async_support(true);
 
     let out_bytes = Arc::new(Mutex::new(Vec::<u8>::new()));
-    let out_stream = OutStream{ data: out_bytes.clone(), max: 3 };
+    let out_stream = OutStream {
+        data: out_bytes.clone(),
+        max: 3,
+    };
 
     let err_bytes = Arc::new(Mutex::new(Vec::<u8>::new()));
-    let err_stream = OutStream{ data: err_bytes.clone(), max: 3 };
+    let err_stream = OutStream {
+        data: err_bytes.clone(),
+        max: 3,
+    };
 
     let in_bytes = "PRINT_IN_2".to_string().into_bytes();
-    let in_stream = InStream { data: in_bytes, offset: 0, max: 3 };
+    let in_stream = InStream {
+        data: in_bytes,
+        offset: 0,
+        max: 3,
+    };
 
     let table = Table::new();
     let wasi = WasiCtxBuilder::new()
@@ -125,7 +145,9 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
     let mut linker = Linker::new(store.engine());
     command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker)
+        .await
+        .unwrap();
 
     let result = instance.call_readln_from_stdin(&mut store).await.unwrap();
     assert_eq!(result, Some("PRINT_IN_2".into()));
@@ -133,11 +155,23 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
     let result = instance.call_readln_from_stdin(&mut store).await.unwrap();
     assert_eq!(result, None);
 
-    instance.call_writeln_to_stdout(&mut store, "PRINT_OUT_2").await.unwrap();
-    instance.call_writeln_to_stdout(&mut store, "NO_PRINT").await.unwrap(); // Test that output is not duplicated to stdout
+    instance
+        .call_writeln_to_stdout(&mut store, "PRINT_OUT_2")
+        .await
+        .unwrap();
+    instance
+        .call_writeln_to_stdout(&mut store, "NO_PRINT")
+        .await
+        .unwrap(); // Test that output is not duplicated to stdout
 
-    instance.call_writeln_to_stderr(&mut store, "PRINT_ERR_2").await.unwrap();
-    instance.call_writeln_to_stderr(&mut store, "NO_PRINT").await.unwrap();
+    instance
+        .call_writeln_to_stderr(&mut store, "PRINT_ERR_2")
+        .await
+        .unwrap();
+    instance
+        .call_writeln_to_stderr(&mut store, "NO_PRINT")
+        .await
+        .unwrap();
 
     let text = String::from_utf8(out_bytes.try_lock().unwrap().clone()).unwrap();
     assert!(text.contains("PRINT_OUT_2"), "stdout is captured");
@@ -149,9 +183,9 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
 }
 
 #[derive(Clone, Debug)]
-struct OutStream { 
+struct OutStream {
     data: Arc<Mutex<Vec<u8>>>,
-    max: usize
+    max: usize,
 }
 
 #[wasm_bridge::async_trait]
@@ -159,10 +193,13 @@ impl Subscribe for OutStream {
     async fn ready(&mut self) {}
 }
 
-
 impl HostOutputStream for OutStream {
     fn write(&mut self, buf: Bytes) -> StreamResult<()> {
-        assert!(buf.len() <= self.max, "We specified to write at most {} bytes at a time.", self.max);
+        assert!(
+            buf.len() <= self.max,
+            "We specified to write at most {} bytes at a time.",
+            self.max
+        );
         self.data.try_lock().unwrap().extend(buf);
         StreamResult::Ok(())
     }
@@ -199,9 +236,9 @@ impl Subscribe for InStream {
 }
 
 impl HostInputStream for InStream {
-     fn read(&mut self, size: usize) -> StreamResult<Bytes> {
+    fn read(&mut self, size: usize) -> StreamResult<Bytes> {
         let start = self.offset;
-        let len =  (self.data.len() - start).min(self.max).min(size);
+        let len = (self.data.len() - start).min(self.max).min(size);
         let end = start + len;
 
         self.offset = end;

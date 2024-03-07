@@ -40,8 +40,8 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
     linker
         .instance("wasi:cli/stdin@0.2.0-rc-2023-11-10")?
         .func_wrap("get-stdin", |mut caller: StoreContextMut<T>, (): ()| {
-            let stream = caller.data().ctx().stdin().stream();
-            let index = caller.data_mut().table_mut().input_streams.insert(stream);
+            let stream = caller.data_mut().ctx().stdin().stream();
+            let index = caller.data_mut().table().input_streams.insert(stream);
             Ok(index)
         })?;
 
@@ -52,7 +52,7 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
             |mut caller: StoreContextMut<T>, (index, len): (u32, u64)| {
                 let stream = caller
                     .data_mut()
-                    .table_mut()
+                    .table()
                     .input_streams
                     .get_mut(index)
                     .context("Get input stream resource")?;

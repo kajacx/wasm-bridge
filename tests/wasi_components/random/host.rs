@@ -17,16 +17,10 @@ struct State {
 }
 
 impl WasiView for State {
-    fn table(&self) -> &Table {
-        &self.table
-    }
-    fn table_mut(&mut self) -> &mut Table {
+    fn table(&mut self) -> &mut Table {
         &mut self.table
     }
-    fn ctx(&self) -> &WasiCtx {
-        &self.wasi
-    }
-    fn ctx_mut(&mut self) -> &mut WasiCtx {
+    fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.wasi
     }
 }
@@ -54,16 +48,26 @@ async fn default_random(component_bytes: &[u8]) -> Result<()> {
     let mut linker = Linker::new(store.engine());
     command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker)
+        .await
+        .unwrap();
     let number1 = instance.call_random_number(&mut store).await.unwrap();
     let bytes1 = instance.call_random_bytes(&mut store).await.unwrap();
 
-    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker)
+        .await
+        .unwrap();
     let number2 = instance.call_random_number(&mut store).await.unwrap();
     let bytes2 = instance.call_random_bytes(&mut store).await.unwrap();
 
-    assert_ne!(number1, number2, "Two random u64 should not really be equal");
-    assert_ne!(bytes1, bytes2, "32 random bytes should definitely noy be equal");
+    assert_ne!(
+        number1, number2,
+        "Two random u64 should not really be equal"
+    );
+    assert_ne!(
+        bytes1, bytes2,
+        "32 random bytes should definitely noy be equal"
+    );
 
     Ok(())
 }
@@ -74,9 +78,7 @@ async fn custom_random(component_bytes: &[u8]) -> Result<()> {
     config.async_support(true);
 
     let table = Table::new();
-    let wasi = WasiCtxBuilder::new()
-        .secure_random(ZeroRng)
-        .build();
+    let wasi = WasiCtxBuilder::new().secure_random(ZeroRng).build();
 
     let engine = Engine::new(&config).unwrap();
     let mut store = Store::new(&engine, State { table, wasi });
@@ -86,11 +88,15 @@ async fn custom_random(component_bytes: &[u8]) -> Result<()> {
     let mut linker = Linker::new(store.engine());
     command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker)
+        .await
+        .unwrap();
     let number1 = instance.call_random_number(&mut store).await.unwrap();
     let bytes1 = instance.call_random_bytes(&mut store).await.unwrap();
 
-    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let (instance, _) = Random::instantiate_async(&mut store, &component, &linker)
+        .await
+        .unwrap();
     let number2 = instance.call_random_number(&mut store).await.unwrap();
     let bytes2 = instance.call_random_bytes(&mut store).await.unwrap();
 

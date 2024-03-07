@@ -1,5 +1,5 @@
 use wasm_bridge::{
-    component::{Linker, new_component_async},
+    component::{new_component_async, Linker},
     Config, Engine, Result, Store,
 };
 
@@ -19,16 +19,10 @@ struct State {
 }
 
 impl WasiView for State {
-    fn table(&self) -> &Table {
-        &self.table
-    }
-    fn table_mut(&mut self) -> &mut Table {
+    fn table(&mut self) -> &mut Table {
         &mut self.table
     }
-    fn ctx(&self) -> &WasiCtx {
-        &self.wasi
-    }
-    fn ctx_mut(&mut self) -> &mut WasiCtx {
+    fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.wasi
     }
 }
@@ -66,7 +60,9 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance.call_add_three(&mut store, 5).await?;
     assert_eq!(result, 8);
 
-    let result = instance.call_push_strings(&mut store, &["a".into(), "b".into()], "c", "d").await?;
+    let result = instance
+        .call_push_strings(&mut store, &["a".into(), "b".into()], "c", "d")
+        .await?;
     assert_eq!(result, vec!["a", "b", "c", "d"]);
 
     Ok(())

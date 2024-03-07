@@ -111,16 +111,16 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
     linker
         .instance("wasi:cli/stdout@0.2.0-rc-2023-11-10")?
         .func_wrap("get-stdout", |mut caller: StoreContextMut<T>, (): ()| {
-            let stream = caller.data().ctx().stdout().stream();
-            let index = caller.data_mut().table_mut().output_streams.insert(stream);
+            let stream = caller.data_mut().ctx().stdout().stream();
+            let index = caller.data_mut().table().output_streams.insert(stream);
             Ok(index)
         })?;
 
     linker
         .instance("wasi:cli/stderr@0.2.0-rc-2023-11-10")?
         .func_wrap("get-stderr", |mut caller: StoreContextMut<T>, (): ()| {
-            let stream = caller.data().ctx().stderr().stream();
-            let index = caller.data_mut().table_mut().output_streams.insert(stream);
+            let stream = caller.data_mut().ctx().stderr().stream();
+            let index = caller.data_mut().table().output_streams.insert(stream);
             Ok(index)
         })?;
 
@@ -131,7 +131,7 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
             |mut caller: StoreContextMut<T>, (index, bytes): (u32, Vec<u8>)| {
                 let stream = caller
                     .data_mut()
-                    .table_mut()
+                    .table()
                     .output_streams
                     .get_mut(index)
                     .context("Get output stream resource")?;

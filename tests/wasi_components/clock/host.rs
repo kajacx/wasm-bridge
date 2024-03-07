@@ -5,9 +5,8 @@ use wasm_bridge::{
     Config, Engine, Result, Store,
 };
 
-use wasm_bridge_wasi::preview2::*;
 use wasm_bridge_wasi::preview2::command;
-
+use wasm_bridge_wasi::preview2::*;
 
 wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
@@ -21,16 +20,10 @@ struct State {
 }
 
 impl WasiView for State {
-    fn table(&self) -> &Table {
-        &self.table
-    }
-    fn table_mut(&mut self) -> &mut Table {
+    fn table(&mut self) -> &mut Table {
         &mut self.table
     }
-    fn ctx(&self) -> &WasiCtx {
-        &self.wasi
-    }
-    fn ctx_mut(&mut self) -> &mut WasiCtx {
+    fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.wasi
     }
 }
@@ -58,7 +51,9 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     let mut linker = Linker::new(store.engine());
     command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker)
+        .await
+        .unwrap();
 
     let seconds_real = seconds_since_epoch();
     let seconds_guest = instance.call_seconds_since_epoch(&mut store).await.unwrap();
@@ -95,7 +90,9 @@ async fn custom_clock(component_bytes: &[u8]) -> Result<()> {
     let mut linker = Linker::new(store.engine());
     command::add_to_linker(&mut linker).unwrap();
 
-    let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker).await.unwrap();
+    let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker)
+        .await
+        .unwrap();
 
     let seconds_real = 5 * 60; // 5 minutes
     let seconds_guest = instance.call_seconds_since_epoch(&mut store).await.unwrap();
@@ -105,7 +102,8 @@ async fn custom_clock(component_bytes: &[u8]) -> Result<()> {
     );
 
     let bench = instance.call_nanoseconds_bench(&mut store).await.unwrap();
-    assert_eq!(bench, 5_000_000_000,
+    assert_eq!(
+        bench, 5_000_000_000,
         "bench should think it took exactly 5 seconds"
     );
 
@@ -119,7 +117,7 @@ fn seconds_since_epoch() -> u64 {
         .duration_since(std::time::SystemTime::UNIX_EPOCH)
         .unwrap();
     interval.as_secs()
-} 
+}
 
 #[cfg(target_arch = "wasm32")]
 fn seconds_since_epoch() -> u64 {
