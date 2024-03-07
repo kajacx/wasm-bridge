@@ -1,4 +1,7 @@
-use std::{cell::RefCell, ops::Deref, rc::Rc};
+use std::{
+    ops::Deref,
+    sync::{Arc, RwLock},
+};
 
 use anyhow::{bail, Context};
 use js_sys::{Array, Function};
@@ -72,19 +75,19 @@ impl ReadableMemory for ModuleMemory {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct LazyModuleMemory(Rc<RefCell<Option<ModuleMemory>>>);
+pub struct LazyModuleMemory(Arc<RwLock<Option<ModuleMemory>>>);
 
 impl LazyModuleMemory {
     pub(crate) fn new() -> Self {
-        Self(Rc::new(RefCell::new(Option::None)))
+        Self(Arc::new(RwLock::new(Option::None)))
     }
 
     pub(crate) fn get(&self) -> impl Deref<Target = Option<ModuleMemory>> + '_ {
-        self.0.borrow()
+        self.0.read().unwrap()
     }
 
     pub(crate) fn set(&self, module_memory: ModuleMemory) {
-        *self.0.borrow_mut() = Some(module_memory);
+        *self.0.write().unwrap() = Some(module_memory);
     }
 }
 
