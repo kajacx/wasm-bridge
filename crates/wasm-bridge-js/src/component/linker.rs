@@ -1,4 +1,4 @@
-use std::{collections::HashMap, future::Future, rc::Rc};
+use std::{collections::HashMap, future::Future, sync::Arc};
 
 use anyhow::Context;
 use js_sys::{Array, Function, Object, Reflect};
@@ -128,7 +128,7 @@ impl<T> Linker<T> {
             Reflect::set(&imports, &name_js, &imports_obj).expect("imports is an object");
         }
 
-        Ok((imports, Rc::new(closures), memory, wasi_info))
+        Ok((imports, Arc::new(closures), memory, wasi_info))
     }
 
     pub fn root(&mut self) -> &mut LinkerInterface<T> {
