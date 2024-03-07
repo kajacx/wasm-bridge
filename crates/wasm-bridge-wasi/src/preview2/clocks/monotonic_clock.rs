@@ -29,7 +29,7 @@ pub(crate) fn default_monotonic_clock() -> impl HostMonotonicClock {
 
 pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
     linker
-        .instance("wasi:clocks/monotonic-clock@0.2.0-rc-2023-11-10")?
+        .instance("wasi:clocks/monotonic-clock@0.2.0")?
         .func_wrap("now", |mut caller: StoreContextMut<T>, ()| {
             let now = caller.data_mut().ctx().monotonic_clock().now();
             Ok(now)
