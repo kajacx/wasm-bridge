@@ -1,4 +1,4 @@
-use std::{collections::HashMap, future::Future, sync::Arc};
+use std::{collections::HashMap, future::Future, rc::Rc};
 
 use anyhow::Context;
 use js_sys::{Array, Function, Object, Reflect};
@@ -128,7 +128,7 @@ impl<T> Linker<T> {
             Reflect::set(&imports, &name_js, &imports_obj).expect("imports is an object");
         }
 
-        Ok((imports, Arc::new(closures), memory, wasi_info))
+        Ok((imports, Rc::new(closures), memory, wasi_info))
     }
 
     pub fn root(&mut self) -> &mut LinkerInterface<T> {
@@ -270,6 +270,8 @@ fn create_dyn_fn(name: &str) -> (Function, Array) {
     )
 }
 
+pub(crate) type WasiInfo = (Object, DynFns, LazyModuleMemory);
+
 #[cfg(test)]
 mod tests {
     use js_sys::eval;
@@ -295,5 +297,3 @@ mod tests {
         assert_eq!(result.as_f64().unwrap(), 2.0);
     }
 }
-
-pub(crate) type WasiInfo = (Object, DynFns, LazyModuleMemory);
