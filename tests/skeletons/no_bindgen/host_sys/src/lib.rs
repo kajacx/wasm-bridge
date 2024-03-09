@@ -7,3 +7,7 @@ mod host;
 async fn test() {
     host::run_test(GUEST_BYTES).await.expect("host_sys test should pass")
 }
+
+fn disable_sync_wasm_functions() {
+    // Nothing to do on sys
+}

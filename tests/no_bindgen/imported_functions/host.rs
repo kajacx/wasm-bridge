@@ -1,20 +1,8 @@
 use std::sync::{Arc, Mutex};
 use wasm_bridge::*;
 
-#[cfg(target_arch = "wasm32")]
-fn disable_sync_wasm_functions() {
-    // Disable the synchronous variants of WebAssembly.compile and WebAssembly.instantiate,
-    // so that this test properly checks that we are actually using the asynchronous ones.
-    wasm_bridge::js_sys::eval("WebAssembly.Module = 'Disabled'; WebAssembly.Instance = 'Disabled';").unwrap();
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn disable_sync_wasm_functions() {
-    // Nothing to do on sys
-}
-
 pub async fn run_test(bytes: &[u8]) -> Result<()> {
-    disable_sync_wasm_functions();
+    super::disable_sync_wasm_functions();
 
     let mut store = Store::<()>::default();
 

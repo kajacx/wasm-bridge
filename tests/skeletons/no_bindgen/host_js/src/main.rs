@@ -7,3 +7,9 @@ mod host;
 async fn main() {
     host::run_test(GUEST_BYTES).await.expect("host_js test should pass")
 }
+
+fn disable_sync_wasm_functions() {
+    // Disable the synchronous variants of WebAssembly.compile and WebAssembly.instantiate,
+    // so that this test properly checks that we are actually using the asynchronous ones.
+    wasm_bridge::js_sys::eval("WebAssembly.Module = 'Disabled'; WebAssembly.Instance = 'Disabled';").unwrap();
+}
