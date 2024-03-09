@@ -1,8 +1,9 @@
 use std::str::FromStr;
 
 use original::{Style, VariantStyle};
+use quote::ToTokens;
 use regex::{Captures, Regex};
-use syn::Attribute;
+use syn::{Attribute, ImplItem, ItemImpl};
 
 mod original;
 
@@ -162,13 +163,13 @@ pub fn async_trait(
     _attr: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let as_string = input.to_string();
-
-    // FIXME: this will break user's "async fn" str slices for example, implement it properly!
-    let regex = Regex::new("async\\s*fn").unwrap();
-    let as_string = regex.replace_all(&as_string, "fn");
-
-    proc_macro::TokenStream::from_str(&as_string).unwrap()
+    let mut item_impl: ItemImpl = syn::parse(input).unwrap();
+    for item in item_impl.items.iter_mut() {
+        if let ImplItem::Fn(method) = item {
+            method.sig.asyncness = None;
+        }
+    }
+    item_impl.into_token_stream().into()
 }
 
 fn replace_namespace_str(stream: proc_macro::TokenStream) -> String {
