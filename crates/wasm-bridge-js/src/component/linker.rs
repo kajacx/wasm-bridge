@@ -1,13 +1,12 @@
-use std::{collections::HashMap, future::Future, rc::Rc};
+use std::{collections::HashMap, rc::Rc};
 
 use anyhow::Context;
 use js_sys::{Array, Function, Object, Reflect};
 use wasm_bindgen::JsValue;
 
 use crate::{
-    direct::{LazyModuleMemory, Lift, Lower},
-    helpers::static_str_to_js,
-    AsContextMut, DataHandle, DropHandle, DropHandles, Engine, Result, StoreContextMut,
+    direct::LazyModuleMemory, helpers::static_str_to_js, AsContextMut, DataHandle, DropHandle,
+    DropHandles, Engine, Result, StoreContextMut,
 };
 
 use super::*;
@@ -178,26 +177,6 @@ impl<T> LinkerInterface<T> {
             .push(PreparedFn::new(name, func.into_make_closure()));
 
         Ok(())
-    }
-
-    pub fn func_wrap_async<Params, Results, F>(&mut self, _name: &str, _func: F) -> Result<()>
-    where
-        T: 'static,
-        // F: IntoMakeClosure<T, Params, Results>,
-        F: for<'a> Fn(
-                StoreContextMut<'a, T>,
-                Params,
-            ) -> Box<dyn Future<Output = Result<Results>> + Send + 'a>
-            + Send
-            + Sync
-            + 'static,
-        Params: Lift + 'static,
-        Results: Lower + 'static,
-    {
-        // self.func_wrap(name, func)
-        todo!("implement func_wrap_async for {_name}")
-        // FIXME: actually implement this, or somehow resolve "normal" user imports
-        // Ok(())
     }
 
     pub fn resource<U>(
