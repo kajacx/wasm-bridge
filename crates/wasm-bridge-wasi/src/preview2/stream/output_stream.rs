@@ -5,10 +5,11 @@ use wasm_bindgen::JsValue;
 use wasm_bridge::StoreContextMut;
 use wasm_bridge::{component::Linker, Result};
 
-use super::StreamResult;
+use super::{StreamResult, Subscribe};
 use crate::preview2::WasiView;
 
-pub trait HostOutputStream: Send {
+// TODO: This seems to need to be "Send" on JS but not on sys, why?
+pub trait HostOutputStream: Subscribe + Send {
     fn write(&mut self, bytes: bytes::Bytes) -> StreamResult<()>;
 
     fn flush(&mut self) -> StreamResult<()>;
@@ -23,6 +24,10 @@ pub trait StdoutStream: Send {
 }
 
 struct VoidingStream;
+
+impl Subscribe for VoidingStream {
+    fn ready(&mut self) {}
+}
 
 impl HostOutputStream for VoidingStream {
     fn write(&mut self, _bytes: bytes::Bytes) -> StreamResult<()> {
@@ -60,6 +65,10 @@ enum WhichOut {
 
 #[derive(Debug, Clone)]
 struct InheritStream(WhichOut);
+
+impl Subscribe for InheritStream {
+    fn ready(&mut self) {}
+}
 
 impl HostOutputStream for InheritStream {
     fn write(&mut self, bytes: bytes::Bytes) -> StreamResult<()> {
@@ -111,7 +120,8 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
     linker
         .instance("wasi:cli/stdout@0.2.0-rc-2023-11-10")?
         .func_wrap("get-stdout", |mut caller: StoreContextMut<T>, (): ()| {
-            let stream = caller.data().ctx().stdout().stream();
+            let mut stream = caller.data().ctx().stdout().stream();
+            stream.ready();
             let index = caller.data_mut().table_mut().output_streams.insert(stream);
             Ok(index)
         })?;
@@ -119,7 +129,8 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
     linker
         .instance("wasi:cli/stderr@0.2.0-rc-2023-11-10")?
         .func_wrap("get-stderr", |mut caller: StoreContextMut<T>, (): ()| {
-            let stream = caller.data().ctx().stderr().stream();
+            let mut stream = caller.data().ctx().stderr().stream();
+            stream.ready();
             let index = caller.data_mut().table_mut().output_streams.insert(stream);
             Ok(index)
         })?;
