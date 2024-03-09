@@ -1,5 +1,13 @@
 # wasm-bridge change log
 
+## [0.3.1] YYYY-MM-DD
+
+### Changes
+
+- Improved performance
+- Fixed module namespace hack, allowing records with similar names
+- Fixed "async fn" replacement hack
+
 ## [0.3.0] 2024-01-07
 
 ### Added
