@@ -86,10 +86,6 @@ async fn inherit(component_bytes: &[u8]) -> Result<()> {
 
     let (instance, _) = IoRedirect::instantiate_async(&mut store, &component, &linker).await.unwrap();
 
-    // Cannot really read a line in js when inheriting
-    // let result = instance.call_readln_from_stdin(&mut store).await.unwrap();
-    // assert_eq!(result, None);
-
     instance.call_writeln_to_stdout(&mut store, "PRINT_OUT_1").await.unwrap();
     instance.call_writeln_to_stderr(&mut store, "PRINT_ERR_1").await.unwrap();
 
@@ -145,6 +141,8 @@ async fn capture(component_bytes: &[u8]) -> Result<()> {
     let text = String::from_utf8(err_bytes.try_lock().unwrap().clone()).unwrap();
     assert!(text.contains("PRINT_ERR_2"), "stderr is captured");
 
+    assert_eq!(*GLOBAL_STRING.lock().unwrap(), "async fn".to_owned());
+
     Ok(())
 }
 
@@ -193,9 +191,13 @@ struct InStream {
     max: usize,
 }
 
+static GLOBAL_STRING: Mutex<String> = Mutex::new(String::new());
+
 #[wasm_bridge::async_trait]
 impl Subscribe for InStream {
-    async fn ready(&mut self) {}
+    async fn ready(&mut self) {
+        *GLOBAL_STRING.lock().unwrap() = "async fn".to_owned();
+    }
 }
 
 impl HostInputStream for InStream {
