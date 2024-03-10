@@ -63,3 +63,5 @@ pub mod __internal {
         f.write_str(")")
     }
 }
+
+pub trait ComponentType {}
