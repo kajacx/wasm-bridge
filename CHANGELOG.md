@@ -1,6 +1,6 @@
 # wasm-bridge change log
 
-## [0.3.1] YYYY-MM-DD
+## [0.3.1] 2024-03-10
 
 ### Changes
 
