@@ -64,4 +64,7 @@ pub mod __internal {
     }
 }
 
-pub trait ComponentType {}
+pub trait ComponentType {
+    const SIZE32: usize;
+    const ALIGN32: usize;
+}
