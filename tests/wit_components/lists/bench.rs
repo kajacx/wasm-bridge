@@ -118,18 +118,3 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
 
     Ok(())
 }
-
-impl PartialEq for AbVariant {
-    fn eq(&self, other: &Self) -> bool {
-        match self {
-            AbVariant::A(a1) => match other {
-                AbVariant::A(a2) => a1 == a2,
-                _ => false,
-            },
-            AbVariant::B(b1) => match other {
-                AbVariant::B(b2) => b1 == b2,
-                _ => false,
-            },
-        }
-    }
-}

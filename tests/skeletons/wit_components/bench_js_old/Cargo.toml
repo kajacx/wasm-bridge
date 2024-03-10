@@ -1,10 +1,10 @@
 [package]
-name = "wit-components-host-js"
+name = "wit-components-bench-js-old"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-wasm-bridge = { path = "../../../crates/wasm-bridge", default-features = false, features = ["component-model"] }
+wasm-bridge = { version = "0.3.0", default-features = false, features = ["component-model"] }
 
 [dev-dependencies]
 wasm-bindgen-test = { version = "0.3.37" }
