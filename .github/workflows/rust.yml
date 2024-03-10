@@ -49,7 +49,7 @@ jobs:
       - name: Run unit tests
         env:
           RUSTFLAGS: "-D warnings"
-        run: cd crates/wasm-bridge-js && wasm-pack test --node -- --all-features
+        run: cd crates/wasm-bridge && wasm-pack test --node -- --all-features
 
       - name: Run wasi unit tests
         env:

@@ -2,7 +2,7 @@
 set -e
 
 # Unit tests
-cd crates/wasm-bridge-js
+cd crates/wasm-bridge
 wasm-pack test --node -- --all-features
 cd ../..
 

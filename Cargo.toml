@@ -22,7 +22,6 @@ categories = ["wasm", "web-programming"]
 
 [workspace.dependencies]
 wasm-bridge = { path = "crates/wasm-bridge", version = "0.3.0" }
-wasm-bridge-js = { path = "crates/wasm-bridge-js", version = "0.3.0" }
 wasm-bridge-macros = { path = "crates/wasm-bridge-macros", version = "0.3.0" }
 
 wasmtime = { version = "15.0", default-features = false, features = ["cranelift"] }
