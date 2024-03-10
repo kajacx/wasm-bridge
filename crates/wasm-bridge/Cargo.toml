@@ -14,11 +14,21 @@ wasm-bridge-macros = { workspace = true, optional = true }
 async-trait = { workspace = true, optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bridge-js = { workspace = true }
+js-sys = { workspace = true }
+wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
+wat = { workspace = true, optional = true }
+wasm-bridge-macros = { workspace = true, optional = true }
+async-trait = { workspace = true, optional = true }
+js-component-bindgen = { workspace = true, optional = true }
+anyhow = { workspace = true }
+
+[dev-dependencies]
+wasm-bindgen-test = { workspace = true }
 
 [features]
 default = ["wat", "error-logging"]
-wat = ["wasmtime/wat", "wasm-bridge-js/wat"]
-component-model = ["wasmtime/component-model", "wasm-bridge-macros", "wasm-bridge-js/component-model"]
-async = ["wasmtime/async", "async-trait", "wasm-bridge-js/async", "wasm-bridge-macros/async"]
-error-logging = ["wasm-bridge-js/error-logging"]
+wat = ["dep:wat", "wasmtime/wat"]
+component-model = ["wasmtime/component-model", "wasm-bridge-macros", "js-component-bindgen"]
+async = ["wasmtime/async", "async-trait", "wasm-bridge-macros/async"]
+error-logging = []

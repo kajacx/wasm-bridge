@@ -5,4 +5,7 @@ mod sys;
 pub use sys::*;
 
 #[cfg(target_arch = "wasm32")]
-pub use wasm_bridge_js::*;
+mod js;
+
+#[cfg(target_arch = "wasm32")]
+pub use js::*;

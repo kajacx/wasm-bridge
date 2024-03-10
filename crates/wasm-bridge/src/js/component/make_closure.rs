@@ -3,8 +3,8 @@ use std::rc::Rc;
 
 use wasm_bindgen::{prelude::*, JsValue};
 
-use crate::conversions::FromJsValue;
 use crate::direct::*;
+use crate::FromJsValue;
 use crate::{DataHandle, DropHandle, Result, StoreContextMut};
 use js_sys::{Array, Function};
 

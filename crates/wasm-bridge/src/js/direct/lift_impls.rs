@@ -1,6 +1,6 @@
 use crate::component::ResourceAny;
 use crate::Result;
-use crate::{component::Resource, conversions::FromJsValue};
+use crate::{component::Resource, FromJsValue};
 use anyhow::{bail, Context};
 use wasm_bindgen::JsValue;
 

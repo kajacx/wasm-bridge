@@ -1,7 +1,7 @@
 use super::*;
 use crate::component::{Resource, ResourceAny};
-use crate::conversions::ToJsValue;
 use crate::Result;
+use crate::ToJsValue;
 use wasm_bindgen::JsValue;
 
 macro_rules! lower_primitive {
