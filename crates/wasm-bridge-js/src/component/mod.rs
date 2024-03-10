@@ -63,8 +63,3 @@ pub mod __internal {
         f.write_str(")")
     }
 }
-
-pub trait ComponentType {
-    const SIZE32: usize;
-    const ALIGN32: usize;
-}
