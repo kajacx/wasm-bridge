@@ -78,7 +78,8 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let regex = Regex::new("#\\[derive[^C]*ComponentType\\s*\\)\\s*\\]").unwrap();
     let as_string = regex.replace_all(&as_string, "");
 
-    let regex = Regex::new("const _ : \\(\\) =[^}]*ComponentType[^}]*\\}\\s*;").unwrap();
+    let regex =
+        Regex::new("const\\s*_\\s*:\\s*\\(\\)\\s*=[^}]*ComponentType[^}]*\\}\\s*;").unwrap();
     let as_string = regex.replace_all(&as_string, "");
 
     // Replace the "Lift" trait with our Lift trait and SizeDescription
