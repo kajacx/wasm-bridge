@@ -38,6 +38,15 @@ Alternatively, you can take a look at these examples:
  - **Component model with WASI:** Read the [text tutorial](/docs/wasi_compnents.md), watch the video showcase, or see a full example.
 
 
+## Versions
+
+| `wasm-bridge` | `wasmtime` | `wit-bindgen` | `cargo-component` |
+| ---           | ---        | ---           | ---               |
+| `0.3.x`       | `15.0`     | `0.15.0`      | `0.5.0`           |
+| `0.2.x`       | `11.0`     | `0.8.0`       | -                 |
+| `0.1.x`       | `10.0`     | -             | -                 |
+
+
 ## License
 
 The source code of `wasm-bride` is licensed under MIT, but there are portions that are copied from other projects,
