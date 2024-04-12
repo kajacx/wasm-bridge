@@ -58,7 +58,7 @@ impl ExportsRoot {
         let mut exported_fns = HashMap::<String, Func>::new();
         for (name, func) in exported_js_fns.into_iter() {
             let post_return_name = format!("{POST_RETURN_PREFIX}{name}");
-            let post_return = post_return_js_fns.get(&post_return_name).map(Clone::clone);
+            let post_return = post_return_js_fns.get(&post_return_name).cloned();
             exported_fns.insert(
                 name,
                 Func::new(func, post_return, memory.clone(), drop_handles.clone()),

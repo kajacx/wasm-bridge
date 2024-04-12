@@ -1,5 +1,4 @@
-use atomic_refcell::AtomicRefCell;
-use std::{ops::Deref, sync::Arc};
+use std::{cell::RefCell, ops::Deref, rc::Rc};
 
 use anyhow::{bail, Context};
 use js_sys::{Array, Function};
@@ -73,11 +72,11 @@ impl ReadableMemory for ModuleMemory {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct LazyModuleMemory(Arc<AtomicRefCell<Option<ModuleMemory>>>);
+pub struct LazyModuleMemory(Rc<RefCell<Option<ModuleMemory>>>);
 
 impl LazyModuleMemory {
     pub(crate) fn new() -> Self {
-        Self(Arc::new(AtomicRefCell::new(Option::None)))
+        Self(Rc::new(RefCell::new(Option::None)))
     }
 
     pub(crate) fn get(&self) -> impl Deref<Target = Option<ModuleMemory>> + '_ {
