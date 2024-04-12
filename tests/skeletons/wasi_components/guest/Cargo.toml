@@ -10,5 +10,5 @@ crate-type = ["cdylib"]
 package = "component:wasi-guest"
 
 [dependencies]
-wit-bindgen = "0.15.0"
+wit-bindgen = "0.24.0"
 rand = "0.8.5"

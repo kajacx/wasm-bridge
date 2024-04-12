@@ -24,17 +24,17 @@ categories = ["wasm", "web-programming"]
 wasm-bridge = { path = "crates/wasm-bridge", version = "0.3.2" }
 wasm-bridge-macros = { path = "crates/wasm-bridge-macros", version = "0.3.2" }
 
-wasmtime = { version = "15.0", default-features = false, features = ["cranelift"] }
-wasmtime-wasi = { version = "15.0", default-features = false, features = ["preview2"] }
-wasmtime-component-util = { version = "15.0", default-features = false }
-wasmtime-wit-bindgen = { version = "15.0", default-features = false }
+wasmtime = { version = "19.0", default-features = false, features = ["cranelift"] }
+wasmtime-wasi = { version = "19.0", default-features = false }
+wasmtime-component-util = { version = "19.0", default-features = false }
+wasmtime-wit-bindgen = { version = "19.0", default-features = false }
 
 js-sys = { version = "0.3", default-features = false }
 wasm-bindgen = { version = "0.2.89", default-features = false } # See https://users.rust-lang.org/t/very-strange-trait-bounds-error/104028
 wasm-bindgen-futures = { version = "0.4", default-features = false }
 wasm-bindgen-test = { version = "0.3" }
 wat = { version = "1.0", default-features = false }
-js-component-bindgen = { version = "0.14", default-features = false, features = ["transpile-bindgen"] }
+js-component-bindgen = { version = "1.0", default-features = false, features = ["transpile-bindgen"] }
 anyhow = { version = "1.0", default-features = false, features = ["std"] }
 rand_core = { version = "0.6", default-features = false }
 bytes = { version = "1.0", default-features = false }

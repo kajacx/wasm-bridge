@@ -42,6 +42,7 @@ Alternatively, you can take a look at these examples:
 
 | `wasm-bridge` | `wasmtime` | `wit-bindgen` | `cargo-component` |
 | ---           | ---        | ---           | ---               |
+| `0.4.x`       | `19.0`     | `0.24.0`      | `0.10.1`          |
 | `0.3.x`       | `15.0`     | `0.15.0`      | `0.5.0`           |
 | `0.2.x`       | `11.0`     | `0.8.0`       | -                 |
 | `0.1.x`       | `10.0`     | -             | -                 |
