@@ -81,11 +81,5 @@ pub fn static_str_to_js(s: &'static str) -> &'static JsValue {
             leaked as &'static JsValue
         });
         *reference
-        // .clone()
-        // .clone()
-        //let val = cache.borrow_mut().entry(key).or_insert_with(|| s.into());
-        // unsafe { &*(val as *const JsString) }
-        //val.clone()
-        //val as &'static JsString
     })
 }
