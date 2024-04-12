@@ -1,4 +1,4 @@
-use heck::ToLowerCamelCase;
+use heck::ToSnakeCase;
 use proc_macro2::*;
 use quote::{format_ident, quote};
 use syn::{DataEnum, DataStruct};
@@ -34,7 +34,7 @@ pub fn lift_struct(name: Ident, data: DataStruct) -> TokenStream {
         read_from_impl.extend(line);
     }
 
-    let name_impl = format_ident!("impl_lift_{}", name.to_string().to_lower_camel_case());
+    let name_impl = format_ident!("impl_lift_{}", name.to_string().to_snake_case());
     quote!(
       mod #name_impl {
         use wasm_bridge::direct::*;
@@ -71,7 +71,7 @@ pub fn lift_enum(name: Ident, data: DataEnum) -> TokenStream {
         from_js_return.extend(line);
     }
 
-    let name_impl = format_ident!("impl_lift_{}", name.to_string().to_lower_camel_case());
+    let name_impl = format_ident!("impl_lift_{}", name.to_string().to_snake_case());
     quote!(
       mod #name_impl {
         use wasm_bridge::direct::*;
@@ -154,7 +154,7 @@ pub fn lift_variant(name: Ident, data: DataEnum) -> TokenStream {
         }
     }).collect();
 
-    let name_impl = format_ident!("impl_lift_{}", name.to_string().to_lower_camel_case());
+    let name_impl = format_ident!("impl_lift_{}", name.to_string().to_snake_case());
     quote!(
       mod #name_impl {
         use wasm_bridge::direct::*;

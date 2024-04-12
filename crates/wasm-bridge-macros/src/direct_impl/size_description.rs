@@ -1,4 +1,4 @@
-use heck::ToLowerCamelCase;
+use heck::ToSnakeCase;
 use proc_macro2::*;
 use quote::{format_ident, quote};
 use syn::{DataEnum, DataStruct};
@@ -54,10 +54,7 @@ pub fn size_description_struct(name: Ident, data: DataStruct) -> TokenStream {
         layout_return.extend(ret);
     }
 
-    let name_impl = format_ident!(
-        "impl_size_description_{}",
-        name.to_string().to_lower_camel_case()
-    );
+    let name_impl = format_ident!("impl_size_description_{}", name.to_string().to_snake_case());
     quote!(
       mod #name_impl {
         use wasm_bridge::direct::*;
