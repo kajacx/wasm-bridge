@@ -24,7 +24,7 @@ categories = ["wasm", "web-programming"]
 wasm-bridge = { path = "crates/wasm-bridge", version = "0.3.2" }
 wasm-bridge-macros = { path = "crates/wasm-bridge-macros", version = "0.3.2" }
 
-wasmtime = { version = "19.0", default-features = false, features = ["cranelift"] }
+wasmtime = { version = "19.0", default-features = false, features = ["cranelift", "runtime"] }
 wasmtime-wasi = { version = "19.0", default-features = false }
 wasmtime-component-util = { version = "19.0", default-features = false }
 wasmtime-wit-bindgen = { version = "19.0", default-features = false }
