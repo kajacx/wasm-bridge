@@ -6,6 +6,7 @@ pub struct FuncType {
 
 impl FuncType {
     pub fn new(
+        _engine: &crate::Engine,
         params: impl IntoIterator<Item = ValType>,
         results: impl IntoIterator<Item = ValType>,
     ) -> Self {

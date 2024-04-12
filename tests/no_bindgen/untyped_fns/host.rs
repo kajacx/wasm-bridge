@@ -15,7 +15,7 @@ fn single_value(bytes: &[u8]) -> Result<()> {
     linker.func_new(
         "imported_fns",
         "add_one_i32",
-        FuncType::new([ValType::I32], [ValType::I32]),
+        FuncType::new(store.engine(), [ValType::I32], [ValType::I32]),
         |_: Caller<()>, args: &[Val], rets: &mut [Val]| {
             // TODO: cannot use this match, it will be Val::F64
             // Ok(match args[0] {
@@ -29,7 +29,7 @@ fn single_value(bytes: &[u8]) -> Result<()> {
     linker.func_new(
         "imported_fns",
         "add_one_i64",
-        FuncType::new([ValType::I64], [ValType::I64]),
+        FuncType::new(store.engine(), [ValType::I64], [ValType::I64]),
         |_: Caller<()>, args: &[Val], rets: &mut [Val]| {
             rets[0] = Val::I64(args[0].i64().unwrap() + 1);
             Ok(())
@@ -38,7 +38,7 @@ fn single_value(bytes: &[u8]) -> Result<()> {
     linker.func_new(
         "imported_fns",
         "add_one_f32",
-        FuncType::new([ValType::F32], [ValType::F32]),
+        FuncType::new(store.engine(), [ValType::F32], [ValType::F32]),
         |_: Caller<()>, args: &[Val], rets: &mut [Val]| {
             // TODO: cannot use this match, it will be Val::F64
             // Ok(match args[0] {
@@ -52,7 +52,7 @@ fn single_value(bytes: &[u8]) -> Result<()> {
     linker.func_new(
         "imported_fns",
         "add_one_f64",
-        FuncType::new([ValType::F64], [ValType::F64]),
+        FuncType::new(store.engine(), [ValType::F64], [ValType::F64]),
         |_: Caller<()>, args: &[Val], rets: &mut [Val]| {
             rets[0] = (args[0].f64().unwrap() + 1.0).into();
             Ok(())
@@ -112,6 +112,7 @@ fn multiple_values() -> Result<()> {
         "imported_fns",
         "add_import",
         FuncType::new(
+            store.engine(),
             [ValType::I32, ValType::I64, ValType::F32, ValType::F64],
             [ValType::F64],
         ),
@@ -128,7 +129,7 @@ fn multiple_values() -> Result<()> {
     linker.func_new(
         "imported_fns",
         "increment",
-        FuncType::new([], []),
+        FuncType::new(store.engine(), [], []),
         |mut caller: Caller<u32>, _args: &[Val], _rets: &mut [Val]| {
             let value = *caller.data();
             let value = value + 1;
