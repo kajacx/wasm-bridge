@@ -1,7 +1,7 @@
+use atomic_refcell::AtomicRefCell;
 use std::{
-    cell::RefCell,
     ops::{Deref, DerefMut},
-    rc::Rc,
+    sync::Arc,
 };
 
 use crate::*;
@@ -16,7 +16,7 @@ impl<T> Store<T> {
     pub fn new(engine: &Engine, data: T) -> Self {
         Self {
             engine: engine.clone(),
-            data: Rc::new(RefCell::new(data)),
+            data: Arc::new(AtomicRefCell::new(data)),
         }
     }
 
@@ -44,7 +44,7 @@ impl<T> Store<T> {
     }
 }
 
-pub(crate) type DataHandle<T> = Rc<RefCell<T>>;
+pub(crate) type DataHandle<T> = Arc<AtomicRefCell<T>>;
 
 pub struct StoreContext<'a, T>(&'a T);
 
