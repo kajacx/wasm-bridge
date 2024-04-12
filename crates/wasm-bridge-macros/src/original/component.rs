@@ -1093,13 +1093,17 @@ pub fn expand_flags(flags: &Flags, is_sys: bool) -> Result<TokenStream> {
 
     let fields = fields.iter().collect::<Vec<_>>();
 
-    let component_type_impl = expand_record_for_component_type(
-        &name,
-        &generics,
-        &fields,
-        quote!(typecheck_flags),
-        component_names,
-    )?;
+    let component_type_impl = if is_sys {
+        expand_record_for_component_type(
+            &name,
+            &generics,
+            &fields,
+            quote!(typecheck_flags),
+            component_names,
+        )?
+    } else {
+        quote!()
+    };
 
     let internal = quote!(wasmtime::component::__internal);
 
@@ -1120,8 +1124,94 @@ pub fn expand_flags(flags: &Flags, is_sys: bool) -> Result<TokenStream> {
         FlagsSize::Size4Plus(_) => (quote!(#internal::InterfaceType::U32), 4),
     };
 
+    let extra_derives = if is_sys {
+        quote!()
+    } else {
+        quote!(, wasm_bridge::component::SizeDescription, wasm_bridge::component::LiftJs, wasm_bridge::component::LowerJs)
+    };
+
+    let lift_and_lower = if is_sys {
+        quote!(
+        unsafe impl wasmtime::component::Lower for #name {
+            fn lower<T>(
+                &self,
+                cx: &mut #internal::LowerContext<'_, T>,
+                _ty: #internal::InterfaceType,
+                dst: &mut std::mem::MaybeUninit<Self::Lower>,
+            ) -> #internal::anyhow::Result<()> {
+                #(
+                    self.#field_names.lower(
+                        cx,
+                        #field_interface_type,
+                        #internal::map_maybe_uninit!(dst.#field_names),
+                    )?;
+                )*
+                Ok(())
+            }
+
+            fn store<T>(
+                &self,
+                cx: &mut #internal::LowerContext<'_, T>,
+                _ty: #internal::InterfaceType,
+                mut offset: usize
+            ) -> #internal::anyhow::Result<()> {
+                debug_assert!(offset % (<Self as wasmtime::component::ComponentType>::ALIGN32 as usize) == 0);
+                #(
+                    self.#field_names.store(
+                        cx,
+                        #field_interface_type,
+                        offset,
+                    )?;
+                    offset += std::mem::size_of_val(&self.#field_names);
+                )*
+                Ok(())
+            }
+        }
+
+        unsafe impl wasmtime::component::Lift for #name {
+            fn lift(
+                cx: &mut #internal::LiftContext<'_>,
+                _ty: #internal::InterfaceType,
+                src: &Self::Lower,
+            ) -> #internal::anyhow::Result<Self> {
+                Ok(Self {
+                    #(
+                        #field_names: wasmtime::component::Lift::lift(
+                            cx,
+                            #field_interface_type,
+                            &src.#field_names,
+                        )?,
+                    )*
+                })
+            }
+
+            fn load(
+                cx: &mut #internal::LiftContext<'_>,
+                _ty: #internal::InterfaceType,
+                bytes: &[u8],
+            ) -> #internal::anyhow::Result<Self> {
+                debug_assert!(
+                    (bytes.as_ptr() as usize)
+                        % (<Self as wasmtime::component::ComponentType>::ALIGN32 as usize)
+                        == 0
+                );
+                #(
+                    let (field, bytes) = bytes.split_at(#field_size);
+                    let #field_names = wasmtime::component::Lift::load(
+                        cx,
+                        #field_interface_type,
+                        field,
+                    )?;
+                )*
+                Ok(Self { #(#field_names,)* })
+            }
+        })
+    } else {
+        quote!()
+    };
+
     let expanded = quote! {
-        #[derive(Copy, Clone, Default)]
+        #[derive(Copy, Clone, Default #extra_derives)]
         pub struct #name { #fields }
 
         impl #name {
@@ -1215,80 +1305,7 @@ pub fn expand_flags(flags: &Flags, is_sys: bool) -> Result<TokenStream> {
 
         #component_type_impl
 
-        unsafe impl wasmtime::component::Lower for #name {
-            fn lower<T>(
-                &self,
-                cx: &mut #internal::LowerContext<'_, T>,
-                _ty: #internal::InterfaceType,
-                dst: &mut std::mem::MaybeUninit<Self::Lower>,
-            ) -> #internal::anyhow::Result<()> {
-                #(
-                    self.#field_names.lower(
-                        cx,
-                        #field_interface_type,
-                        #internal::map_maybe_uninit!(dst.#field_names),
-                    )?;
-                )*
-                Ok(())
-            }
-
-            fn store<T>(
-                &self,
-                cx: &mut #internal::LowerContext<'_, T>,
-                _ty: #internal::InterfaceType,
-                mut offset: usize
-            ) -> #internal::anyhow::Result<()> {
-                debug_assert!(offset % (<Self as wasmtime::component::ComponentType>::ALIGN32 as usize) == 0);
-                #(
-                    self.#field_names.store(
-                        cx,
-                        #field_interface_type,
-                        offset,
-                    )?;
-                    offset += std::mem::size_of_val(&self.#field_names);
-                )*
-                Ok(())
-            }
-        }
-
-        unsafe impl wasmtime::component::Lift for #name {
-            fn lift(
-                cx: &mut #internal::LiftContext<'_>,
-                _ty: #internal::InterfaceType,
-                src: &Self::Lower,
-            ) -> #internal::anyhow::Result<Self> {
-                Ok(Self {
-                    #(
-                        #field_names: wasmtime::component::Lift::lift(
-                            cx,
-                            #field_interface_type,
-                            &src.#field_names,
-                        )?,
-                    )*
-                })
-            }
-
-            fn load(
-                cx: &mut #internal::LiftContext<'_>,
-                _ty: #internal::InterfaceType,
-                bytes: &[u8],
-            ) -> #internal::anyhow::Result<Self> {
-                debug_assert!(
-                    (bytes.as_ptr() as usize)
-                        % (<Self as wasmtime::component::ComponentType>::ALIGN32 as usize)
-                        == 0
-                );
-                #(
-                    let (field, bytes) = bytes.split_at(#field_size);
-                    let #field_names = wasmtime::component::Lift::load(
-                        cx,
-                        #field_interface_type,
-                        field,
-                    )?;
-                )*
-                Ok(Self { #(#field_names,)* })
-            }
-        }
+        #lift_and_lower
     };
 
     Ok(expanded)
