@@ -1,9 +1,6 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "clock",
-    exports: {
-        world: GuestImpl,
-    }
 });
 
 struct GuestImpl;
@@ -35,3 +32,5 @@ impl Guest for GuestImpl {
         elapsed + result
     }
 }
+
+export!(GuestImpl);
