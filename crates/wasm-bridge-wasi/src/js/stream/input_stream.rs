@@ -2,7 +2,7 @@ use anyhow::Context;
 use wasm_bridge::{component::Linker, Result, StoreContextMut};
 
 use super::{StreamError, StreamResult, Subscribe};
-use crate::preview2::WasiView;
+use crate::js::WasiView;
 
 pub trait HostInputStream: Subscribe + Send {
     fn read(&mut self, size: usize) -> StreamResult<bytes::Bytes>;
@@ -44,9 +44,9 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
     linker
         .instance("wasi:cli/stdin@0.2.0-rc-2023-11-10")?
         .func_wrap("get-stdin", |mut caller: StoreContextMut<T>, (): ()| {
-            let mut stream = caller.data().ctx().stdin().stream();
+            let mut stream = caller.data_mut().ctx().stdin().stream();
             stream.ready();
-            let index = caller.data_mut().table_mut().input_streams.insert(stream);
+            let index = caller.data_mut().table().input_streams.insert(stream);
             Ok(index)
         })?;
 
@@ -57,7 +57,7 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
             |mut caller: StoreContextMut<T>, (index, len): (u32, u64)| {
                 let stream = caller
                     .data_mut()
-                    .table_mut()
+                    .table()
                     .input_streams
                     .get_mut(index)
                     .context("Get input stream resource")?;

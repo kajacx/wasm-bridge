@@ -4,8 +4,8 @@ pub use wasi_ctx_builder::*;
 mod wasi_ctx;
 pub use wasi_ctx::*;
 
-mod table;
-pub use table::*;
+mod resource_table;
+pub use resource_table::*;
 
 mod wasi_view;
 pub use wasi_view::*;

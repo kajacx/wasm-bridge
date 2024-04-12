@@ -1,4 +1,4 @@
-use crate::preview2::{clocks, WasiView};
+use crate::js::{clocks, WasiView};
 use wasm_bridge::component::Linker;
 use wasm_bridge::Result;
 

@@ -44,7 +44,7 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
             "get-random-bytes",
             |mut caller: StoreContextMut<T>, (len,): (u64,)| {
                 let mut bytes = vec![0u8; len as usize];
-                caller.data_mut().ctx_mut().random().fill_bytes(&mut bytes);
+                caller.data_mut().ctx().random().fill_bytes(&mut bytes);
                 Ok(bytes)
             },
         )

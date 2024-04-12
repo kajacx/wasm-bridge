@@ -1,4 +1,4 @@
-use crate::preview2::WasiView;
+use crate::js::WasiView;
 use wasm_bridge::{component::Linker, Result, StoreContextMut};
 
 pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {

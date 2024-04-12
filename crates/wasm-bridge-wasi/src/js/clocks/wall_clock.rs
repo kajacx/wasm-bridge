@@ -3,7 +3,7 @@ use std::time::Duration;
 use wasm_bridge::component::Linker;
 use wasm_bridge::{Result, StoreContextMut};
 
-use crate::preview2::WasiView;
+use crate::js::WasiView;
 
 pub trait HostWallClock: Send + Sync {
     fn resolution(&self) -> Duration;
@@ -33,8 +33,8 @@ pub(crate) fn real_wall_clock() -> impl HostWallClock {
 pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
     linker
         .instance("wasi:clocks/wall-clock@0.2.0-rc-2023-11-10")?
-        .func_wrap("now", |caller: StoreContextMut<T>, ()| {
-            let now = caller.data().ctx().wall_clock().now();
+        .func_wrap("now", |mut caller: StoreContextMut<T>, ()| {
+            let now = caller.data_mut().ctx().wall_clock().now();
             Ok(WallTime {
                 seconds: now.as_secs(),
                 nanoseconds: now.subsec_nanos(),

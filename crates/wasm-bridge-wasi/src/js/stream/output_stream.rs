@@ -6,7 +6,7 @@ use wasm_bridge::StoreContextMut;
 use wasm_bridge::{component::Linker, Result};
 
 use super::{StreamResult, Subscribe};
-use crate::preview2::WasiView;
+use crate::js::WasiView;
 
 // TODO: This seems to need to be "Send" on JS but not on sys, why?
 pub trait HostOutputStream: Subscribe + Send {
@@ -120,18 +120,18 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
     linker
         .instance("wasi:cli/stdout@0.2.0-rc-2023-11-10")?
         .func_wrap("get-stdout", |mut caller: StoreContextMut<T>, (): ()| {
-            let mut stream = caller.data().ctx().stdout().stream();
+            let mut stream = caller.data_mut().ctx().stdout().stream();
             stream.ready();
-            let index = caller.data_mut().table_mut().output_streams.insert(stream);
+            let index = caller.data_mut().table().output_streams.insert(stream);
             Ok(index)
         })?;
 
     linker
         .instance("wasi:cli/stderr@0.2.0-rc-2023-11-10")?
         .func_wrap("get-stderr", |mut caller: StoreContextMut<T>, (): ()| {
-            let mut stream = caller.data().ctx().stderr().stream();
+            let mut stream = caller.data_mut().ctx().stderr().stream();
             stream.ready();
-            let index = caller.data_mut().table_mut().output_streams.insert(stream);
+            let index = caller.data_mut().table().output_streams.insert(stream);
             Ok(index)
         })?;
 
@@ -142,7 +142,7 @@ pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Re
             |mut caller: StoreContextMut<T>, (index, bytes): (u32, Vec<u8>)| {
                 let stream = caller
                     .data_mut()
-                    .table_mut()
+                    .table()
                     .output_streams
                     .get_mut(index)
                     .context("Get output stream resource")?;
