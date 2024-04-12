@@ -7,8 +7,9 @@
 
   <p>
     <a href="https://www.flaticon.com/" title="Icons from flaticon.com">
-      <img src="https://img.shields.io/badge/Icons_from-Flaticon-green" alt="Icons from flaticon.com">
+      <img src="https://img.shields.io/badge/Icons_from-Flaticon-teal" alt="Icons from flaticon.com">
     </a>
+    <img src="https://img.shields.io/badge/%E2%9C%85-No_unsafe-green" alt="No unsafe">
     <a href="https://crates.io/crates/wasm-bridge" title="View on crates.io">
       <img src="https://img.shields.io/badge/View_on-crates.io-blue" alt="View on crates.io">
     </a>
