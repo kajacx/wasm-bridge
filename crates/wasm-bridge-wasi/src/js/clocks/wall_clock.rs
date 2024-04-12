@@ -31,15 +31,16 @@ pub(crate) fn real_wall_clock() -> impl HostWallClock {
 }
 
 pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
-    linker
-        .instance("wasi:clocks/wall-clock@0.2.0-rc-2023-11-10")?
-        .func_wrap("now", |mut caller: StoreContextMut<T>, ()| {
+    linker.instance("wasi:clocks/wall-clock@0.2.0")?.func_wrap(
+        "now",
+        |mut caller: StoreContextMut<T>, ()| {
             let now = caller.data_mut().ctx().wall_clock().now();
             Ok(WallTime {
                 seconds: now.as_secs(),
                 nanoseconds: now.subsec_nanos(),
             })
-        })
+        },
+    )
 }
 
 #[derive(

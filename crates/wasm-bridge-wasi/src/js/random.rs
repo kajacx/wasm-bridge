@@ -38,16 +38,14 @@ pub(crate) fn js_rand() -> SecureRandom {
 }
 
 pub(crate) fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
-    linker
-        .instance("wasi:random/random@0.2.0-rc-2023-11-10")?
-        .func_wrap(
-            "get-random-bytes",
-            |mut caller: StoreContextMut<T>, (len,): (u64,)| {
-                let mut bytes = vec![0u8; len as usize];
-                caller.data_mut().ctx().random().fill_bytes(&mut bytes);
-                Ok(bytes)
-            },
-        )
+    linker.instance("wasi:random/random@0.2.0")?.func_wrap(
+        "get-random-bytes",
+        |mut caller: StoreContextMut<T>, (len,): (u64,)| {
+            let mut bytes = vec![0u8; len as usize];
+            caller.data_mut().ctx().random().fill_bytes(&mut bytes);
+            Ok(bytes)
+        },
+    )
 }
 
 #[cfg(test)]
