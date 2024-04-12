@@ -33,7 +33,8 @@ pub fn expand(input: &Config) -> Result<TokenStream> {
     // be inspected manually.
     if std::env::var("WASMTIME_DEBUG_BINDGEN").is_ok() {
         static INVOCATION: AtomicUsize = AtomicUsize::new(0);
-        let root = Path::new(env!("DEBUG_OUTPUT_DIR"));
+        // let root = Path::new(env!("DEBUG_OUTPUT_DIR"));
+        let root = Path::new("TODO: fix this mess");
         let world_name = &input.resolve.worlds[input.world].name;
         let n = INVOCATION.fetch_add(1, Relaxed);
         let path = root.join(format!("{world_name}{n}.rs"));
