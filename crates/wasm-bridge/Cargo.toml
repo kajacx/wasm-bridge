@@ -22,6 +22,8 @@ wasm-bridge-macros = { workspace = true, optional = true }
 async-trait = { workspace = true, optional = true }
 js-component-bindgen = { workspace = true, optional = true }
 anyhow = { workspace = true }
+try-lock = { workspace = true }
+atomic_refcell = { workspace = true }
 
 [dev-dependencies]
 wasm-bindgen-test = { workspace = true }
