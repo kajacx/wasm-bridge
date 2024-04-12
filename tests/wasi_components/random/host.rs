@@ -3,7 +3,7 @@ use wasm_bridge::{
     Config, Engine, Result, Store,
 };
 
-use wasm_bridge_wasi::preview2::*;
+use wasm_bridge_wasi::*;
 
 wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
@@ -12,21 +12,16 @@ wasm_bridge::component::bindgen!({
 });
 
 struct State {
-    table: Table,
+    table: ResourceTable,
     wasi: WasiCtx,
 }
 
 impl WasiView for State {
-    fn table(&self) -> &Table {
-        &self.table
-    }
-    fn table_mut(&mut self) -> &mut Table {
+    fn table(&mut self) -> &mut ResourceTable {
         &mut self.table
     }
-    fn ctx(&self) -> &WasiCtx {
-        &self.wasi
-    }
-    fn ctx_mut(&mut self) -> &mut WasiCtx {
+
+    fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.wasi
     }
 }
@@ -43,7 +38,7 @@ async fn default_random(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let table = Table::new();
+    let table = ResourceTable::new();
     let wasi = WasiCtxBuilder::new().build();
 
     let engine = Engine::new(&config).unwrap();
@@ -73,7 +68,7 @@ async fn custom_random(component_bytes: &[u8]) -> Result<()> {
     config.wasm_component_model(true);
     config.async_support(true);
 
-    let table = Table::new();
+    let table = ResourceTable::new();
     let wasi = WasiCtxBuilder::new()
         .secure_random(ZeroRng)
         .build();

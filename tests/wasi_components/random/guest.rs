@@ -3,9 +3,6 @@ use rand::Rng;
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "random",
-    exports: {
-        world: GuestImpl
-    }
 });
 
 struct GuestImpl;
@@ -19,3 +16,5 @@ impl Guest for GuestImpl {
         rand::thread_rng().gen::<[u8; 32]>().into()
     }
 }
+
+export!(GuestImpl);
