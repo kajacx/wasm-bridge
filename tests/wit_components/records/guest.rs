@@ -1,14 +1,11 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "records",
-    exports: {
-        world: MyGuest,
-    }
 });
 
-struct MyGuest;
+struct GuestImpl;
 
-impl Guest for MyGuest {
+impl Guest for GuestImpl {
     fn move_players(mut players: Vec<Player>, delta: f32) -> Vec<Player> {
         players.iter_mut().for_each(|player| {
             *player = move_player(player, delta);
@@ -31,3 +28,5 @@ impl Guest for MyGuest {
         todo!()
     }
 }
+
+export!(GuestImpl);

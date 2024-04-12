@@ -1,14 +1,11 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "flags-test",
-    exports: {
-        world: MyGuest,
-    }
 });
 
-struct MyGuest;
+struct GuestImpl;
 
-impl Guest for MyGuest {
+impl Guest for GuestImpl {
     fn export_add_green_and_blue(colors: Colors) -> Colors {
         import_add_green(colors).union(Colors::BLUE)
     }
@@ -29,3 +26,5 @@ impl Guest for MyGuest {
         values
     }
 }
+
+export!(GuestImpl);

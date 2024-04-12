@@ -1,14 +1,11 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "tuples",
-    exports: {
-        world: MyGuest,
-    }
 });
 
-struct MyGuest;
+struct GuestImpl;
 
-impl Guest for MyGuest {
+impl Guest for GuestImpl {
     fn increment_twice() {
         increment();
         increment();
@@ -28,3 +25,5 @@ impl Guest for MyGuest {
         (a + 10, b - 10)
     }
 }
+
+export!(GuestImpl);

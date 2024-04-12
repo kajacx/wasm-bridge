@@ -1,14 +1,11 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "primitives",
-    exports: {
-        world: MyGuest,
-    }
 });
 
-struct MyGuest;
+struct GuestImpl;
 
-impl Guest for MyGuest {
+impl Guest for GuestImpl {
     fn negate_times(mut value: bool, times: u32) -> bool {
         for _ in 0..times {
             value = negate(value);
@@ -67,3 +64,5 @@ impl Guest for MyGuest {
         text
     }
 }
+
+export!(GuestImpl);
