@@ -5,6 +5,9 @@ struct Data {
 }
 
 pub async fn run_test(bytes: &[u8]) -> Result<()> {
+    assert_send::<Store<()>>();
+    assert_sync::<Store<()>>();
+
     let data = Data { times_called: 0 };
 
     let engine = Engine::default();
@@ -69,3 +72,7 @@ fn increment(mut context: impl AsContextMut<Data = Data>) {
     let mut data = store.data_mut();
     data.times_called += 1;
 }
+
+fn assert_sync<T: Sync>() {}
+
+fn assert_send<T: Send>() {}
