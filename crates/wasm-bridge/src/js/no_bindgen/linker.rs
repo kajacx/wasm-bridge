@@ -111,6 +111,7 @@ impl<T> Linker<T> {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct DropHandle(Box<dyn std::fmt::Debug>);
 pub type DropHandles = Rc<Vec<DropHandle>>;
