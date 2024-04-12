@@ -8,6 +8,8 @@
       console.log("Calling [method]descriptor.write-via-stream", ...args),
     "[method]descriptor.read-via-stream": (...args) =>
       console.log("Calling [method]descriptor.read-via-stream", ...args),
+    "[method]descriptor.stat": (...args) =>
+      console.log("Calling [method]descriptor.stat", ...args),
     "[resource-drop]descriptor": (...args) =>
       console.log("Calling [resource-drop]descriptor", ...args),
   },
