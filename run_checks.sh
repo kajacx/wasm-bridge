@@ -11,6 +11,7 @@ wasm-pack test --node -- --all-features
 cd ../..
 
 # Warnigns
+cargo fmt --all -- --check
 cargo check --target wasm32-unknown-unknown --all-features
 cargo clippy --target wasm32-unknown-unknown --all-features -- -D clippy::all
 
