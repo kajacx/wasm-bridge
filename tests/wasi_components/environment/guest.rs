@@ -1,9 +1,6 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "environment",
-    exports: {
-        world: GuestImpl,
-    }
 });
 
 struct GuestImpl;
@@ -13,3 +10,5 @@ impl Guest for GuestImpl {
         std::env::var(name).ok()
     }
 }
+
+export!(GuestImpl);
