@@ -1,9 +1,6 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "io-redirect",
-    exports: {
-        world: GuestImpl,
-    }
 });
 
 struct GuestImpl;
@@ -24,3 +21,5 @@ impl Guest for GuestImpl {
         eprintln!("{line}");
     }
 }
+
+export!(GuestImpl);
