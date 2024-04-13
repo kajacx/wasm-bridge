@@ -40,7 +40,7 @@ crate-type = ["cdylib"]
 package = "component:guest"
 
 [dependencies]
-wit-bindgen = "0.8.0"
+wit-bindgen = "0.24.0"
 ```
 
 Be sure to specify `cdylib` as the library type and include the `package.metadata.component` info
@@ -67,7 +67,7 @@ impl Calculator for MyCalculator {
 
 4. Export your struct with the `export_calculator` (name based on world name again) macro:
 ```rust
-export_calculator!(MyCalculator);
+export!(MyCalculator);
 ```
 
 ## Build the guest
