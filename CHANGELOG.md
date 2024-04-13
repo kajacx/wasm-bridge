@@ -1,10 +1,16 @@
 # wasm-bridge change log
 
+## [0.4.0] 2024-04-13
+
+### <b style="color: red">Breaking changes:</b>
+
+- Updated to `wasmtime` version `19.0`, `wit-bindgen` to version `0.24.0` and `cargo component` to version `0.10.1`.
+
 ## [0.3.2] 2024-04-12
 
 ### Added
 
-- Made `Store` `Sync` and `Send`.
+- `Store` is now `Sync` and `Send`.
 
 
 ## [0.3.1] 2024-03-10
