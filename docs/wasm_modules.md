@@ -70,7 +70,7 @@ These are, however, slightly different from the "normal" async functions that wa
 | --- | --- | --- | --- | --- |
 | `linker.instantiate` | sync | *none* | Calls wasmtime's `linker.instantiate` | Calls the sync `new WebAssembly.Instance()` constructor ❌ |
 | `linker.instantiate_async` | async | `async` | Calls wasmtime's `linker.instantiate_async` | Calls the async `new WebAssembly.instantiate()` function ✅ |
-| `wasm_bridge::instantiate_async` | async | *none* | Calls wasmtime's `linker.instantiate` | Calls the async `new WebAssembly.instantiate()` function ✅ |
+| `wasm_bridge::linker_instantiate_async` | async | *none* | Calls wasmtime's `linker.instantiate` | Calls the async `new WebAssembly.instantiate()` function ✅ |
 
 The advantage of the "custom" wasm-bridge methods is that they work even without the `async` feature flag.
 

@@ -41,7 +41,7 @@ pub async fn run_test(bytes: &[u8]) -> Result<()> {
     })?;
 
     // Test "async" instantiate
-    let instance = instantiate_async(&mut store, &linker, &module).await?;
+    let instance = linker_instantiate_async(&mut store, &linker, &module).await?;
 
     single_value(&mut store, &instance)?;
     few_values(&mut store, instance, global_value)?;
@@ -154,7 +154,7 @@ async fn many_values(mut store: &mut Store<()>) -> Result<()> {
             (a + 1, b + 1, c + 1, d + 1, e + 1.0, f + 1.0)
         },
     )?;
-    let instance = instantiate_async(&mut store, &linker, &module).await?;
+    let instance = linker_instantiate_async(&mut store, &linker, &module).await?;
  
     let add = instance
         .get_typed_func::<(i32, i64, u32, u64, f32, f64), (i32, i64, u32, u64, f32, f64)>(
@@ -183,13 +183,13 @@ async fn errors(mut store: &mut Store<()>) -> Result<()> {
 
     let mut linker = Linker::new(store.engine());
     linker.func_wrap("wrong_module", "panics_import", |_: Caller<()>| {})?;
-    instantiate_async(&mut store, &linker, &module).await
+    linker_instantiate_async(&mut store, &linker, &module).await
         .map(|_| ())
         .expect_err("wrong module name");
 
     let mut linker = Linker::new(store.engine());
     linker.func_wrap("imported_fns", "wrong_fn", |_: Caller<()>| {})?;
-    instantiate_async(&mut store, &linker, &module).await
+    linker_instantiate_async(&mut store, &linker, &module).await
         .map(|_| ())
         .expect_err("wrong function name");
 

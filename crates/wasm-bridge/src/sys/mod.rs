@@ -12,7 +12,7 @@ pub async fn new_instance_async(
     Instance::new(store, module, imports)
 }
 
-pub async fn instantiate_async<T>(
+pub async fn linker_instantiate_async<T>(
     store: impl AsContextMut<Data = T>,
     linker: &Linker<T>,
     module: &Module,
