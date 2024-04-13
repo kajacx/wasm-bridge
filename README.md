@@ -30,7 +30,7 @@ but it works on desktop as well as on the web.
 
 ## How do I use this?
 
-In general, you would use this crate the same way wou would use `wasmtime`, and just replace `wasmtime` with `wasm_bride`.
+In general, you would use this crate the same way wou would use `wasmtime`, and just replace `wasmtime` with `wasm_bridge`.
 
 Alternatively, refer to this handy table:
 

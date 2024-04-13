@@ -56,7 +56,7 @@ impl CalculatorImports for CalculatorData {
 }
 ```
 
-The functions must return a `wasm_bride::Result`, which is re-exported `anyhow::Result`.
+The functions must return a `wasm_bridge::Result`, which is re-exported `anyhow::Result`.
 
 Returning an `Err` variant will result in an error return on the call site,
 but the instance will not be re-entriable.

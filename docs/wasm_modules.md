@@ -21,7 +21,7 @@ See the [`no_bindgen`](/tests/no_bindgen) test folder for supported example usag
 Here is an example of adding three using a WASM module compiled from WAT, using `wasm-bridge` version `0.3.0`:
 
 ```rust
-use wasm_bride::*;
+use wasm_bridge::*;
 
 fn add_three(number: i32) -> Result<i32> {
     let mut store = Store::<()>::default();
