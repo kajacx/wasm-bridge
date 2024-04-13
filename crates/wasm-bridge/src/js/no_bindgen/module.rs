@@ -11,6 +11,10 @@ pub struct Module {
 }
 
 impl Module {
+    #[deprecated(
+        since = "0.3.0",
+        note = "Compiling a module synchronously can panic, please use `new_module_async` instead."
+    )]
     pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
         let bytes = Self::resolve_bytes(bytes.as_ref())?;
         Self::from_bytes(&bytes)

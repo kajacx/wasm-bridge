@@ -14,6 +14,10 @@ impl<T> Linker<T> {
         Self { fns: vec![] }
     }
 
+    #[deprecated(
+        since = "0.3.0",
+        note = "Instantiating a module synchronously can panic, please use `linker_instantiate_async` instead."
+    )]
     pub fn instantiate(
         &self,
         store: impl AsContextMut<Data = T>,
@@ -179,7 +183,7 @@ fn transform_dynamic_closure_arguments(closure: JsValue) -> JsValue {
     transformer.call1(&JsValue::UNDEFINED, &closure).unwrap()
 }
 
-pub async fn instantiate_async<T>(
+pub async fn linker_instantiate_async<T>(
     store: impl AsContextMut<Data = T>,
     linker: &Linker<T>,
     module: &Module,

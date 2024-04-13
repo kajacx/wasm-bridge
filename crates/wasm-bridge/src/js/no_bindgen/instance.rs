@@ -18,6 +18,10 @@ pub struct Instance {
 }
 
 impl Instance {
+    #[deprecated(
+        since = "0.3.0",
+        note = "Instantiating a module synchronously can panic, please use `new_instance_async` instead."
+    )]
     pub fn new(_store: impl AsContextMut, module: &Module, _imports: &[()]) -> Result<Self> {
         let imports = Object::new();
         Self::new_with_imports(module, &imports, vec![])
