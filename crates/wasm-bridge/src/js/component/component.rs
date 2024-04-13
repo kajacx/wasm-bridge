@@ -17,6 +17,10 @@ pub struct Component {
 }
 
 impl Component {
+    #[deprecated(
+        since = "0.3.0",
+        note = "Compiling a component synchronously can panic, please use `new_component_async` instead."
+    )]
     pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
         let files = ComponentLoader::generate_files(bytes.as_ref())?;
 
