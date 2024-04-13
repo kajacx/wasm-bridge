@@ -15,7 +15,7 @@ impl<T> Linker<T> {
     }
 
     #[deprecated(
-        since = "0.3.0",
+        since = "0.4.0",
         note = "Instantiating a module synchronously can panic, please use `linker_instantiate_async` instead."
     )]
     pub fn instantiate(
