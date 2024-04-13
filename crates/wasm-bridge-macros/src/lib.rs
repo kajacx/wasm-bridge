@@ -90,6 +90,24 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let regex = Regex::new("#\\[derive\\([^)]*Lower\\)\\]").unwrap();
     let as_string = regex.replace_all(&as_string, "#[derive(wasm_bridge::component::LowerJs)]");
 
+    // Add deprecated warning to [World]::instantiate
+    let regex = Regex::new("pub\\s+fn\\s+instantiate\\s*<").unwrap();
+    let as_string = regex.replace_all(&as_string, r#"
+    pub async fn instantiate_safe<T>(
+        mut store: impl wasm_bridge::AsContextMut<Data = T>,
+        component: &wasm_bridge::component::Component,
+        linker: &wasm_bridge::component::Linker<T>,
+    ) -> wasm_bridge::Result<(Self, wasm_bridge::component::Instance)> {
+        let instance = linker.instantiate_async(&mut store, component).await?;
+        Ok((Self::new(store, &instance)?, instance))
+    }
+
+    #[deprecated(
+        since = "0.4.0",
+        note = "Instantiating a component synchronously can panic, please use `instantiate_safe` instead."
+    )]
+    pub fn instantiate<"#);
+
     // eprintln!("bindgen IMPL: {as_string}");
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
