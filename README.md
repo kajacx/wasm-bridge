@@ -32,11 +32,13 @@ but it works on desktop as well as on the web.
 
 In general, you would use this crate the same way wou would use `wasmtime`, and just replace `wasmtime` with `wasm_bride`.
 
-Alternatively, you can take a look at these examples:
+Alternatively, refer to this handy table:
 
- - **No bindgen:** Read the [text tutorial](/docs/wasm_modules.md), watch the video showcase, or see a [full example](https://github.com/kajacx/wasm-tutorials/tree/wbtutor-wasm-modules).
- - **Component model:** Read the [text tutorial](/docs/wit_components.md), watch the video showcase, or see a full example.
- - **Component model with WASI:** Read the [text tutorial](/docs/wasi_compnents.md), watch the video showcase, or see a full example.
+| Use case | 📝 Text tutorial | ▶️ Video tutorial | 🧾 Full example | 📑 Test cases |
+| --- | --- | --- | --- | --- |
+| **No bindgen** | [Read here](/docs/wasm_modules.md) | Coming soon | [See here](https://github.com/kajacx/wasm-tutorials/tree/wbtutor-wasm-modules) | [Explore here](/tests/no_bindgen/) |
+| **Component model** | [Read here](/docs/wit_components.md) | Coming soon | Coming soon | [Explore here](/tests/wit_components/) |
+| **Component model with WASI** | Coming soon | Coming soon | Coming soon | [Explore here](/tests/wasi_components/) |
 
 
 ## Versions
