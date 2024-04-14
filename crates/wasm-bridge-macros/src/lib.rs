@@ -59,9 +59,9 @@ fn bindgen(input: proc_macro::TokenStream) -> String {
 pub fn bindgen_sys(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let as_string = bindgen(input);
 
-    let as_string = add_safe_instantiation(&as_string, CompilationTarget::Sys);
+    let as_string = add_safe_instantiation(&as_string);
 
-    // eprintln!("bindgen SYS IMPL: {as_string}");
+    // eprintln!("bindgen SYS IMPL: {}", as_string.deref());
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
 
@@ -99,39 +99,32 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let regex = Regex::new("#\\[derive\\([^)]*Lower\\)\\]").unwrap();
     let as_string = regex.replace_all(&as_string, "#[derive(wasm_bridge::component::LowerJs)]");
 
-    let as_string = add_safe_instantiation(&as_string, CompilationTarget::Js);
+    let as_string = add_safe_instantiation(&as_string);
 
-    // eprintln!("bindgen JS IMPL: {as_string}");
+    // eprintln!("bindgen JS IMPL: {}", as_string.deref());
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
 
-fn add_safe_instantiation(
-    as_string: &str,
-    target: CompilationTarget,
-) -> impl Deref<Target = str> + '_ {
-    let regex = Regex::new("pub\\s+fn\\s+instantiate\\s*<").unwrap();
+fn add_safe_instantiation(as_string: &str) -> impl Deref<Target = str> + '_ {
+    let regex = Regex::new("pub\\s+fn\\s+instantiate\\s*<([^{]*)\\{").unwrap();
 
-    regex.replace_all(as_string, format!(r#"
+    regex.replace_all(as_string, r#"
     pub async fn instantiate_safe<T>(
         mut store: impl wasm_bridge::AsContextMut<Data = T>,
         component: &wasm_bridge::component::Component,
         linker: &wasm_bridge::component::Linker<T>,
-    ) -> wasm_bridge::Result<(Self, wasm_bridge::component::Instance)> {{
-        {}
-    }}
+    ) -> wasm_bridge::Result<(Self, wasm_bridge::component::Instance)> {
+        let instance = linker.instantiate_safe(&mut store, component).await?;
+        Ok((Self::new(store, &instance)?, instance))
+    }
     
     #[deprecated(
         since = "0.4.0",
         note = "Instantiating a component synchronously can panic on the web, please use `instantiate_safe` instead."
     )]
-    pub fn instantiate<"#, match target {
-        CompilationTarget::Sys =>
-            "#[allow(deprecated)]
-            Self::instantiate(store, component, linker)",
-        CompilationTarget::Js =>
-            "let instance = linker.instantiate_async(&mut store, component).await?;
-            Ok((Self::new(store, &instance)?, instance))",
-    }))
+    pub fn instantiate< $1 {
+        #[allow(deprecated)]
+        "#)
 }
 
 #[proc_macro_derive(SizeDescription, attributes(component))]

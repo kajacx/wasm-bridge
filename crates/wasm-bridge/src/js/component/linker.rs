@@ -36,6 +36,10 @@ impl<T> Linker<T> {
         }
     }
 
+    #[deprecated(
+        since = "0.4.0",
+        note = "Instantiating a component synchronously can panic on the web, please use `instantiate_safe` instead."
+    )]
     pub fn instantiate(
         &self,
         store: impl AsContextMut<Data = T>,
@@ -48,6 +52,14 @@ impl<T> Linker<T> {
         } else {
             component.instantiate(&imports, drop_handles, &memory)
         }
+    }
+
+    pub async fn instantiate_safe(
+        &self,
+        store: impl AsContextMut<Data = T>,
+        component: &Component,
+    ) -> Result<Instance> {
+        self.instantiate_async(store, component).await
     }
 
     pub async fn instantiate_async(

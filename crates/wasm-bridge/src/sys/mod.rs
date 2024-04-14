@@ -621,6 +621,7 @@ pub mod component {
     pub use wasm_bridge_macros::Lift;
     pub use wasm_bridge_macros::Lower;
 
+    use ref_cast::RefCast;
     use wasmtime::{AsContextMut, Engine, Result};
 
     /// A compiled WebAssembly Component.
@@ -784,6 +785,18 @@ pub mod component {
             Self(wasmtime::component::Linker::new(engine))
         }
 
+        #[deprecated(
+            since = "0.4.0",
+            note = "Instantiating a component synchronously can panic on the web, please use `instantiate_safe` instead."
+        )]
+        pub fn instantiate(
+            &self,
+            store: impl AsContextMut<Data = T>,
+            component: &Component,
+        ) -> Result<Instance> {
+            self.0.instantiate(store, &component.0)
+        }
+
         /// Instantiates the [`Component`] provided into the `store` specified.
         ///
         /// This function will use the items defined within this [`Linker`] to
@@ -796,12 +809,14 @@ pub mod component {
         /// `component` requires or if it is of the wrong type. Additionally this
         /// can return an error if something goes wrong during instantiation such as
         /// a runtime trap or a runtime limit being exceeded.
-        pub fn instantiate(
+        pub async fn instantiate_safe(
             &self,
             store: impl AsContextMut<Data = T>,
             component: &Component,
         ) -> Result<Instance> {
-            self.0.instantiate(store, &component.0)
+            // This just calls `instantiate` on sys, but uses proper async instantiation on the web.
+            #[allow(deprecated)]
+            self.instantiate(store, component)
         }
 
         /// Instantiates the [`Component`] provided into the `store` specified.
