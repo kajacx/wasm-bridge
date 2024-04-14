@@ -7,6 +7,8 @@ use syn::punctuated::Punctuated;
 use syn::{braced, parse_quote, Data, DeriveInput, Error, Result, Token};
 use wasmtime_component_util::{DiscriminantSize, FlagsSize};
 
+use crate::CompilationTarget;
+
 mod kw {
     syn::custom_keyword!(record);
     syn::custom_keyword!(variant);
@@ -896,7 +898,7 @@ impl Parse for Flags {
     }
 }
 
-pub fn expand_flags(flags: &Flags, is_sys: bool) -> Result<TokenStream> {
+pub fn expand_flags(flags: &Flags, target: CompilationTarget) -> Result<TokenStream> {
     let size = FlagsSize::from_count(flags.flags.len());
 
     let ty;
@@ -1093,7 +1095,7 @@ pub fn expand_flags(flags: &Flags, is_sys: bool) -> Result<TokenStream> {
 
     let fields = fields.iter().collect::<Vec<_>>();
 
-    let component_type_impl = if is_sys {
+    let component_type_impl = if target == CompilationTarget::Sys {
         expand_record_for_component_type(
             &name,
             &generics,
@@ -1124,13 +1126,13 @@ pub fn expand_flags(flags: &Flags, is_sys: bool) -> Result<TokenStream> {
         FlagsSize::Size4Plus(_) => (quote!(#internal::InterfaceType::U32), 4),
     };
 
-    let extra_derives = if is_sys {
-        quote!()
-    } else {
+    let extra_derives = if target == CompilationTarget::Js {
         quote!(, wasm_bridge::component::SizeDescription, wasm_bridge::component::LiftJs, wasm_bridge::component::LowerJs)
+    } else {
+        quote!()
     };
 
-    let lift_and_lower = if is_sys {
+    let lift_and_lower = if target == CompilationTarget::Sys {
         quote!(
         unsafe impl wasmtime::component::Lower for #name {
             fn lower<T>(

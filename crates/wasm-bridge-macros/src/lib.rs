@@ -1,13 +1,18 @@
-use std::str::FromStr;
+use std::{ops::Deref, str::FromStr};
 
 use original::{Style, VariantStyle};
 use quote::ToTokens;
 use regex::{Captures, Regex};
 use syn::{Attribute, ImplItem, ItemImpl};
 
+mod direct_impl;
 mod original;
 
-mod direct_impl;
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum CompilationTarget {
+    Sys,
+    Js,
+}
 
 #[proc_macro_derive(Lift, attributes(component))]
 pub fn lift(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -26,12 +31,12 @@ pub fn component_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream
 
 #[proc_macro]
 pub fn flags_sys(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    replace_namespace(original::flags(input, true))
+    replace_namespace(original::flags(input, CompilationTarget::Sys))
 }
 
 #[proc_macro]
 pub fn flags_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    replace_namespace(original::flags(input, false))
+    replace_namespace(original::flags(input, CompilationTarget::Js))
 }
 
 fn bindgen(input: proc_macro::TokenStream) -> String {
@@ -53,6 +58,10 @@ fn bindgen(input: proc_macro::TokenStream) -> String {
 #[proc_macro]
 pub fn bindgen_sys(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let as_string = bindgen(input);
+
+    let as_string = add_safe_instantiation(&as_string, CompilationTarget::Sys);
+
+    // eprintln!("bindgen SYS IMPL: {as_string}");
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
 
@@ -90,26 +99,39 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let regex = Regex::new("#\\[derive\\([^)]*Lower\\)\\]").unwrap();
     let as_string = regex.replace_all(&as_string, "#[derive(wasm_bridge::component::LowerJs)]");
 
-    // Add deprecated warning to [World]::instantiate
+    let as_string = add_safe_instantiation(&as_string, CompilationTarget::Js);
+
+    // eprintln!("bindgen JS IMPL: {as_string}");
+    proc_macro::TokenStream::from_str(&as_string).unwrap()
+}
+
+fn add_safe_instantiation(
+    as_string: &str,
+    target: CompilationTarget,
+) -> impl Deref<Target = str> + '_ {
     let regex = Regex::new("pub\\s+fn\\s+instantiate\\s*<").unwrap();
-    let as_string = regex.replace_all(&as_string, r#"
+
+    regex.replace_all(&as_string, format!(r#"
     pub async fn instantiate_safe<T>(
         mut store: impl wasm_bridge::AsContextMut<Data = T>,
         component: &wasm_bridge::component::Component,
         linker: &wasm_bridge::component::Linker<T>,
-    ) -> wasm_bridge::Result<(Self, wasm_bridge::component::Instance)> {
-        let instance = linker.instantiate_async(&mut store, component).await?;
+    ) -> wasm_bridge::Result<(Self, wasm_bridge::component::Instance)> {{
+        let instance = linker.{}(&mut store, component){}?;
         Ok((Self::new(store, &instance)?, instance))
-    }
-
+    }}
+    
     #[deprecated(
         since = "0.4.0",
         note = "Instantiating a component synchronously can panic, please use `instantiate_safe` instead."
     )]
-    pub fn instantiate<"#);
-
-    // eprintln!("bindgen IMPL: {as_string}");
-    proc_macro::TokenStream::from_str(&as_string).unwrap()
+    pub fn instantiate<"#, match target {
+        CompilationTarget::Sys => "instantiate",
+        CompilationTarget::Js => "instantiate_async",
+    }, match target {
+        CompilationTarget::Sys => "",
+        CompilationTarget::Js => ".await",
+    }))
 }
 
 #[proc_macro_derive(SizeDescription, attributes(component))]
