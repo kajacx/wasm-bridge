@@ -54,7 +54,7 @@ impl<T> Linker<T> {
         &mut self,
         module: &str,
         name: &str,
-        _type: FuncType,
+        _ty: FuncType,
         func: F,
     ) -> Result<&mut Self>
     where

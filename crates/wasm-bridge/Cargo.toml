@@ -12,6 +12,7 @@ categories.workspace = true
 wasmtime = { workspace = true }
 wasm-bridge-macros = { workspace = true, optional = true }
 async-trait = { workspace = true, optional = true }
+ref-cast = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = { workspace = true }
