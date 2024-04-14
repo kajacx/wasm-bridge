@@ -125,7 +125,9 @@ fn add_safe_instantiation(
         note = "Instantiating a component synchronously can panic on the web, please use `instantiate_safe` instead."
     )]
     pub fn instantiate<"#, match target {
-        CompilationTarget::Sys => "self.instantiate(store, component, linker)",
+        CompilationTarget::Sys =>
+            "#[allow(deprecated)]
+            Self::instantiate(store, component, linker)",
         CompilationTarget::Js =>
             "let instance = linker.instantiate_async(&mut store, component).await?;
             Ok((Self::new(store, &instance)?, instance))",

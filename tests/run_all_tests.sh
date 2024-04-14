@@ -1,6 +1,8 @@
 #!/usr/bin/sh
 set -e
 
+# Run from this folder
+
 for test in no_bindgen/*; do
   test=$(echo "$test" | sed 's#no_bindgen/##')
   sh skeletons/no_bindgen/run_test.sh "$test"
