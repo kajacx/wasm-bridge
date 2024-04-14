@@ -35,11 +35,13 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let engine = Engine::new(&config)?;
     let mut store = Store::new(&engine, HostData);
 
+    #[allow(deprecated)]
     let component = Component::new(&store.engine(), &component_bytes)?;
 
     let mut linker = Linker::new(store.engine());
     Interfaces::add_to_linker(&mut linker, |data| data)?;
 
+    #[allow(deprecated)]
     let (instance, _) = Interfaces::instantiate(&mut store, &component, &linker)?;
 
     let result = instance.call_normal_export(&mut store, 7)?;

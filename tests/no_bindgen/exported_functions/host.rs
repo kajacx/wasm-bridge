@@ -2,7 +2,9 @@ use wasm_bridge::*;
 
 pub async fn run_test(bytes: &[u8]) -> Result<()> {
     let mut store = Store::<()>::default();
+    #[allow(deprecated)]
     let module = Module::new(store.engine(), bytes)?;
+    #[allow(deprecated)]
     let instance = Instance::new(&mut store, &module, &[])?;
 
     single_value(&mut store, &instance)?;
@@ -91,8 +93,10 @@ fn many_values(mut store: &mut Store<()>) -> Result<()> {
       )
     "#;
 
+    #[allow(deprecated)]
     let module = Module::new(store.engine(), wat.as_bytes())?;
 
+    #[allow(deprecated)]
     let instance = Instance::new(&mut store, &module, &[])?;
 
     let add_ten_all = instance
@@ -109,15 +113,19 @@ fn many_values(mut store: &mut Store<()>) -> Result<()> {
 fn errors(bytes: &[u8]) -> Result<()> {
     let mut store = Store::<()>::default();
 
+    #[allow(deprecated)]
     Module::new(store.engine(), &[1, 5])
         .map(|_| ())
         .expect_err("parsing module from invalid binary bytes");
 
+    #[allow(deprecated)]
     Module::new(store.engine(), "not a valid wat module".as_bytes())
         .map(|_| ())
         .expect_err("parsing module from invalid wat text");
 
+    #[allow(deprecated)]
     let module = Module::new(store.engine(), bytes)?;
+    #[allow(deprecated)]
     let instance = Instance::new(&mut store, &module, &[])?;
 
     instance

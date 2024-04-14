@@ -9,6 +9,7 @@ pub async fn run_test(bytes: &[u8]) -> Result<()> {
 
 fn single_value(bytes: &[u8]) -> Result<()> {
     let mut store = Store::<()>::default();
+    #[allow(deprecated)]
     let module = Module::new(store.engine(), bytes)?;
 
     let mut linker = Linker::new(store.engine());
@@ -59,6 +60,7 @@ fn single_value(bytes: &[u8]) -> Result<()> {
         },
     )?;
 
+    #[allow(deprecated)]
     let instance = linker.instantiate(&mut store, &module)?;
     let mut results = [Val::I32(0)];
 
@@ -105,6 +107,7 @@ fn multiple_values() -> Result<()> {
     )"#;
 
     let mut store = Store::<u32>::default();
+    #[allow(deprecated)]
     let module = Module::new(store.engine(), wat.as_bytes())?;
 
     let mut linker = Linker::new(store.engine());
@@ -138,6 +141,7 @@ fn multiple_values() -> Result<()> {
         },
     )?;
 
+    #[allow(deprecated)]
     let instance = linker.instantiate(&mut store, &module)?;
     let mut results = [Val::I32(0)];
 

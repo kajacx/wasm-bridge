@@ -13,6 +13,7 @@ pub async fn run_test(bytes: &[u8]) -> Result<()> {
     let engine = Engine::default();
     let mut store = Store::new(&engine, data);
 
+    #[allow(deprecated)]
     let module = Module::new(store.engine(), bytes)?;
 
     let mut linker = Linker::<Data>::new(store.engine());
@@ -27,6 +28,7 @@ pub async fn run_test(bytes: &[u8]) -> Result<()> {
         },
     )?;
 
+    #[allow(deprecated)]
     let instance = linker.instantiate(&mut store, &module)?;
 
     let add_three_i32 = instance.get_typed_func::<i32, i32>(&mut store, "add_three_i32")?;
@@ -37,6 +39,7 @@ pub async fn run_test(bytes: &[u8]) -> Result<()> {
     assert_eq!(store.data().times_called, 2);
 
     // Re-use the linker
+    #[allow(deprecated)]
     let instance = linker.instantiate(&mut store, &module)?;
 
     let add_three_i32 = instance.get_typed_func::<i32, i32>(&mut store, "add_three_i32")?;

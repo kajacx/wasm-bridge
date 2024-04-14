@@ -39,6 +39,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let engine = Engine::new(&config)?;
     let mut store = Store::new(&engine, HostData);
 
+    #[allow(deprecated)]
     let component = Component::new(&store.engine(), component_bytes)?;
 
     let mut linker = Linker::new(store.engine());
@@ -48,39 +49,47 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     // Kind of annoying, but what are we going to do ...
 
     // Simple return value
+    #[allow(deprecated)]
     let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
     let result = instance.call_simple_fail_guest(&mut store, WhereFail::HostOkOk)?;
     assert_eq!(result, WhereFail::HostOkOk);
 
+    #[allow(deprecated)]
     let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
     instance
         .call_simple_fail_guest(&mut store, WhereFail::GuestPanic)
         .expect_err("guest code should panic");
 
+    #[allow(deprecated)]
     let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
     instance
         .call_simple_fail_guest(&mut store, WhereFail::HostErr)
         .expect_err("host code should return err");
 
     // Full return value
+    #[allow(deprecated)]
     let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
     instance
         .call_full_fail_guest(&mut store, WhereFail::GuestPanic)
         .expect_err("guest code should panic");
 
+    #[allow(deprecated)]
     let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
     let result = instance.call_full_fail_guest(&mut store, WhereFail::GuestErr)?;
     assert_eq!(result, Err(WhereFail::GuestErr));
 
+    #[allow(deprecated)]
     let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
     instance
         .call_full_fail_guest(&mut store, WhereFail::HostErr)
         .expect_err("host code should return err");
 
+    #[allow(deprecated)]
     let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
     let result = instance.call_full_fail_guest(&mut store, WhereFail::HostOkErr)?;
     assert_eq!(result, Err(WhereFail::HostOkErr));
 
+    #[allow(deprecated)]
     let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
     let result = instance.call_full_fail_guest(&mut store, WhereFail::HostOkOk)?;
     assert_eq!(result, Ok(WhereFail::HostOkOk));

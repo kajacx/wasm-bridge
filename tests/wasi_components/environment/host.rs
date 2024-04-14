@@ -43,7 +43,8 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     let engine = Engine::new(&config).unwrap();
     let mut store = Store::new(&engine, State { table, wasi });
 
-    let component = Component::new(&store.engine(), &component_bytes).unwrap();
+    #[allow(deprecated)]
+    let component = Component::new(&store.engine(), &component_bytes).unwrap(); 
 
     let mut linker = Linker::new(store.engine());
     command::add_to_linker(&mut linker).unwrap();

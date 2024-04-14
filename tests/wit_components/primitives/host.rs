@@ -71,12 +71,14 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let engine = Engine::new(&config)?;
     let mut store = Store::new(&engine, Imports);
 
+    #[allow(deprecated)]
     let component = Component::new(&store.engine(), &component_bytes)?;
 
     let mut linker = Linker::new(store.engine());
     Primitives::add_to_linker(&mut linker, |data| data)?;
 
-    let (instance, _) = Primitives::instantiate(&mut store, &component, &linker)?;
+    #[allow(deprecated)]
+    let (instance, _) = Primitives::instantiate(&mut store, &component, &linker).unwrap();
 
     let result = instance.call_negate_times(&mut store, true, 0)?;
     assert_eq!(result, true);
