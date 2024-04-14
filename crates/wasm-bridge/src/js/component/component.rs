@@ -19,7 +19,7 @@ pub struct Component {
 impl Component {
     #[deprecated(
         since = "0.4.0",
-        note = "Compiling a component synchronously can panic, please use `new_component_async` instead."
+        note = "Compiling a component synchronously can panic on the web, please use `new_safe` instead."
     )]
     pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
         let files = ComponentLoader::generate_files(bytes.as_ref())?;
@@ -42,7 +42,7 @@ impl Component {
         })
     }
 
-    pub async fn new_async(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
+    pub async fn new_safe(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
         let files = ComponentLoader::generate_files(bytes.as_ref())?;
 
         let promise = WebAssembly::compile(&bytes_to_js_value(&files.main_core));
@@ -262,10 +262,6 @@ impl Component {
             realloc,
         ))
     }
-}
-
-pub async fn new_component_async(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Component> {
-    Component::new_async(engine, bytes).await
 }
 
 fn bytes_to_js_value(bytes: &[u8]) -> JsValue {

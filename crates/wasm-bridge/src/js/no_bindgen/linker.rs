@@ -16,7 +16,7 @@ impl<T> Linker<T> {
 
     #[deprecated(
         since = "0.4.0",
-        note = "Instantiating a module synchronously can panic, please use `linker_instantiate_async` instead."
+        note = "Instantiating a module synchronously can panic on the web, please use `instantiate_safe` instead."
     )]
     pub fn instantiate(
         &self,
@@ -27,7 +27,7 @@ impl<T> Linker<T> {
         Instance::new_with_imports(module, &imports, drop_handles)
     }
 
-    pub async fn instantiate_async(
+    pub async fn instantiate_safe(
         &self,
         store: impl AsContextMut<Data = T>,
         module: &Module,
@@ -181,12 +181,4 @@ fn transform_dynamic_closure_arguments(closure: JsValue) -> JsValue {
     debug_assert!(transformer.is_function(), "transformer is a function");
 
     transformer.call1(&JsValue::UNDEFINED, &closure).unwrap()
-}
-
-pub async fn linker_instantiate_async<T>(
-    store: impl AsContextMut<Data = T>,
-    linker: &Linker<T>,
-    module: &Module,
-) -> Result<Instance> {
-    linker.instantiate_async(store, module).await
 }

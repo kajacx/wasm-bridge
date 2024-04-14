@@ -9,14 +9,14 @@ pub struct Module(pub(crate) wasmtime::Module);
 impl Module {
     #[deprecated(
         since = "0.4.0",
-        note = "Compiling a module synchronously can panic, please use `new_safe` instead."
+        note = "Compiling a module synchronously can panic on the web, please use `new_safe` instead."
     )]
     pub fn new(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
         Ok(Self(wasmtime::Module::new(engine, bytes)?))
     }
 
     pub async fn new_safe(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
-        // This calls `new` on sys, but `new_async` on js.
+        // This just calls `new` on sys, but uses proper async compilation on the web.
         #[allow(deprecated)]
         Self::new(engine, bytes)
     }
@@ -34,7 +34,7 @@ pub struct Instance(pub(crate) wasmtime::Instance);
 impl Instance {
     #[deprecated(
         since = "0.4.0",
-        note = "Instantiating a module synchronously can panic, please use `new_safe` instead."
+        note = "Instantiating a module synchronously can panic on the web, please use `new_safe` instead."
     )]
     pub fn new(store: impl AsContextMut, module: &Module, imports: &[Extern]) -> Result<Self> {
         Ok(Self(wasmtime::Instance::new(store, &module.0, imports)?))
@@ -45,7 +45,7 @@ impl Instance {
         module: &Module,
         imports: &[Extern],
     ) -> Result<Self> {
-        // This calls `new` on sys, but `new_async` on js.
+        // This just calls `new` on sys, but uses proper async instantiation on the web.
         #[allow(deprecated)]
         Self::new(store, module, imports)
     }
@@ -94,7 +94,7 @@ impl<T> Linker<T> {
 
     #[deprecated(
         since = "0.4.0",
-        note = "Instantiating a module synchronously can panic, please use `instantiate_safe` instead."
+        note = "Instantiating a module synchronously can panic on the web, please use `instantiate_safe` instead."
     )]
     pub fn instantiate(
         &self,
@@ -109,7 +109,7 @@ impl<T> Linker<T> {
         store: impl AsContextMut<Data = T>,
         module: &Module,
     ) -> Result<Instance, Error> {
-        // This calls `instantiate` on sys, but `instantiate_async` on js.
+        // This just calls `instantiate` on sys, but uses proper async instantiation on the web.
         #[allow(deprecated)]
         self.instantiate(store, module)
     }

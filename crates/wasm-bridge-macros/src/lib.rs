@@ -117,20 +117,18 @@ fn add_safe_instantiation(
         component: &wasm_bridge::component::Component,
         linker: &wasm_bridge::component::Linker<T>,
     ) -> wasm_bridge::Result<(Self, wasm_bridge::component::Instance)> {{
-        let instance = linker.{}(&mut store, component){}?;
-        Ok((Self::new(store, &instance)?, instance))
+        {}
     }}
     
     #[deprecated(
         since = "0.4.0",
-        note = "Instantiating a component synchronously can panic, please use `instantiate_safe` instead."
+        note = "Instantiating a component synchronously can panic on the web, please use `instantiate_safe` instead."
     )]
     pub fn instantiate<"#, match target {
-        CompilationTarget::Sys => "instantiate",
-        CompilationTarget::Js => "instantiate_async",
-    }, match target {
-        CompilationTarget::Sys => "",
-        CompilationTarget::Js => ".await",
+        CompilationTarget::Sys => "self.instantiate(store, component, linker)",
+        CompilationTarget::Js =>
+            "let instance = linker.instantiate_async(&mut store, component).await?;
+            Ok((Self::new(store, &instance)?, instance))",
     }))
 }
 

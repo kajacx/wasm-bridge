@@ -5,7 +5,7 @@
 ### <b style="color: red">Breaking changes:</b>
 
 - Updated to `wasmtime` version `19.0`, `wit-bindgen` to version `0.24.0` and `cargo component` to version `0.10.1`.
-- Renamed `instantiate_async` to `linker_instantiate_async`.
+- Moved "safe" async functions to associated functions instead.
 
 ## [0.3.2] 2024-04-12
 

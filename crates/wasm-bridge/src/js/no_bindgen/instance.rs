@@ -20,14 +20,14 @@ pub struct Instance {
 impl Instance {
     #[deprecated(
         since = "0.4.0",
-        note = "Instantiating a module synchronously can panic, please use `new_instance_async` instead."
+        note = "Instantiating a module synchronously can panic on the web, please use `new_safe` instead."
     )]
     pub fn new(_store: impl AsContextMut, module: &Module, _imports: &[()]) -> Result<Self> {
         let imports = Object::new();
         Self::new_with_imports(module, &imports, vec![])
     }
 
-    pub async fn new_async(
+    pub async fn new_safe(
         _store: impl AsContextMut,
         module: &Module,
         _imports: &[()],
@@ -139,12 +139,4 @@ fn process_exports(js_exports: JsValue) -> Result<HashMap<String, JsValue>> {
         exports.insert(name, export);
     }
     Ok(exports)
-}
-
-pub async fn new_instance_async(
-    store: impl AsContextMut,
-    module: &Module,
-    imports: &[()],
-) -> Result<Instance> {
-    Instance::new_async(store, module, imports).await
 }

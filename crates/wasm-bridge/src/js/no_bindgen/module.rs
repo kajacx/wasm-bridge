@@ -13,14 +13,14 @@ pub struct Module {
 impl Module {
     #[deprecated(
         since = "0.4.0",
-        note = "Compiling a module synchronously can panic, please use `new_module_async` instead."
+        note = "Compiling a module synchronously can panic on the web, please use `new_safe` instead."
     )]
     pub fn new(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
         let bytes = Self::resolve_bytes(bytes.as_ref())?;
         Self::from_bytes(&bytes)
     }
 
-    pub async fn new_async(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
+    pub async fn new_safe(_engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
         let bytes = Self::resolve_bytes(bytes.as_ref())?;
         Self::from_bytes_async(&bytes).await
     }
@@ -69,8 +69,4 @@ impl Module {
             module: module.into(),
         })
     }
-}
-
-pub async fn new_module_async(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Module> {
-    Module::new_async(engine, bytes).await
 }
