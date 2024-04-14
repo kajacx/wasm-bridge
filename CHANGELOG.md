@@ -1,6 +1,6 @@
 # wasm-bridge change log
 
-## [0.4.0] 2024-04-13
+## [0.4.0] 2024-04-14
 
 ### <b style="color: red">Breaking changes:</b>
 
