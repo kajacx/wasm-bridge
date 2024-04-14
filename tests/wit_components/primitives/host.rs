@@ -68,58 +68,58 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
     config.wasm_component_model(true);
 
-    let engine = Engine::new(&config)?;
+    let engine = Engine::new(&config).unwrap();
     let mut store = Store::new(&engine, Imports);
 
     #[allow(deprecated)]
-    let component = Component::new(&store.engine(), &component_bytes)?;
+    let component = Component::new(&store.engine(), &component_bytes).unwrap();
 
     let mut linker = Linker::new(store.engine());
-    Primitives::add_to_linker(&mut linker, |data| data)?;
+    Primitives::add_to_linker(&mut linker, |data| data).unwrap();
 
     #[allow(deprecated)]
     let (instance, _) = Primitives::instantiate(&mut store, &component, &linker).unwrap();
 
-    let result = instance.call_negate_times(&mut store, true, 0)?;
+    let result = instance.call_negate_times(&mut store, true, 0).unwrap();
     assert_eq!(result, true);
 
-    let result = instance.call_negate_times(&mut store, false, 3)?;
+    let result = instance.call_negate_times(&mut store, false, 3).unwrap();
     assert_eq!(result, true);
 
-    let result = instance.call_add_three_s8(&mut store, 5i8)?;
+    let result = instance.call_add_three_s8(&mut store, 5i8).unwrap();
     assert_eq!(result, 5i8 + 3);
 
-    let result = instance.call_add_three_s16(&mut store, 5i16)?;
+    let result = instance.call_add_three_s16(&mut store, 5i16).unwrap();
     assert_eq!(result, 5i16 + 3);
 
-    let result = instance.call_add_three_s32(&mut store, 5i32)?;
+    let result = instance.call_add_three_s32(&mut store, 5i32).unwrap();
     assert_eq!(result, 5i32 + 3);
 
-    let result = instance.call_add_three_s64(&mut store, 5i64)?;
+    let result = instance.call_add_three_s64(&mut store, 5i64).unwrap();
     assert_eq!(result, 5i64 + 3);
 
-    let result = instance.call_add_three_u8(&mut store, 5u8)?;
+    let result = instance.call_add_three_u8(&mut store, 5u8).unwrap();
     assert_eq!(result, 5u8 + 3);
 
-    let result = instance.call_add_three_u16(&mut store, 5u16)?;
+    let result = instance.call_add_three_u16(&mut store, 5u16).unwrap();
     assert_eq!(result, 5u16 + 3);
 
-    let result = instance.call_add_three_u32(&mut store, 5u32)?;
+    let result = instance.call_add_three_u32(&mut store, 5u32).unwrap();
     assert_eq!(result, 5u32 + 3);
 
-    let result = instance.call_add_three_u64(&mut store, 5u64)?;
+    let result = instance.call_add_three_u64(&mut store, 5u64).unwrap();
     assert_eq!(result, 5u64 + 3);
 
-    let result = instance.call_add_three_float32(&mut store, 5.5f32)?;
+    let result = instance.call_add_three_float32(&mut store, 5.5f32).unwrap();
     assert_eq!(result, 5.5f32 + 3.0);
 
-    let result = instance.call_add_three_float64(&mut store, 5.5f64)?;
+    let result = instance.call_add_three_float64(&mut store, 5.5f64).unwrap();
     assert_eq!(result, 5.5f64 + 3.0);
 
-    let result = instance.call_to_upper(&mut store, 'a')?;
+    let result = instance.call_to_upper(&mut store, 'a').unwrap();
     assert_eq!(result, 'A');
 
-    let result = instance.call_add_abc(&mut store, "hello ")?;
+    let result = instance.call_add_abc(&mut store, "hello ").unwrap();
     assert_eq!(result, "hello abc");
 
     Ok(())

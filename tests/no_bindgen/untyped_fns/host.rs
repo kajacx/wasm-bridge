@@ -1,8 +1,8 @@
 use wasm_bridge::*;
 
 pub async fn run_test(bytes: &[u8]) -> Result<()> {
-    single_value(bytes)?;
-    multiple_values()?;
+    single_value(bytes).unwrap();
+    multiple_values().unwrap();
 
     Ok(())
 }
@@ -10,7 +10,7 @@ pub async fn run_test(bytes: &[u8]) -> Result<()> {
 fn single_value(bytes: &[u8]) -> Result<()> {
     let mut store = Store::<()>::default();
     #[allow(deprecated)]
-    let module = Module::new(store.engine(), bytes)?;
+    let module = Module::new(store.engine(), bytes).unwrap();
 
     let mut linker = Linker::new(store.engine());
     linker.func_new(
@@ -26,7 +26,7 @@ fn single_value(bytes: &[u8]) -> Result<()> {
             rets[0] = Val::I32(args[0].i32().unwrap() + 1);
             Ok(())
         },
-    )?;
+    ).unwrap();
     linker.func_new(
         "imported_fns",
         "add_one_i64",
@@ -35,7 +35,7 @@ fn single_value(bytes: &[u8]) -> Result<()> {
             rets[0] = Val::I64(args[0].i64().unwrap() + 1);
             Ok(())
         },
-    )?;
+    ).unwrap();
     linker.func_new(
         "imported_fns",
         "add_one_f32",
@@ -49,7 +49,7 @@ fn single_value(bytes: &[u8]) -> Result<()> {
             rets[0] = (args[0].f32().unwrap() + 1.0).into();
             Ok(())
         },
-    )?;
+    ).unwrap();
     linker.func_new(
         "imported_fns",
         "add_one_f64",
@@ -58,26 +58,26 @@ fn single_value(bytes: &[u8]) -> Result<()> {
             rets[0] = (args[0].f64().unwrap() + 1.0).into();
             Ok(())
         },
-    )?;
+    ).unwrap();
 
     #[allow(deprecated)]
-    let instance = linker.instantiate(&mut store, &module)?;
+    let instance = linker.instantiate(&mut store, &module).unwrap();
     let mut results = [Val::I32(0)];
 
     let add_three_i32 = instance.get_func(&mut store, "add_three_i32").unwrap();
-    add_three_i32.call(&mut store, &[Val::I32(5)], &mut results)?;
+    add_three_i32.call(&mut store, &[Val::I32(5)], &mut results).unwrap();
     assert_eq!(results[0].i32().unwrap(), 8);
 
     let add_three_i64 = instance.get_func(&mut store, "add_three_i64").unwrap();
-    add_three_i64.call(&mut store, &[Val::I64(5)], &mut results)?;
+    add_three_i64.call(&mut store, &[Val::I64(5)], &mut results).unwrap();
     assert_eq!(results[0].i64().unwrap(), 8);
 
     let add_three_f32 = instance.get_func(&mut store, "add_three_f32").unwrap();
-    add_three_f32.call(&mut store, &[(5.5f32).into()], &mut results)?;
+    add_three_f32.call(&mut store, &[(5.5f32).into()], &mut results).unwrap();
     assert_eq!(results[0].f32().unwrap(), 8.5);
 
     let add_three_f64 = instance.get_func(&mut store, "add_three_f64").unwrap();
-    add_three_f64.call(&mut store, &[(5.5f64).into()], &mut results)?;
+    add_three_f64.call(&mut store, &[(5.5f64).into()], &mut results).unwrap();
     assert_eq!(results[0].f64().unwrap(), 8.5);
 
     Ok(())
@@ -108,7 +108,7 @@ fn multiple_values() -> Result<()> {
 
     let mut store = Store::<u32>::default();
     #[allow(deprecated)]
-    let module = Module::new(store.engine(), wat.as_bytes())?;
+    let module = Module::new(store.engine(), wat.as_bytes()).unwrap();
 
     let mut linker = Linker::new(store.engine());
     linker.func_new(
@@ -128,7 +128,7 @@ fn multiple_values() -> Result<()> {
             rets[0] = result.into();
             Ok(())
         },
-    )?;
+    ).unwrap();
     linker.func_new(
         "imported_fns",
         "increment",
@@ -139,10 +139,10 @@ fn multiple_values() -> Result<()> {
             *caller.data_mut() = value;
             Ok(())
         },
-    )?;
+    ).unwrap();
 
     #[allow(deprecated)]
-    let instance = linker.instantiate(&mut store, &module)?;
+    let instance = linker.instantiate(&mut store, &module).unwrap();
     let mut results = [Val::I32(0)];
 
     let add = instance.get_func(&mut store, "add").unwrap();
@@ -155,11 +155,11 @@ fn multiple_values() -> Result<()> {
             Val::F64((35.25f64).to_bits()),
         ],
         &mut results,
-    )?;
+    ).unwrap();
     assert_eq!(results[0].f64().unwrap(), 5.0 + 15.0 + 25.5 + 35.25);
 
     let increment_twice = instance.get_func(&mut store, "increment_twice").unwrap();
-    increment_twice.call(&mut store, &[], &mut [])?;
+    increment_twice.call(&mut store, &[], &mut []).unwrap();
     assert_eq!(*store.data(), 2);
 
     Ok(())

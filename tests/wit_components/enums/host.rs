@@ -66,61 +66,71 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
     config.wasm_component_model(true);
 
-    let engine = Engine::new(&config)?;
+    let engine = Engine::new(&config).unwrap();
     let mut store = Store::new(&engine, HostData);
 
     #[allow(deprecated)]
-    let component = Component::new(&store.engine(), &component_bytes)?;
+    let component = Component::new(&store.engine(), &component_bytes).unwrap();
 
     let mut linker = Linker::new(store.engine());
-    Enums::add_to_linker(&mut linker, |data| data)?;
+    Enums::add_to_linker(&mut linker, |data| data).unwrap();
 
     #[allow(deprecated)]
-    let (instance, _) = Enums::instantiate(&mut store, &component, &linker)?;
+    let (instance, _) = Enums::instantiate(&mut store, &component, &linker).unwrap();
 
-    let result = instance.call_quadruple_shape(&mut store, Shape::Circle(2.0))?;
+    let result = instance
+        .call_quadruple_shape(&mut store, Shape::Circle(2.0))
+        .unwrap();
     assert_eq!(result, Shape::Circle(8.0));
 
-    let result = instance.call_quadruple_shape(&mut store, Shape::Rectangle((2.0, 3.0)))?;
+    let result = instance
+        .call_quadruple_shape(&mut store, Shape::Rectangle((2.0, 3.0)))
+        .unwrap();
     assert_eq!(result, Shape::Rectangle((8.0, 12.0)));
 
-    let result = instance.call_quadruple_shape(&mut store, Shape::Point)?;
+    let result = instance
+        .call_quadruple_shape(&mut store, Shape::Point)
+        .unwrap();
     assert_eq!(result, Shape::Point);
 
-    let result = instance.call_raise_temperature_times(&mut store, Temperature::Cold, 2)?;
+    let result = instance
+        .call_raise_temperature_times(&mut store, Temperature::Cold, 2)
+        .unwrap();
     assert_eq!(result, Temperature::Warm);
 
-    let result = instance.call_rotate_ccw(&mut store, Direction::Up)?;
+    let result = instance.call_rotate_ccw(&mut store, Direction::Up).unwrap();
     assert_eq!(result, Direction::Right);
 
-    let result = instance.call_rotate_ccw(&mut store, Direction::StayCenter)?;
+    let result = instance
+        .call_rotate_ccw(&mut store, Direction::StayCenter)
+        .unwrap();
     assert_eq!(result, Direction::StayCenter);
 
-    let result = instance.call_sqrt(&mut store, Some(16.0))?;
+    let result = instance.call_sqrt(&mut store, Some(16.0)).unwrap();
     assert_eq!(result, Some(4.0));
-    let result = instance.call_sqrt(&mut store, Some(-16.0))?;
+    let result = instance.call_sqrt(&mut store, Some(-16.0)).unwrap();
     assert_eq!(result, None);
-    let result = instance.call_sqrt(&mut store, None)?;
+    let result = instance.call_sqrt(&mut store, None).unwrap();
     assert_eq!(result, None);
 
-    let result = instance.call_add_three_both(&mut store, Ok(10))?;
+    let result = instance.call_add_three_both(&mut store, Ok(10)).unwrap();
     assert_eq!(result, Ok(13));
-    let result = instance.call_add_three_both(&mut store, Err(7))?;
+    let result = instance.call_add_three_both(&mut store, Err(7)).unwrap();
     assert_eq!(result, Err(7));
 
-    let result = instance.call_add_three_ok(&mut store, Ok(10))?;
+    let result = instance.call_add_three_ok(&mut store, Ok(10)).unwrap();
     assert_eq!(result, Ok(13));
-    let result = instance.call_add_three_ok(&mut store, Err(()))?;
+    let result = instance.call_add_three_ok(&mut store, Err(())).unwrap();
     assert_eq!(result, Err(()));
 
-    let result = instance.call_add_three_err(&mut store, Ok(()))?;
+    let result = instance.call_add_three_err(&mut store, Ok(())).unwrap();
     assert_eq!(result, Ok(()));
-    let result = instance.call_add_three_err(&mut store, Err(7))?;
+    let result = instance.call_add_three_err(&mut store, Err(7)).unwrap();
     assert_eq!(result, Err(7));
 
-    let result = instance.call_add_three_none(&mut store, Ok(()))?;
+    let result = instance.call_add_three_none(&mut store, Ok(())).unwrap();
     assert_eq!(result, Ok(()));
-    let result = instance.call_add_three_none(&mut store, Err(()))?;
+    let result = instance.call_add_three_none(&mut store, Err(())).unwrap();
     assert_eq!(result, Err(()));
 
     Ok(())

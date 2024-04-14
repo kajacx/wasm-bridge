@@ -92,60 +92,86 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
     config.wasm_component_model(true);
 
-    let engine = Engine::new(&config)?;
+    let engine = Engine::new(&config).unwrap();
     let mut store = Store::new(&engine, HostData);
 
     #[allow(deprecated)]
-    let component = Component::new(&store.engine(), &component_bytes)?;
+    let component = Component::new(&store.engine(), &component_bytes).unwrap();
 
     let mut linker = Linker::new(store.engine());
-    Lists::add_to_linker(&mut linker, |data| data)?;
+    Lists::add_to_linker(&mut linker, |data| data).unwrap();
 
     #[allow(deprecated)]
-    let (instance, _) = Lists::instantiate(&mut store, &component, &linker)?;
+    let (instance, _) = Lists::instantiate(&mut store, &component, &linker).unwrap();
 
-    let result = instance.call_push_bools(&mut store, &[true, false], false, true)?;
+    let result = instance
+        .call_push_bools(&mut store, &[true, false], false, true)
+        .unwrap();
     assert_eq!(result, vec![true, false, false, true]);
 
-    let result = instance.call_push_s8s(&mut store, &[-10, 20], 3, 4)?;
+    let result = instance
+        .call_push_s8s(&mut store, &[-10, 20], 3, 4)
+        .unwrap();
     assert_eq!(result, vec![-10, 20, 3, 4]);
 
-    let result = instance.call_push_s16s(&mut store, &[-10, 200], 3, 4)?;
+    let result = instance
+        .call_push_s16s(&mut store, &[-10, 200], 3, 4)
+        .unwrap();
     assert_eq!(result, vec![-10, 200, 3, 4]);
 
-    let result = instance.call_push_s32s(&mut store, &[-10, 200], 3, 4)?;
+    let result = instance
+        .call_push_s32s(&mut store, &[-10, 200], 3, 4)
+        .unwrap();
     assert_eq!(result, vec![-10, 200, 3, 4]);
 
-    let result = instance.call_push_s64s(&mut store, &[-10_000_000_000, 200_000_000_000], 3, 4)?;
+    let result = instance
+        .call_push_s64s(&mut store, &[-10_000_000_000, 200_000_000_000], 3, 4)
+        .unwrap();
     assert_eq!(result, vec![-10_000_000_000, 200_000_000_000, 3, 4]);
 
-    let result = instance.call_push_u8s(&mut store, &[10, u8::MAX - 10], 3, 4)?;
+    let result = instance
+        .call_push_u8s(&mut store, &[10, u8::MAX - 10], 3, 4)
+        .unwrap();
     assert_eq!(result, vec![10, u8::MAX - 10, 3, 4]);
 
-    let result = instance.call_push_u16s(&mut store, &[10, u16::MAX - 10], 3, 4)?;
+    let result = instance
+        .call_push_u16s(&mut store, &[10, u16::MAX - 10], 3, 4)
+        .unwrap();
     assert_eq!(result, vec![10, u16::MAX - 10, 3, 4]);
 
-    let result = instance.call_push_u32s(&mut store, &[10, u32::MAX - 10], 3, 4)?;
+    let result = instance
+        .call_push_u32s(&mut store, &[10, u32::MAX - 10], 3, 4)
+        .unwrap();
     assert_eq!(result, vec![10, u32::MAX - 10, 3, 4]);
 
-    let result = instance.call_push_u64s(&mut store, &[10, u64::MAX - 10], 3, 4)?;
+    let result = instance
+        .call_push_u64s(&mut store, &[10, u64::MAX - 10], 3, 4)
+        .unwrap();
     assert_eq!(result, vec![10, u64::MAX - 10, 3, 4]);
 
-    let result = instance.call_push_float32s(&mut store, &[5.5, -10.25], 3.0, 4.0)?;
+    let result = instance
+        .call_push_float32s(&mut store, &[5.5, -10.25], 3.0, 4.0)
+        .unwrap();
     assert_eq!(result, vec![5.5, -10.25, 3.0, 4.0]);
 
-    let result = instance.call_push_float64s(&mut store, &[5.5, -10.25], 3.0, 4.0)?;
+    let result = instance
+        .call_push_float64s(&mut store, &[5.5, -10.25], 3.0, 4.0)
+        .unwrap();
     assert_eq!(result, vec![5.5, -10.25, 3.0, 4.0]);
 
-    let result = instance.call_push_chars(&mut store, &['á', 'b'], 'č', 'd')?;
+    let result = instance
+        .call_push_chars(&mut store, &['á', 'b'], 'č', 'd')
+        .unwrap();
     assert_eq!(result, vec!['á', 'b', 'č', 'd']);
 
-    let result = instance.call_push_strings(
-        &mut store,
-        &["hello".into(), "world".into()],
-        "three",
-        "four",
-    )?;
+    let result = instance
+        .call_push_strings(
+            &mut store,
+            &["hello".into(), "world".into()],
+            "three",
+            "four",
+        )
+        .unwrap();
     assert_eq!(
         result,
         vec![
@@ -156,7 +182,9 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         ]
     );
 
-    let result = instance.call_increment_abs(&mut store, &[AbVariant::A(1), AbVariant::B(2)])?;
+    let result = instance
+        .call_increment_abs(&mut store, &[AbVariant::A(1), AbVariant::B(2)])
+        .unwrap();
     assert_eq!(result, vec![AbVariant::A(2), AbVariant::B(3)]);
 
     Ok(())

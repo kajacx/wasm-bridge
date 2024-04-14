@@ -36,62 +36,70 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
     config.wasm_component_model(true);
 
-    let engine = Engine::new(&config)?;
+    let engine = Engine::new(&config).unwrap();
     let mut store = Store::new(&engine, HostData);
 
     #[allow(deprecated)]
-    let component = Component::new(&store.engine(), component_bytes)?;
+    let component = Component::new(&store.engine(), component_bytes).unwrap();
 
     let mut linker = Linker::new(store.engine());
-    Errors::add_to_linker(&mut linker, |data| data)?;
+    Errors::add_to_linker(&mut linker, |data| data).unwrap();
 
     // We need a new instance for every test because of the "cannot reenter component instance" error
     // Kind of annoying, but what are we going to do ...
 
     // Simple return value
     #[allow(deprecated)]
-    let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
-    let result = instance.call_simple_fail_guest(&mut store, WhereFail::HostOkOk)?;
+    let (instance, _) = Errors::instantiate(&mut store, &component, &linker).unwrap();
+    let result = instance
+        .call_simple_fail_guest(&mut store, WhereFail::HostOkOk)
+        .unwrap();
     assert_eq!(result, WhereFail::HostOkOk);
 
     #[allow(deprecated)]
-    let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
+    let (instance, _) = Errors::instantiate(&mut store, &component, &linker).unwrap();
     instance
         .call_simple_fail_guest(&mut store, WhereFail::GuestPanic)
         .expect_err("guest code should panic");
 
     #[allow(deprecated)]
-    let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
+    let (instance, _) = Errors::instantiate(&mut store, &component, &linker).unwrap();
     instance
         .call_simple_fail_guest(&mut store, WhereFail::HostErr)
         .expect_err("host code should return err");
 
     // Full return value
     #[allow(deprecated)]
-    let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
+    let (instance, _) = Errors::instantiate(&mut store, &component, &linker).unwrap();
     instance
         .call_full_fail_guest(&mut store, WhereFail::GuestPanic)
         .expect_err("guest code should panic");
 
     #[allow(deprecated)]
-    let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
-    let result = instance.call_full_fail_guest(&mut store, WhereFail::GuestErr)?;
+    let (instance, _) = Errors::instantiate(&mut store, &component, &linker).unwrap();
+    let result = instance
+        .call_full_fail_guest(&mut store, WhereFail::GuestErr)
+        .unwrap();
     assert_eq!(result, Err(WhereFail::GuestErr));
 
     #[allow(deprecated)]
-    let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
+    let (instance, _) = Errors::instantiate(&mut store, &component, &linker).unwrap();
     instance
         .call_full_fail_guest(&mut store, WhereFail::HostErr)
         .expect_err("host code should return err");
 
     #[allow(deprecated)]
-    let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
-    let result = instance.call_full_fail_guest(&mut store, WhereFail::HostOkErr)?;
+    let (instance, _) = Errors::instantiate(&mut store, &component, &linker).unwrap();
+    let result = instance
+        .call_full_fail_guest(&mut store, WhereFail::HostOkErr)
+        .unwrap();
     assert_eq!(result, Err(WhereFail::HostOkErr));
 
     #[allow(deprecated)]
-    let (instance, _) = Errors::instantiate(&mut store, &component, &linker)?;
-    let result = instance.call_full_fail_guest(&mut store, WhereFail::HostOkOk)?;
+    let (instance, _) = Errors::instantiate(&mut store, &component, &linker).unwrap();
+    let result = instance
+        .call_full_fail_guest(&mut store, WhereFail::HostOkOk)
+        .unwrap();
     assert_eq!(result, Ok(WhereFail::HostOkOk));
 
     Ok(())

@@ -14,7 +14,7 @@ pub async fn run_test(bytes: &[u8]) -> Result<()> {
     let mut store = Store::new(&engine, data);
 
     #[allow(deprecated)]
-    let module = Module::new(store.engine(), bytes)?;
+    let module = Module::new(store.engine(), bytes).unwrap();
 
     let mut linker = Linker::<Data>::new(store.engine());
 
@@ -26,26 +26,26 @@ pub async fn run_test(bytes: &[u8]) -> Result<()> {
             increment(caller);
             val.wrapping_add(1)
         },
-    )?;
+    ).unwrap();
 
     #[allow(deprecated)]
-    let instance = linker.instantiate(&mut store, &module)?;
+    let instance = linker.instantiate(&mut store, &module).unwrap();
 
-    let add_three_i32 = instance.get_typed_func::<i32, i32>(&mut store, "add_three_i32")?;
+    let add_three_i32 = instance.get_typed_func::<i32, i32>(&mut store, "add_three_i32").unwrap();
 
-    add_three_i32.call(&mut store, 5)?;
-    add_three_i32.call(&mut store, 10)?;
+    add_three_i32.call(&mut store, 5).unwrap();
+    add_three_i32.call(&mut store, 10).unwrap();
 
     assert_eq!(store.data().times_called, 2);
 
     // Re-use the linker
     #[allow(deprecated)]
-    let instance = linker.instantiate(&mut store, &module)?;
+    let instance = linker.instantiate(&mut store, &module).unwrap();
 
-    let add_three_i32 = instance.get_typed_func::<i32, i32>(&mut store, "add_three_i32")?;
+    let add_three_i32 = instance.get_typed_func::<i32, i32>(&mut store, "add_three_i32").unwrap();
 
-    add_three_i32.call(&mut store, 5)?;
-    add_three_i32.call(&mut store, 10)?;
+    add_three_i32.call(&mut store, 5).unwrap();
+    add_three_i32.call(&mut store, 10).unwrap();
 
     assert_eq!(store.data().times_called, 4);
 
@@ -55,13 +55,13 @@ pub async fn run_test(bytes: &[u8]) -> Result<()> {
 
     let address = instance
         .get_typed_func::<u32, u32>(&mut store, "allocate_bytes")?
-        .call(&mut store, bytes.len() as _)?;
+        .call(&mut store, bytes.len() as _).unwrap();
 
-    memory.write(&mut store, address as usize, &bytes)?;
+    memory.write(&mut store, address as usize, &bytes).unwrap();
     instance
         .get_typed_func::<(u32, u32), ()>(&mut store, "increment_bytes_at")?
-        .call(&mut store, (address, bytes.len() as _))?;
-    memory.read(&mut store, address as usize, &mut bytes)?;
+        .call(&mut store, (address, bytes.len() as _)).unwrap();
+    memory.read(&mut store, address as usize, &mut bytes).unwrap();
 
     assert_eq!(bytes, [6, 7, 8]);
 

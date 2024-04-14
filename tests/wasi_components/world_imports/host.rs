@@ -47,23 +47,23 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     let table = ResourceTable::new();
     let wasi = WasiCtxBuilder::new().build();
 
-    let engine = Engine::new(&config)?;
+    let engine = Engine::new(&config).unwrap();
     let mut store = Store::new(&engine, State { table, wasi });
 
-    let component = Component::new_safe(&store.engine(), &component_bytes).await?;
+    let component = Component::new_safe(&store.engine(), &component_bytes).await.unwrap();
 
     let mut linker = Linker::new(store.engine());
-    command::add_to_linker(&mut linker)?;
-    WitImports::add_to_linker(&mut linker, |data| data)?;
+    command::add_to_linker(&mut linker).unwrap();
+    WitImports::add_to_linker(&mut linker, |data| data).unwrap();
 
-    let (instance, _) = WitImports::instantiate_async(&mut store, &component, &linker).await?;
+    let (instance, _) = WitImports::instantiate_async(&mut store, &component, &linker).await.unwrap();
 
-    let result = instance.call_add_three(&mut store, 5).await?;
+    let result = instance.call_add_three(&mut store, 5).await.unwrap();
     assert_eq!(result, 8);
 
     let result = instance
         .call_push_strings(&mut store, &["a".into(), "b".into()], "c", "d")
-        .await?;
+        .await.unwrap();
     assert_eq!(result, vec!["a", "b", "c", "d"]);
 
     Ok(())

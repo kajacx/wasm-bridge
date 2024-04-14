@@ -78,7 +78,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance.call_group_export(&mut store, &group).unwrap();
     assert_eq!(result, group);
 
-    let result = instance.call_increment_single_times(&mut store, Single { value: 5 }, 2)?;
+    let result = instance.call_increment_single_times(&mut store, Single { value: 5 }, 2).unwrap();
     assert_eq!(result, Single { value: 7 });
 
     Ok(())

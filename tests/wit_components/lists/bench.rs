@@ -92,17 +92,17 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
     config.wasm_component_model(true);
 
-    let engine = Engine::new(&config)?;
+    let engine = Engine::new(&config).unwrap();
     let mut store = Store::new(&engine, HostData);
 
     #[allow(deprecated)]
-    let component = Component::new(&store.engine(), &component_bytes)?;
+    let component = Component::new(&store.engine(), &component_bytes).unwrap();
 
     let mut linker = Linker::new(store.engine());
-    Lists::add_to_linker(&mut linker, |data| data)?;
+    Lists::add_to_linker(&mut linker, |data| data).unwrap();
 
     #[allow(deprecated)]
-    let (instance, _) = Lists::instantiate(&mut store, &component, &linker)?;
+    let (instance, _) = Lists::instantiate(&mut store, &component, &linker).unwrap();
 
     let test_vec: Vec<_> = (0..100)
         .map(|i| {
