@@ -111,7 +111,7 @@ fn add_safe_instantiation(
 ) -> impl Deref<Target = str> + '_ {
     let regex = Regex::new("pub\\s+fn\\s+instantiate\\s*<").unwrap();
 
-    regex.replace_all(&as_string, format!(r#"
+    regex.replace_all(as_string, format!(r#"
     pub async fn instantiate_safe<T>(
         mut store: impl wasm_bridge::AsContextMut<Data = T>,
         component: &wasm_bridge::component::Component,

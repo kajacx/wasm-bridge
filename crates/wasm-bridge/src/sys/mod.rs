@@ -123,12 +123,12 @@ impl<T> Linker<T> {
         Ok(Instance(self.0.instantiate_async(store, module).await?))
     }
 
-    pub fn func_new<F>(
+    pub fn func_new(
         &mut self,
         module: &str,
         name: &str,
         ty: FuncType,
-        func: impl Fn(Caller<'_, T>, &[Val], &mut [Val]) -> Result<()> + Send + Sync + 'static,
+        func: impl Fn(Caller<T>, &[Val], &mut [Val]) -> Result<()> + Send + Sync + 'static,
     ) -> Result<&mut Self> {
         Ok(Self::ref_cast_mut(self.0.func_new(module, name, ty, func)?))
     }
