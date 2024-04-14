@@ -1,5 +1,5 @@
 use wasm_bridge::{
-    component::{Linker, new_component_async},
+    component::{Component, Linker},
     Config, Engine, Result, Store,
 };
 
@@ -50,7 +50,7 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     let engine = Engine::new(&config)?;
     let mut store = Store::new(&engine, State { table, wasi });
 
-    let component = new_component_async(&store.engine(), &component_bytes).await?;
+    let component = Component::new_safe(&store.engine(), &component_bytes).await?;
 
     let mut linker = Linker::new(store.engine());
     command::add_to_linker(&mut linker)?;
@@ -61,7 +61,9 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance.call_add_three(&mut store, 5).await?;
     assert_eq!(result, 8);
 
-    let result = instance.call_push_strings(&mut store, &["a".into(), "b".into()], "c", "d").await?;
+    let result = instance
+        .call_push_strings(&mut store, &["a".into(), "b".into()], "c", "d")
+        .await?;
     assert_eq!(result, vec!["a", "b", "c", "d"]);
 
     Ok(())

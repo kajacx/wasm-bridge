@@ -10,6 +10,7 @@ categories.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 wasmtime-wasi = { workspace = true }
+wasm-bridge = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = { workspace = true }

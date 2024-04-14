@@ -20,11 +20,6 @@ impl Module {
         #[allow(deprecated)]
         Self::new(engine, bytes)
     }
-
-    #[cfg(feature = "async")]
-    pub async fn new_async(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
-        Ok(Self(wasmtime::Module::new_async(engine, bytes).await?))
-    }
 }
 
 #[repr(transparent)]
@@ -51,12 +46,14 @@ impl Instance {
     }
 
     #[cfg(feature = "async")]
-    pub async fn new_async(
-        store: impl AsContextMut,
+    pub async fn new_async<T>(
+        store: impl AsContextMut<Data = T>,
         module: &Module,
-        imports: &[()],
-    ) -> Result<Self> {
-        let imports = Object::new();
+        imports: &[Extern],
+    ) -> Result<Self>
+    where
+        T: Send,
+    {
         Ok(Self(
             wasmtime::Instance::new_async(store, &module.0, imports).await?,
         ))
@@ -119,8 +116,11 @@ impl<T> Linker<T> {
         &self,
         store: impl AsContextMut<Data = T>,
         module: &Module,
-    ) -> Result<Instance> {
-        Ok(Instance(self.0.instantiate_async(store, module).await?))
+    ) -> Result<Instance>
+    where
+        T: Send,
+    {
+        Ok(Instance(self.0.instantiate_async(store, &module.0).await?))
     }
 
     pub fn func_new(
@@ -153,16 +153,60 @@ pub mod component {
     pub use wasm_bridge_macros::Lift;
     pub use wasm_bridge_macros::Lower;
 
-    /// Loads component from bytes "asynchronously".
-    ///
-    /// This is just `Component::new()` on sys,
-    /// but on js, this will compile WASM cores asynchronously,
-    /// which is better.
-    pub async fn new_component_async(
-        engine: &wasmtime::Engine,
-        bytes: impl AsRef<[u8]>,
-    ) -> wasmtime::Result<Component> {
-        Component::new(engine, bytes)
+    use wasmtime::{AsContextMut, Engine, Result};
+
+    pub struct Component(pub(crate) wasmtime::component::Component);
+
+    impl Component {
+        #[deprecated(
+            since = "0.4.0",
+            note = "Compiling a component synchronously can panic on the web, please use `new_safe` instead."
+        )]
+        pub fn new(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
+            Ok(Self(wasmtime::component::Component::new(engine, bytes)?))
+        }
+
+        pub async fn new_safe(engine: &Engine, bytes: impl AsRef<[u8]>) -> Result<Self> {
+            // This just calls `new` on sys, but uses proper async compilation on the web.
+            #[allow(deprecated)]
+            Self::new(engine, bytes)
+        }
+    }
+
+    pub struct Linker<T>(pub wasmtime::component::Linker<T>);
+
+    impl<T> Linker<T> {
+        pub fn new(engine: &Engine) -> Self {
+            Self(wasmtime::component::Linker::new(engine))
+        }
+
+        pub fn instantiate(
+            &self,
+            store: impl AsContextMut<Data = T>,
+            component: &Component,
+        ) -> Result<Instance> {
+            self.0.instantiate(store, &component.0)
+        }
+
+        #[cfg(feature = "async")]
+        pub async fn instantiate_async(
+            &self,
+            store: impl AsContextMut<Data = T>,
+            component: &Component,
+        ) -> Result<Instance>
+        where
+            T: Send,
+        {
+            self.0.instantiate_async(store, &component.0).await
+        }
+
+        pub fn root(&mut self) -> LinkerInstance<T> {
+            self.0.root()
+        }
+
+        pub fn instance(&mut self, name: &str) -> Result<LinkerInstance<T>> {
+            self.0.instance(name)
+        }
     }
 }
 

@@ -36,9 +36,8 @@ pub use wasm_bridge_macros::SizeDescription;
 pub mod __internal {
     pub use anyhow;
 
-    // #[cfg(feature = "async")]
-    // pub use wasm_bridge_macros::async_trait;
-    // pub use async_trait::async_trait;
+    #[cfg(feature = "async")]
+    pub use async_trait::async_trait;
 
     // From https://github.com/bytecodealliance/wasmtime/blob/v15.0.1/crates/wasmtime/src/component/func/typed.rs#L1791-L1806
     /// Format the specified bitflags using the specified names for debugging

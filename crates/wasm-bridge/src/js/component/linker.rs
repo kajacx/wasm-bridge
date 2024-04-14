@@ -22,8 +22,8 @@ static WASI_IMPORT_NAMES: &[&str] = &[
 ];
 
 pub struct Linker<T> {
-    interfaces: HashMap<String, LinkerInterface<T>>,
-    wasi_interfaces: HashMap<String, LinkerInterface<T>>,
+    interfaces: HashMap<String, LinkerInstance<T>>,
+    wasi_interfaces: HashMap<String, LinkerInstance<T>>,
     wasi_object: Option<Box<dyn Fn() -> Object>>,
 }
 
@@ -130,11 +130,11 @@ impl<T> Linker<T> {
         Ok((imports, Rc::new(closures), memory, wasi_info))
     }
 
-    pub fn root(&mut self) -> &mut LinkerInterface<T> {
+    pub fn root(&mut self) -> &mut LinkerInstance<T> {
         self.instance("$root").unwrap()
     }
 
-    pub fn instance<'a>(&'a mut self, name: &str) -> Result<&'a mut LinkerInterface<T>> {
+    pub fn instance<'a>(&'a mut self, name: &str) -> Result<&'a mut LinkerInstance<T>> {
         // TODO: kind of hacky, but it will work (probably)
         if name.starts_with("wasi:") {
             return self.instance_wasi(name);
@@ -144,14 +144,14 @@ impl<T> Linker<T> {
         Ok(self
             .interfaces
             .entry(name.to_owned())
-            .or_insert_with(LinkerInterface::new))
+            .or_insert_with(LinkerInstance::new))
     }
 
-    pub fn instance_wasi<'a>(&'a mut self, name: &str) -> Result<&'a mut LinkerInterface<T>> {
+    pub fn instance_wasi<'a>(&'a mut self, name: &str) -> Result<&'a mut LinkerInstance<T>> {
         Ok(self
             .wasi_interfaces
             .entry(name.to_owned())
-            .or_insert_with(LinkerInterface::new))
+            .or_insert_with(LinkerInstance::new))
     }
 
     pub fn set_wasi_object(&mut self, creator: impl Fn() -> Object + 'static) {
@@ -159,11 +159,11 @@ impl<T> Linker<T> {
     }
 }
 
-pub struct LinkerInterface<T> {
+pub struct LinkerInstance<T> {
     fns: Vec<PreparedFn<T>>,
 }
 
-impl<T> LinkerInterface<T> {
+impl<T> LinkerInstance<T> {
     fn new() -> Self {
         Self { fns: vec![] }
     }
