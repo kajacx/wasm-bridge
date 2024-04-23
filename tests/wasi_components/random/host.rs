@@ -48,7 +48,7 @@ async fn default_random(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes).unwrap(); 
 
     let mut linker = Linker::new(store.engine());
-    command::add_to_linker(&mut linker).unwrap();
+    add_to_linker_async(&mut linker).unwrap();
 
     let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await.unwrap();
     let number1 = instance.call_random_number(&mut store).await.unwrap();
@@ -81,7 +81,7 @@ async fn custom_random(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes).unwrap(); 
 
     let mut linker = Linker::new(store.engine());
-    command::add_to_linker(&mut linker).unwrap();
+    add_to_linker_async(&mut linker).unwrap();
 
     let (instance, _) = Random::instantiate_async(&mut store, &component, &linker).await.unwrap();
     let number1 = instance.call_random_number(&mut store).await.unwrap();

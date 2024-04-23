@@ -6,8 +6,6 @@ use wasm_bridge::{
 };
 
 use wasm_bridge_wasi::*;
-use wasm_bridge_wasi::command;
-
 
 wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
@@ -52,7 +50,7 @@ async fn no_config(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes).unwrap(); 
 
     let mut linker = Linker::new(store.engine());
-    command::add_to_linker(&mut linker).unwrap();
+    add_to_linker_async(&mut linker).unwrap();
 
     let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker).await.unwrap();
 
@@ -90,7 +88,7 @@ async fn custom_clock(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes).unwrap(); 
 
     let mut linker = Linker::new(store.engine());
-    command::add_to_linker(&mut linker).unwrap();
+    add_to_linker_async(&mut linker).unwrap();
 
     let (instance, _) = Clock::instantiate_async(&mut store, &component, &linker).await.unwrap();
 

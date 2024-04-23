@@ -4,7 +4,7 @@ use wasm_bridge::Result;
 
 use super::{cli, error, filesystem, random, stream};
 
-pub fn add_to_linker<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
+pub fn add_to_linker_async<T: WasiView + 'static>(linker: &mut Linker<T>) -> Result<()> {
     linker.set_wasi_object(get_wasi_object);
 
     stream::add_to_linker(linker)?;

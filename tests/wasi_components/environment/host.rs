@@ -1,12 +1,9 @@
-
 use wasm_bridge::{
     component::{Component, Linker},
     Config, Engine, Result, Store,
 };
 
 use wasm_bridge_wasi::*;
-use wasm_bridge_wasi::command;
-
 
 wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
@@ -47,7 +44,7 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new(&store.engine(), &component_bytes).unwrap(); 
 
     let mut linker = Linker::new(store.engine());
-    command::add_to_linker(&mut linker).unwrap();
+    add_to_linker_async(&mut linker).unwrap();
 
     let (instance, _) = Environment::instantiate_async(&mut store, &component, &linker).await.unwrap();
 

@@ -53,7 +53,7 @@ pub async fn run_test(component_bytes: &[u8]) -> Result<()> {
     let component = Component::new_safe(&store.engine(), &component_bytes).await.unwrap();
 
     let mut linker = Linker::new(store.engine());
-    command::add_to_linker(&mut linker).unwrap();
+    add_to_linker_async(&mut linker).unwrap();
     WitImports::add_to_linker(&mut linker, |data| data).unwrap();
 
     let (instance, _) = WitImports::instantiate_async(&mut store, &component, &linker).await.unwrap();

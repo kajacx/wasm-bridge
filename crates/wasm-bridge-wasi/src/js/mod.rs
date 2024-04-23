@@ -10,7 +10,8 @@ pub use resource_table::*;
 mod wasi_view;
 pub use wasi_view::*;
 
-pub mod command;
+mod command;
+pub use command::*;
 
 pub mod stream;
 pub use stream::*;

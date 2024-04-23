@@ -449,7 +449,7 @@ impl Expander for LiftExpander {
             if let Some(ty) = ty {
                 let payload_ty = match style {
                     VariantStyle::Variant => {
-                        quote!(ty.cases[#index].ty.unwrap_or_else(#internal::bad_type_info))
+                        quote!(ty.cases[#index].unwrap_or_else(#internal::bad_type_info))
                     }
                     VariantStyle::Enum => unreachable!(),
                 };
@@ -628,7 +628,7 @@ impl Expander for LowerExpander {
             if ty.is_some() {
                 let ty = match style {
                     VariantStyle::Variant => {
-                        quote!(ty.cases[#index].ty.unwrap_or_else(#internal::bad_type_info))
+                        quote!(ty.cases[#index].unwrap_or_else(#internal::bad_type_info))
                     }
                     VariantStyle::Enum => unreachable!(),
                 };
