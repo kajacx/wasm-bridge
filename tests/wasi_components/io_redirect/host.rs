@@ -155,7 +155,6 @@ impl Subscribe for OutStream {
     async fn ready(&mut self) {}
 }
 
-
 impl HostOutputStream for OutStream {
     fn write(&mut self, buf: Bytes) -> StreamResult<()> {
         assert!(buf.len() <= self.max, "We specified to write at most {} bytes at a time.", self.max);

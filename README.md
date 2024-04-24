@@ -45,11 +45,23 @@ Alternatively, refer to this handy table:
 
 | `wasm-bridge` | `wasmtime` | `wit-bindgen` | `cargo-component` |
 | ---           | ---        | ---           | ---               |
+| `0.5.x`       | `20.0`     | `0.24.0`      | `0.11.0`          |
 | `0.4.x`       | `19.0`     | `0.24.0`      | `0.10.1`          |
 | `0.3.x`       | `15.0`     | `0.15.0`      | `0.5.0`           |
 | `0.2.x`       | `11.0`     | `0.8.0`       | -                 |
 | `0.1.x`       | `10.0`     | -             | -                 |
 
+
+## Alternatives
+
+There are other options for loading and executing WASM modules on the desktop and on the web in RUST: `wasmer` can run on the web with the `js` feature flag, `wasmi` is an interpreter so it has no problem running on the web, and `wasm_component_layer` provides a unified API that can be "backed" by a number of "backends".
+
+| Crate | Short description | Component model | Wasi support |
+| ---   | ---               | ---             | ---          |
+| `wasm-bridge` | Re-exports `wasmtime` on sys, `js-sys` impl on web. | Yes, but no resources. | Partially yes. |
+| [`wasmer`](https://github.com/wasmerio/wasmer) | Native impl in sys, `js-sys` impl on web. | They have [`wai` bindgen](https://github.com/wasmerio/wai). | [Yes](https://crates.io/crates/wasmer-wasi). |
+| [`wasmi`](https://github.com/wasmi-labs/wasmi) | Lightweight WASM interpreter, run anywhere. | [Planned](https://github.com/wasmi-labs/wasmi/issues/897). | Experimental [`wasmi_wasi`](https://github.com/wasmi-labs/wasmi/tree/master/crates/wasi) crate. |
+| [`wasm_runtime_layer`](https://github.com/DouglasDwyer/wasm_runtime_layer) | Thin wrapper around `wasmtime` or `wasmi`, `js-sys` impl on web. | [`wasm_component_layer`](https://github.com/DouglasDwyer/wasm_component_layer), but no bindgen. | Not to my knowledge. |
 
 ## License
 
