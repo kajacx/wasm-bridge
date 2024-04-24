@@ -1,24 +1,20 @@
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "resources",
-    exports: {
-        "component-test:wit-protocol/employees": MyEmployees,
-        "component-test:wit-protocol/employees/employee": MyEmployee,
-    }
 });
 
 struct MyEmployees;
 
 impl exports::component_test::wit_protocol::employees::Guest for MyEmployees {
+    type Employee = MyEmployee;
+
     fn find_job(
-        employee: &MyEmployee,
-        companies: wit_bindgen::rt::vec::Vec<
-            exports::component_test::wit_protocol::employees::Company,
-        >,
+        employee: exports::component_test::wit_protocol::employees::EmployeeBorrow,
+        companies: Vec<exports::component_test::wit_protocol::employees::Company>,
     ) -> Option<exports::component_test::wit_protocol::employees::Company> {
         companies
             .into_iter()
-            .find(|company| employee.min_salary <= company.get_max_salary())
+            .find(|company| employee.get::<MyEmployee>().min_salary <= company.get_max_salary())
     }
 }
 
@@ -40,3 +36,5 @@ impl exports::component_test::wit_protocol::employees::GuestEmployee for MyEmplo
         self.min_salary
     }
 }
+
+export!(MyEmployees);

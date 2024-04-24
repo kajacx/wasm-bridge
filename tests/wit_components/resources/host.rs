@@ -74,11 +74,13 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let engine = Engine::new(&config).unwrap();
     let mut store = Store::new(&engine, State::default());
 
+    #[allow(deprecated)]
     let component = Component::new(&store.engine(), &component_bytes).expect("create component");
 
     let mut linker = Linker::new(store.engine());
-
     Resources::add_to_linker(&mut linker, |state| state).unwrap();
+
+    #[allow(deprecated)]
     let (instance, _) = Resources::instantiate(&mut store, &component, &linker).unwrap();
 
     let employees = instance.component_test_wit_protocol_employees().employee();
