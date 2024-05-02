@@ -6,15 +6,16 @@ use wasm_bridge::{
 
 wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
-    world: "resources"
+    world: "resources",
+    with: {
+        "component-test:wit-protocol/companies/company": MyCompany
+    }
 });
 
-use component_test::wit_protocol::companies::Company;
-
 #[derive(Default, Clone, Debug, PartialEq)]
-struct MyCompany {
-    name: String,
-    max_salary: u32,
+pub struct MyCompany {
+    pub name: String,
+    pub max_salary: u32,
 }
 
 #[derive(Default)]
@@ -23,43 +24,39 @@ struct State {
 }
 
 impl State {
-    fn new_company(&mut self, company: MyCompany) -> Resource<Company> {
-        Resource::new_own(self.resources.push(company).unwrap().rep())
+    fn new_company(&mut self, company: MyCompany) -> Resource<MyCompany> {
+        self.resources.push(company).unwrap()
     }
 
-    fn get_company(&self, company: &Resource<Company>) -> &MyCompany {
-        self.resources
-            .get(&Resource::<MyCompany>::new_borrow(company.rep()))
-            .unwrap()
+    fn get_company(&self, company: &Resource<MyCompany>) -> &MyCompany {
+        self.resources.get(company).unwrap()
     }
 
-    fn drop_company(&mut self, company: Resource<Company>) {
-        self.resources
-            .delete(Resource::<MyCompany>::new_own(company.rep()))
-            .unwrap();
+    fn drop_company(&mut self, company: Resource<MyCompany>) {
+        self.resources.delete(company).unwrap();
     }
 }
 
 impl component_test::wit_protocol::companies::HostCompany for State {
-    fn new(&mut self, name: String, max_salary: u32) -> Result<Resource<Company>> {
+    fn new(&mut self, name: String, max_salary: u32) -> Result<Resource<MyCompany>> {
         Ok(self.new_company(MyCompany { name, max_salary }))
     }
 
-    fn get_name(&mut self, self_: Resource<Company>) -> Result<String> {
+    fn get_name(&mut self, self_: Resource<MyCompany>) -> Result<String> {
         Ok(self.get_company(&self_).name.clone())
     }
 
-    fn get_max_salary(&mut self, self_: Resource<Company>) -> Result<u32> {
+    fn get_max_salary(&mut self, self_: Resource<MyCompany>) -> Result<u32> {
         Ok(self.get_company(&self_).max_salary)
     }
 
-    fn drop(&mut self, rep: Resource<Company>) -> Result<()> {
+    fn drop(&mut self, rep: Resource<MyCompany>) -> Result<()> {
         Ok(self.drop_company(rep))
     }
 }
 
 impl component_test::wit_protocol::companies::Host for State {
-    fn company_roundtrip(&mut self, company: Resource<Company>) -> Result<Resource<Company>> {
+    fn company_roundtrip(&mut self, company: Resource<MyCompany>) -> Result<Resource<MyCompany>> {
         Ok(company)
     }
 }
@@ -122,7 +119,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     store.data_mut().drop_company(result);
 
     let company = store.data_mut().new_company(MyCompany {
-        name: "Company Roundtrip".into(),
+        name: "MyCompany Roundtrip".into(),
         max_salary: 30_000,
     });
 
@@ -130,7 +127,10 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         .component_test_wit_protocol_employees()
         .call_company_roundtrip(&mut store, company)
         .unwrap();
-    assert_eq!(store.data().get_company(&result).name, "Company Roundtrip");
+    assert_eq!(
+        store.data().get_company(&result).name,
+        "MyCompany Roundtrip"
+    );
     store.data_mut().drop_company(result);
 
     // TODO: this assert doesn't seem to work, how to check that all resources have been deleted?
