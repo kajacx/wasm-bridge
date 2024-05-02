@@ -193,11 +193,14 @@ impl<T> LinkerInstance<T> {
 
     pub fn resource(
         &mut self,
-        _name: &str,
+        name: &str,
         _: (),
-        _destroy: impl Fn(StoreContextMut<'_, T>, u32) -> Result<()>,
-    ) -> Result<()> {
-        Ok(())
+        destroy: impl Fn(StoreContextMut<'_, T>, u32) -> Result<()> + 'static,
+    ) -> Result<()>
+    where
+        T: 'static,
+    {
+        self.func_wrap(&format!("[resource-drop]{name}"), destroy)
     }
 
     fn prepare_imports(
@@ -221,7 +224,6 @@ struct PreparedFn<T> {
     creator: MakeClosure<T>,
 }
 
-#[allow(dead_code)]
 impl<T> PreparedFn<T> {
     fn new(name: &str, creator: MakeClosure<T>) -> Self {
         Self {

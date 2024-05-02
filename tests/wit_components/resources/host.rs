@@ -88,5 +88,11 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         .unwrap();
     assert_eq!(result, "Company Name");
 
+    assert_eq!(
+        store.data().companies.resources.len(),
+        0,
+        "all resources should have been dropped by now"
+    );
+
     Ok(())
 }

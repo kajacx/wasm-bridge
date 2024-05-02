@@ -37,11 +37,6 @@ impl<T> ResourceEntries<T> {
         index
     }
 
-    #[allow(unused)]
-    pub(crate) fn get(&self, index: u32) -> Option<&T> {
-        self.items.get(&index)
-    }
-
     pub(crate) fn get_mut(&mut self, index: u32) -> Option<&mut T> {
         self.items.get_mut(&index)
     }
