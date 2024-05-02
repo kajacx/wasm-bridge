@@ -10,6 +10,10 @@ impl Guest for MyEmployees {
         let company = component_test::wit_protocol::companies::Company::new(&name, 80_000);
         company.get_name().to_owned()
     }
+
+    fn company_roundtrip(company: Company) -> Company {
+        company
+    }
 }
 
 export!(MyEmployees);

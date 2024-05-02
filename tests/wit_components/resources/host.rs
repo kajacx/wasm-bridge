@@ -88,6 +88,20 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         .unwrap();
     assert_eq!(result, "Company Name");
 
+    let company = Resource::new_own(store.data_mut().companies.new(MyCompany {
+        name: "Company Roundtrip".into(),
+        max_salary: 30_000,
+    }));
+
+    let result = instance
+        .call_company_roundtrip(&mut store, company)
+        .unwrap();
+    assert_eq!(
+        store.data().companies.get(result.rep()).unwrap().name,
+        "Company Roundtrip"
+    );
+    store.data_mut().companies.drop(result.rep()).unwrap();
+
     assert_eq!(
         store.data().companies.resources.len(),
         0,
