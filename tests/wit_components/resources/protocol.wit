@@ -16,4 +16,5 @@ world resources {
   export create-company: func(name: string) -> string;
 
   export company-roundtrip: func(company: company) -> company;
+  import company-roundtrip-import: func(company: company) -> company;
 }

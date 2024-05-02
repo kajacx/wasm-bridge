@@ -12,7 +12,7 @@ impl Guest for MyEmployees {
     }
 
     fn company_roundtrip(company: Company) -> Company {
-        company
+        company_roundtrip_import(company)
     }
 }
 

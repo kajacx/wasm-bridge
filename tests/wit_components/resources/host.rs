@@ -44,6 +44,15 @@ struct State {
     companies: ResHolder<MyCompany>,
 }
 
+impl ResourcesImports for State {
+    fn company_roundtrip_import(
+        &mut self,
+        company: Resource<Company>,
+    ) -> Result<Resource<Company>> {
+        Ok(company)
+    }
+}
+
 impl companies::HostCompany for State {
     fn new(&mut self, name: String, max_salary: u32) -> Result<Resource<companies::Company>> {
         Ok(Resource::new_own(
