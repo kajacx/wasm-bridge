@@ -3,18 +3,22 @@ wit_bindgen::generate!({
     world: "resources",
 });
 
+use component_test::wit_protocol::companies::Company;
+use exports::component_test::wit_protocol::employees::Employee;
+
 struct MyEmployees;
 
 impl exports::component_test::wit_protocol::employees::Guest for MyEmployees {
     type Employee = MyEmployee;
 
-    fn find_job(
-        employee: exports::component_test::wit_protocol::employees::EmployeeBorrow,
-        companies: Vec<exports::component_test::wit_protocol::employees::Company>,
-    ) -> Option<exports::component_test::wit_protocol::employees::Company> {
+    fn find_job(employee: Employee, companies: Vec<Company>) -> Option<Company> {
         companies
             .into_iter()
             .find(|company| employee.get::<MyEmployee>().min_salary <= company.get_max_salary())
+    }
+
+    fn company_roundtrip(company: Company) -> Company {
+        component_test::wit_protocol::companies::company_roundtrip(company)
     }
 }
 
@@ -34,10 +38,6 @@ impl exports::component_test::wit_protocol::employees::GuestEmployee for MyEmplo
 
     fn get_min_salary(&self) -> u32 {
         self.min_salary
-    }
-
-    fn company_roundtrip(company: Company) -> Company {
-        company_roundtrip_import(company)
     }
 }
 

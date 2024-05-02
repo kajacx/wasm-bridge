@@ -10,6 +10,8 @@ wasm_bridge::component::bindgen!({
     world: "resources"
 });
 
+use crate::host::companies::Company;
+
 #[derive(Default, Clone)]
 struct MyCompany {
     name: String,
@@ -44,15 +46,6 @@ struct State {
     companies: ResHolder<MyCompany>,
 }
 
-impl ResourcesImports for State {
-    fn company_roundtrip_import(
-        &mut self,
-        company: Resource<Company>,
-    ) -> Result<Resource<Company>> {
-        Ok(company)
-    }
-}
-
 impl companies::HostCompany for State {
     fn new(&mut self, name: String, max_salary: u32) -> Result<Resource<companies::Company>> {
         Ok(Resource::new_own(
@@ -74,7 +67,11 @@ impl companies::HostCompany for State {
     }
 }
 
-impl companies::Host for State {}
+impl companies::Host for State {
+    fn company_roundtrip(&mut self, company: Resource<Company>) -> Result<Resource<Company>> {
+        Ok(company)
+    }
+}
 
 pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
@@ -112,6 +109,10 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         .unwrap();
     assert!(result.is_none());
 
+    let employee = employees
+        .call_constructor(&mut store, "Mike".into(), 50_000)
+        .unwrap();
+
     let company1 = Resource::new_own(store.data_mut().companies.new(MyCompany {
         name: "Company1".into(),
         max_salary: 30_000,
@@ -124,16 +125,13 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = instance
         .component_test_wit_protocol_employees()
         .call_find_job(&mut store, employee, &[company1, company2])
-        .unwrap();
+        .unwrap() // WASM call
+        .unwrap(); // Option return type
     assert_eq!(
-        store
-            .data()
-            .companies
-            .get(result.unwrap().rep())
-            .unwrap()
-            .name,
+        store.data().companies.get(result.rep()).unwrap().name,
         "Company2"
     );
+    store.data_mut().companies.drop(result.rep()).unwrap();
 
     let company = Resource::new_own(store.data_mut().companies.new(MyCompany {
         name: "Company Roundtrip".into(),
@@ -141,6 +139,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     }));
 
     let result = instance
+        .component_test_wit_protocol_employees()
         .call_company_roundtrip(&mut store, company)
         .unwrap();
     assert_eq!(

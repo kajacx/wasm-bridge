@@ -6,6 +6,8 @@ interface companies {
     get-name: func() -> string;
     get-max-salary: func() -> u32;
   }
+
+  company-roundtrip: func(company: company) -> company;
 }
 
 interface employees {
@@ -15,7 +17,10 @@ interface employees {
     get-name: func() -> string;
     get-min-salary: func() -> u32;
   }
-  find-job: func(employee: borrow<employee>, companies: list<company>) -> option<company>;
+
+  find-job: func(employee: employee, companies: list<company>) -> option<company>;
+
+  company-roundtrip: func(company: company) -> company;
 }
 
 world resources {
