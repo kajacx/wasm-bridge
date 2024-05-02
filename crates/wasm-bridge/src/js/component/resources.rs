@@ -30,6 +30,7 @@ impl ResourceType {
 }
 
 // TODO: unify with wasi's resource table?
+// TODO: Implement proper "free index" implementation.
 #[derive(Default)]
 pub struct ResourceTable {
     items: HashMap<u32, Box<dyn Any>>,
