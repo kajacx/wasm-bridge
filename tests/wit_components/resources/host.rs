@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use wasm_bridge::{
     component::{Component, Linker, Resource, ResourceTable},
     Config, Engine, Result, Store,
@@ -133,16 +132,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     );
     store.data_mut().drop_company(result);
 
-    // TODO: this assert doesn't seem to work, how to check that all resources have been deleted?
-    assert!(
-        store
-            .data_mut()
-            .resources
-            .iter_entries(HashMap::<_, MyCompany>::new())
-            .next()
-            .is_none(),
-        "all companies should have been dropped by now"
-    );
+    // TODO: assert that all resources have been deleted
 
     Ok(())
 }
