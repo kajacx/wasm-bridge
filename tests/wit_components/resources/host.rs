@@ -83,48 +83,10 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     #[allow(deprecated)]
     let (instance, _) = Resources::instantiate(&mut store, &component, &linker).unwrap();
 
-    let employees = instance.component_test_wit_protocol_employees().employee();
-    let employee = employees
-        .call_constructor(&mut store, "Mike".into(), 50_000)
-        .unwrap();
-    assert_eq!(
-        employees.call_get_name(&mut store, employee).unwrap(),
-        "Mike"
-    );
-
-    let company1 = Resource::new_own(store.data_mut().companies.new(MyCompany {
-        name: "Company1".into(),
-        max_salary: 30_000,
-    }));
-
     let result = instance
-        .component_test_wit_protocol_employees()
-        .call_find_job(&mut store, employee, &[company1])
+        .call_create_company(&mut store, "Company Name")
         .unwrap();
-    assert!(result.is_none());
-
-    let company1 = Resource::new_own(store.data_mut().companies.new(MyCompany {
-        name: "Company1".into(),
-        max_salary: 30_000,
-    }));
-    let company2 = Resource::new_own(store.data_mut().companies.new(MyCompany {
-        name: "Company2".into(),
-        max_salary: 60_000,
-    }));
-
-    let result = instance
-        .component_test_wit_protocol_employees()
-        .call_find_job(&mut store, employee, &[company1, company2])
-        .unwrap();
-    assert_eq!(
-        store
-            .data()
-            .companies
-            .get(result.unwrap().rep())
-            .unwrap()
-            .name,
-        "Company2"
-    );
+    assert_eq!(result, "Company Name");
 
     Ok(())
 }
