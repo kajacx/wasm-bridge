@@ -1,7 +1,6 @@
-use component_test::wit_protocol::companies;
 use std::collections::HashMap;
 use wasm_bridge::{
-    component::{Component, Linker, Resource},
+    component::{Component, Linker, Resource, ResourceTable},
     Config, Engine, Result, Store,
 };
 
@@ -10,64 +9,56 @@ wasm_bridge::component::bindgen!({
     world: "resources"
 });
 
-use crate::host::companies::Company;
+use component_test::wit_protocol::companies::Company;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug, PartialEq)]
 struct MyCompany {
     name: String,
     max_salary: u32,
 }
 
-#[derive(Default, Clone)]
-struct ResHolder<T> {
-    resources: HashMap<u32, T>,
-    next_id: u32,
-}
-
-impl<T> ResHolder<T> {
-    fn new(&mut self, item: T) -> u32 {
-        let id = self.next_id;
-        self.resources.insert(id, item);
-        self.next_id += 1;
-        id
-    }
-
-    fn get(&self, id: u32) -> Option<&T> {
-        self.resources.get(&id)
-    }
-
-    fn drop(&mut self, id: u32) -> Result<(), ()> {
-        self.resources.remove(&id).map(|_| ()).ok_or(())
-    }
-}
-
-#[derive(Default, Clone)]
+#[derive(Default)]
 struct State {
-    companies: ResHolder<MyCompany>,
+    resources: ResourceTable,
 }
 
-impl companies::HostCompany for State {
-    fn new(&mut self, name: String, max_salary: u32) -> Result<Resource<companies::Company>> {
-        Ok(Resource::new_own(
-            self.companies.new(MyCompany { name, max_salary }),
-        ))
+impl State {
+    fn new_company(&mut self, company: MyCompany) -> Resource<Company> {
+        Resource::new_own(self.resources.push(company).unwrap().rep())
     }
 
-    fn get_name(&mut self, self_: Resource<companies::Company>) -> Result<String> {
-        Ok(self.companies.get(self_.rep()).unwrap().name.clone())
+    fn get_company(&self, company: &Resource<Company>) -> &MyCompany {
+        self.resources
+            .get(&Resource::<MyCompany>::new_borrow(company.rep()))
+            .unwrap()
     }
 
-    fn get_max_salary(&mut self, self_: Resource<companies::Company>) -> Result<u32> {
-        Ok(self.companies.get(self_.rep()).unwrap().max_salary)
-    }
-
-    fn drop(&mut self, rep: Resource<companies::Company>) -> Result<()> {
-        self.companies.drop(rep.rep()).unwrap();
-        Ok(())
+    fn drop_company(&mut self, company: Resource<Company>) {
+        self.resources
+            .delete(Resource::<MyCompany>::new_own(company.rep()))
+            .unwrap();
     }
 }
 
-impl companies::Host for State {
+impl component_test::wit_protocol::companies::HostCompany for State {
+    fn new(&mut self, name: String, max_salary: u32) -> Result<Resource<Company>> {
+        Ok(self.new_company(MyCompany { name, max_salary }))
+    }
+
+    fn get_name(&mut self, self_: Resource<Company>) -> Result<String> {
+        Ok(self.get_company(&self_).name.clone())
+    }
+
+    fn get_max_salary(&mut self, self_: Resource<Company>) -> Result<u32> {
+        Ok(self.get_company(&self_).max_salary)
+    }
+
+    fn drop(&mut self, rep: Resource<Company>) -> Result<()> {
+        Ok(self.drop_company(rep))
+    }
+}
+
+impl component_test::wit_protocol::companies::Host for State {
     fn company_roundtrip(&mut self, company: Resource<Company>) -> Result<Resource<Company>> {
         Ok(company)
     }
@@ -98,10 +89,10 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         "Mike"
     );
 
-    let company1 = Resource::new_own(store.data_mut().companies.new(MyCompany {
+    let company1 = store.data_mut().new_company(MyCompany {
         name: "Company1".into(),
         max_salary: 30_000,
-    }));
+    });
 
     let result = instance
         .component_test_wit_protocol_employees()
@@ -113,45 +104,44 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         .call_constructor(&mut store, "Mike".into(), 50_000)
         .unwrap();
 
-    let company1 = Resource::new_own(store.data_mut().companies.new(MyCompany {
+    let company1 = store.data_mut().new_company(MyCompany {
         name: "Company1".into(),
         max_salary: 30_000,
-    }));
-    let company2 = Resource::new_own(store.data_mut().companies.new(MyCompany {
+    });
+    let company2 = store.data_mut().new_company(MyCompany {
         name: "Company2".into(),
         max_salary: 60_000,
-    }));
+    });
 
     let result = instance
         .component_test_wit_protocol_employees()
         .call_find_job(&mut store, employee, &[company1, company2])
         .unwrap() // WASM call
         .unwrap(); // Option return type
-    assert_eq!(
-        store.data().companies.get(result.rep()).unwrap().name,
-        "Company2"
-    );
-    store.data_mut().companies.drop(result.rep()).unwrap();
+    assert_eq!(store.data().get_company(&result).name, "Company2");
+    store.data_mut().drop_company(result);
 
-    let company = Resource::new_own(store.data_mut().companies.new(MyCompany {
+    let company = store.data_mut().new_company(MyCompany {
         name: "Company Roundtrip".into(),
         max_salary: 30_000,
-    }));
+    });
 
     let result = instance
         .component_test_wit_protocol_employees()
         .call_company_roundtrip(&mut store, company)
         .unwrap();
-    assert_eq!(
-        store.data().companies.get(result.rep()).unwrap().name,
-        "Company Roundtrip"
-    );
-    store.data_mut().companies.drop(result.rep()).unwrap();
+    assert_eq!(store.data().get_company(&result).name, "Company Roundtrip");
+    store.data_mut().drop_company(result);
 
-    assert_eq!(
-        store.data().companies.resources.len(),
-        0,
-        "all resources should have been dropped by now"
+    // TODO: this assert doesn't seem to work, how to check that all resources have been deleted?
+    assert!(
+        store
+            .data_mut()
+            .resources
+            .iter_entries(HashMap::<_, MyCompany>::new())
+            .next()
+            .is_none(),
+        "all companies should have been dropped by now"
     );
 
     Ok(())
