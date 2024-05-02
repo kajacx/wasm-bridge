@@ -11,9 +11,10 @@ use syn::punctuated::Punctuated;
 use syn::{braced, token, Token};
 use wasmtime_wit_bindgen::{AsyncConfig, Opts, Ownership, TrappableError};
 use wit_parser::FunctionKind;
-use wit_parser::Package;
 use wit_parser::WorldItem;
 use wit_parser::{PackageId, Resolve, UnresolvedPackage, WorldId};
+
+use crate::CompilationTarget;
 
 pub struct Config {
     opts: Opts,
@@ -22,7 +23,7 @@ pub struct Config {
     files: Vec<PathBuf>,
 }
 
-pub fn expand(input: &Config) -> Result<TokenStream> {
+pub fn expand(input: &Config, target: CompilationTarget) -> Result<TokenStream> {
     if !cfg!(feature = "async") && input.opts.async_.maybe_async() {
         return Err(Error::new(
             Span::call_site(),
@@ -32,66 +33,69 @@ pub fn expand(input: &Config) -> Result<TokenStream> {
 
     let mut src = input.opts.generate(&input.resolve, input.world);
 
-    let world = &input.resolve.worlds[input.world];
-    let mut to_add = String::new();
-    // panic!("What is world? {:?}", world.imports);
-    for (wkey, import) in &world.exports {
-        if let WorldItem::Interface(id) = *import {
-            let iface = &input.resolve.interfaces[id];
-            // if id.index() != 0 {
+    // God forgive me ...
+    if target == CompilationTarget::Js {
+        let world = &input.resolve.worlds[input.world];
+        let mut to_add = String::new();
+        // panic!("What is world? {:?}", world.imports);
+        for (wkey, import) in &world.exports {
+            if let WorldItem::Interface(id) = *import {
+                let iface = &input.resolve.interfaces[id];
+                // if id.index() != 0 {
 
-            for (fn_name, func) in &iface.functions {
-                if let FunctionKind::Constructor(_) = func.kind {
-                    // panic!(
-                    //     "WHUT? {:?}, {:?}",
-                    //     input.resolve.packages[world.package.unwrap()].name,
-                    //     fn_name
-                    // );
+                for (fn_name, func) in &iface.functions {
+                    if let FunctionKind::Constructor(_) = func.kind {
+                        // panic!(
+                        //     "WHUT? {:?}, {:?}",
+                        //     input.resolve.packages[world.package.unwrap()].name,
+                        //     fn_name
+                        // );
 
-                    let package = &input.resolve.packages
-                        [world.package.expect("would should have a package")];
-                    let instance_name = format!(
-                        "[export]{}:{}/{}",
-                        package.name.namespace,
-                        package.name.name,
-                        iface.name.as_ref().expect("interface should have a name")
-                    );
+                        let package = &input.resolve.packages
+                            [world.package.expect("would should have a package")];
+                        let instance_name = format!(
+                            "[export]{}:{}/{}",
+                            package.name.namespace,
+                            package.name.name,
+                            iface.name.as_ref().expect("interface should have a name")
+                        );
 
-                    let resource_name = fn_name.replace("[constructor]", "");
+                        let resource_name = fn_name.replace("[constructor]", "");
 
-                    let to_add_ = quote! {
-                        let mut inst = linker.instance(#instance_name)?;
-                        inst.func_wrap(
-                            &format!("[resource-new]{}", #resource_name),
-                            move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<()> {
-                                Ok(())
-                            },
-                        )?;
-                        inst.func_wrap(
-                            &format!("[resource-rep]{}", #resource_name),
-                            move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<()> {
-                                Ok(())
-                            },
-                        )?;
-                        inst.func_wrap(
-                            &format!("[resource-drop]{}", #resource_name),
-                            move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<()> {
-                                Ok(())
-                            },
-                        )?;
-                    };
+                        let to_add_ = quote! {
+                            let mut inst = linker.instance(#instance_name)?;
+                            inst.func_wrap(
+                                &format!("[resource-new]{}", #resource_name),
+                                move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<()> {
+                                    Ok(())
+                                },
+                            )?;
+                            inst.func_wrap(
+                                &format!("[resource-rep]{}", #resource_name),
+                                move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<()> {
+                                    Ok(())
+                                },
+                            )?;
+                            inst.func_wrap(
+                                &format!("[resource-drop]{}", #resource_name),
+                                move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<()> {
+                                    Ok(())
+                                },
+                            )?;
+                        };
 
-                    to_add = to_add_.to_string();
+                        to_add = to_add_.to_string();
+                    }
                 }
             }
         }
-    }
 
-    let regex =
-        Regex::new("let\\s+mut\\s+inst\\s*=\\s*linker\\s*.\\s*instance\\s*\\(\\s*\"").unwrap();
-    src = regex
-        .replace_all(&src, format!("{to_add} let mut inst = linker.instance(\""))
-        .to_string();
+        let regex =
+            Regex::new("let\\s+mut\\s+inst\\s*=\\s*linker\\s*.\\s*instance\\s*\\(\\s*\"").unwrap();
+        src = regex
+            .replace_all(&src, format!("{to_add} let mut inst = linker.instance(\""))
+            .to_string();
+    }
 
     // If a magical `WASMTIME_DEBUG_BINDGEN` environment variable is set then
     // place a formatted version of the expanded code into a file. This file

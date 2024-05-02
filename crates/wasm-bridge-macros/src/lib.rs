@@ -39,8 +39,8 @@ pub fn flags_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     replace_namespace(original::flags(input, CompilationTarget::Js))
 }
 
-fn bindgen(input: proc_macro::TokenStream) -> String {
-    let as_string = replace_namespace_str(original::bindgen(input));
+fn bindgen(input: proc_macro::TokenStream, target: CompilationTarget) -> String {
+    let as_string = replace_namespace_str(original::bindgen(input, target));
 
     // Add PartialEq derive, so that testing isn't so miserably painful
     let regex = Regex::new("derive\\(([^\\)]*Clone[^\\)]*)\\)").unwrap();
@@ -57,7 +57,7 @@ fn bindgen(input: proc_macro::TokenStream) -> String {
 
 #[proc_macro]
 pub fn bindgen_sys(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let as_string = bindgen(input);
+    let as_string = bindgen(input, CompilationTarget::Sys);
 
     let as_string = add_safe_instantiation(&as_string);
 
@@ -67,7 +67,7 @@ pub fn bindgen_sys(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 #[proc_macro]
 pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let as_string = bindgen(input);
+    let as_string = bindgen(input, CompilationTarget::Js);
 
     // Clone exported function
     let regex = Regex::new("\\*\\s*__exports\\.typed_func([^?]*)\\?\\.func\\(\\)").unwrap();

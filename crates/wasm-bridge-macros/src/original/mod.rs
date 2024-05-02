@@ -40,8 +40,11 @@ pub fn flags(input: proc_macro::TokenStream, target: CompilationTarget) -> proc_
         .into()
 }
 
-pub fn bindgen(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    bindgen::expand(&parse_macro_input!(input as bindgen::Config))
+pub fn bindgen(
+    input: proc_macro::TokenStream,
+    target: CompilationTarget,
+) -> proc_macro::TokenStream {
+    bindgen::expand(&parse_macro_input!(input as bindgen::Config), target)
         .unwrap_or_else(Error::into_compile_error)
         .into()
 }
