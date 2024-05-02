@@ -22,3 +22,9 @@ impl<T> Resource<T> {
 pub struct ResourceAny {
     pub(crate) id: u32,
 }
+
+pub struct ResourceType;
+
+impl ResourceType {
+    pub fn host<T>() {}
+}

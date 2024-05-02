@@ -191,9 +191,10 @@ impl<T> LinkerInstance<T> {
         Ok(())
     }
 
-    pub fn resource<U>(
+    pub fn resource(
         &mut self,
         _name: &str,
+        _: (),
         _destroy: impl Fn(StoreContextMut<'_, T>, u32) -> Result<()>,
     ) -> Result<()> {
         Ok(())
