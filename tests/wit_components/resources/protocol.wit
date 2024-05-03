@@ -44,4 +44,7 @@ world resources {
   
   export employees;
   export guest-fns;
+
+  export simple: func();
+  import log: func(message: string);
 }

@@ -17,6 +17,7 @@ impl exports::component_test::wit_protocol::employees::Guest for MyEmployees {
 
 impl exports::component_test::wit_protocol::guest_fns::Guest for MyEmployees {
     fn company_roundtrip(company: Company) -> Company {
+        log("ENTERING COMPANY ROUNDTRIP");
         let name = company.get_name();
         let name = name + " round";
         company.set_name(&name);
@@ -62,6 +63,12 @@ impl exports::component_test::wit_protocol::employees::GuestEmployee for MyEmplo
 
     fn get_min_salary(&self) -> u32 {
         self.min_salary
+    }
+}
+
+impl Guest for MyEmployees {
+    fn simple() {
+        log("SIMPLE");
     }
 }
 

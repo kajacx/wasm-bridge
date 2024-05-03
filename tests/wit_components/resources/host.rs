@@ -72,6 +72,14 @@ impl component_test::wit_protocol::host_fns::Host for State {
     }
 }
 
+impl ResourcesImports for State {
+    fn log(&mut self, message: String) -> Result<()> {
+        wasm_bridge::helpers::console_log("--- GUEST SAYS: ---");
+        wasm_bridge::helpers::console_log(message);
+        Ok(())
+    }
+}
+
 pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let mut config = Config::new();
     config.wasm_component_model(true);
@@ -87,6 +95,8 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
 
     #[allow(deprecated)]
     let (instance, _) = Resources::instantiate(&mut store, &component, &linker).unwrap();
+    instance.call_simple(&mut store).unwrap();
+
     let employees = instance.component_test_wit_protocol_employees().employee();
     let guest_fns = instance.component_test_wit_protocol_guest_fns();
 
