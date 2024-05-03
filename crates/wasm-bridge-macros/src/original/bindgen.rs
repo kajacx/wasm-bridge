@@ -36,9 +36,9 @@ pub fn expand(input: &Config, target: CompilationTarget) -> Result<TokenStream> 
     // God forgive me ...
     if target == CompilationTarget::Js {
         let world = &input.resolve.worlds[input.world];
-        let mut to_add = String::new();
+        let mut to_add = quote! {};
         // panic!("What is world? {:?}", world.imports);
-        for (wkey, import) in &world.exports {
+        for (_wkey, import) in &world.exports {
             if let WorldItem::Interface(id) = *import {
                 let iface = &input.resolve.interfaces[id];
                 // if id.index() != 0 {
@@ -62,18 +62,23 @@ pub fn expand(input: &Config, target: CompilationTarget) -> Result<TokenStream> 
 
                         let resource_name = fn_name.replace("[constructor]", "");
 
-                        let to_add_ = quote! {
+                        let add_impl = quote! {
                             let mut inst = linker.instance(#instance_name)?;
+                            // let table = wasm_bridge::component::SharedTable::<()>::new();
+
+                            // let table_clone = table.clone();
                             inst.func_wrap(
                                 &format!("[resource-new]{}", #resource_name),
-                                move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<()> {
-                                    Ok(())
+                                move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<u32> {
+                                    // Ok(rep.0)
+                                    Ok(0)
                                 },
                             )?;
                             inst.func_wrap(
                                 &format!("[resource-rep]{}", #resource_name),
-                                move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<()> {
-                                    Ok(())
+                                move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<u32> {
+                                    // Ok(rep.0)
+                                    Ok(0)
                                 },
                             )?;
                             inst.func_wrap(
@@ -84,7 +89,7 @@ pub fn expand(input: &Config, target: CompilationTarget) -> Result<TokenStream> 
                             )?;
                         };
 
-                        to_add = to_add_.to_string();
+                        to_add.extend(add_impl);
                     }
                 }
             }
