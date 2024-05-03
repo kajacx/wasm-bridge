@@ -25,6 +25,7 @@ js-component-bindgen = { workspace = true, optional = true }
 anyhow = { workspace = true }
 try-lock = { workspace = true }
 atomic_refcell = { workspace = true }
+slab = { workspace = true, optional = true }
 
 [dev-dependencies]
 wasm-bindgen-test = { workspace = true }
@@ -32,6 +33,6 @@ wasm-bindgen-test = { workspace = true }
 [features]
 default = ["wat", "error-logging"]
 wat = ["dep:wat", "wasmtime/wat"]
-component-model = ["wasmtime/component-model", "wasm-bridge-macros", "js-component-bindgen"]
+component-model = ["wasmtime/component-model", "wasm-bridge-macros", "js-component-bindgen", "slab"]
 async = ["wasmtime/async", "async-trait", "wasm-bridge-macros/async"]
 error-logging = []

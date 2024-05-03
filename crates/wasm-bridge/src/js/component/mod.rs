@@ -23,6 +23,9 @@ pub use make_closure::*;
 mod resources;
 pub use resources::*;
 
+mod shared_table;
+pub use shared_table::*;
+
 mod component_loader;
 pub(crate) use component_loader::*;
 
