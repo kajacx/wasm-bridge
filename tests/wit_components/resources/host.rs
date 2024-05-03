@@ -54,7 +54,9 @@ impl component_test::wit_protocol::companies::HostCompany for State {
     }
 }
 
-impl component_test::wit_protocol::companies::Host for State {
+impl component_test::wit_protocol::companies::Host for State {}
+
+impl component_test::wit_protocol::host_fns::Host for State {
     fn company_roundtrip(&mut self, company: Resource<MyCompany>) -> Result<Resource<MyCompany>> {
         Ok(company)
     }
@@ -91,7 +93,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     });
 
     let result = instance
-        .component_test_wit_protocol_employees()
+        .component_test_wit_protocol_guest_fns()
         .call_find_job(&mut store, employee, &[company1])
         .unwrap();
     assert!(result.is_none());
@@ -110,7 +112,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     });
 
     let result = instance
-        .component_test_wit_protocol_employees()
+        .component_test_wit_protocol_guest_fns()
         .call_find_job(&mut store, employee, &[company1, company2])
         .unwrap() // WASM call
         .unwrap(); // Option return type
@@ -123,7 +125,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     });
 
     let result = instance
-        .component_test_wit_protocol_employees()
+        .component_test_wit_protocol_guest_fns()
         .call_company_roundtrip(&mut store, company)
         .unwrap();
     assert_eq!(

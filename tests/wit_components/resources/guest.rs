@@ -10,15 +10,21 @@ struct MyEmployees;
 
 impl exports::component_test::wit_protocol::employees::Guest for MyEmployees {
     type Employee = MyEmployee;
+}
+
+impl exports::component_test::wit_protocol::guest_fns::Guest for MyEmployees {
+    fn company_roundtrip(company: Company) -> Company {
+        component_test::wit_protocol::host_fns::company_roundtrip(company)
+    }
+
+    fn employee_roundtrip(employee: Employee) -> Employee {
+        employee
+    }
 
     fn find_job(employee: Employee, companies: Vec<Company>) -> Option<Company> {
         companies
             .into_iter()
             .find(|company| employee.get::<MyEmployee>().min_salary <= company.get_max_salary())
-    }
-
-    fn company_roundtrip(company: Company) -> Company {
-        component_test::wit_protocol::companies::company_roundtrip(company)
     }
 }
 

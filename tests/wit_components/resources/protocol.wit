@@ -6,24 +6,40 @@ interface companies {
     get-name: func() -> string;
     get-max-salary: func() -> u32;
   }
+}
 
+interface host-fns {
+  // use employees.{employee};
+  use companies.{company};
+
+  // Cannot use guest resources in host imported functions, see
+  // https://bytecodealliance.zulipchat.com/#narrow/stream/327223-wit-bindgen/topic/.E2.9C.94.20Guest.20resource.20gets.20duplicated
+  // employee-roundtrip: func(employee: employee) -> employee;
   company-roundtrip: func(company: company) -> company;
 }
 
 interface employees {
-  use companies.{company};
   resource employee {
     constructor(name: string, min-salary: u32);
     get-name: func() -> string;
     get-min-salary: func() -> u32;
   }
+}
+
+interface guest-fns {
+  use employees.{employee};
+  use companies.{company};
+
+  employee-roundtrip: func(employee: employee) -> employee;
+  company-roundtrip: func(company: company) -> company;
 
   find-job: func(employee: employee, companies: list<company>) -> option<company>;
-
-  company-roundtrip: func(company: company) -> company;
 }
 
 world resources {
   import companies;
+  import host-fns;
+  
   export employees;
+  export guest-fns;
 }
