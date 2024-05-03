@@ -22,7 +22,7 @@ fi
 cp $test/guest.rs instance/guest/src/lib.rs
 
 # build the guest
-cd instance/guest && cargo component build --release && cd ../..
+cd instance/guest && cargo component build && cd ../..
 if [ $? -ne 0 ]; then
   echo
   echo "Oh no, there is an error in the $test guest."

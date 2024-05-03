@@ -1,6 +1,6 @@
 #[cfg(test)]
 const GUEST_BYTES: &'static [u8] =
-    include_bytes!("../../guest/target/wasm32-unknown-unknown/release/wit_components_guest.wasm");
+    include_bytes!("../../guest/target/wasm32-unknown-unknown/debug/wit_components_guest.wasm");
 
 #[cfg(test)]
 mod host;

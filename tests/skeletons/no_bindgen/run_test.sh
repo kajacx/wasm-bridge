@@ -19,7 +19,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # build the guest
-cd instance/guest && cargo build --release --target=wasm32-unknown-unknown && cd ../..
+cd instance/guest && cargo build --target=wasm32-unknown-unknown && cd ../..
 if [ $? -ne 0 ]; then
   echo
   echo "Oh no, there is an error in the $test guest."
