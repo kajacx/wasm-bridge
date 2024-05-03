@@ -1,4 +1,6 @@
-use std::{any::Any, collections::HashMap, marker::PhantomData};
+use std::{any::Any, marker::PhantomData};
+
+use slab::Slab;
 
 pub struct Resource<T> {
     id: u32,
@@ -30,34 +32,38 @@ impl ResourceType {
 }
 
 // TODO: unify with wasi's resource table?
-// TODO: Implement proper "free index" implementation.
 #[derive(Default)]
-pub struct ResourceTable {
-    items: HashMap<u32, Box<dyn Any>>,
-    next_index: u32,
-}
+pub struct ResourceTable(Slab<Box<dyn Any>>);
 
 impl ResourceTable {
     pub fn push<R: Any>(&mut self, value: R) -> Result<Resource<R>, ResourceTableError> {
-        let index = self.next_index;
-        self.next_index += 1;
-
-        self.items.insert(index, Box::new(value));
-        Ok(Resource::new_own(index))
+        let index = self.0.insert(Box::new(value));
+        Ok(Resource::new_own(index as u32))
     }
 
     pub fn get<R: Any>(&self, resource: &Resource<R>) -> Result<&R, ResourceTableError> {
-        self.items
-            .get(&resource.rep())
+        self.0
+            .get(resource.rep() as usize)
             .ok_or(ResourceTableError::NotPresent)?
             .downcast_ref()
             .ok_or(ResourceTableError::WrongType)
     }
 
+    pub fn get_mut<R: Any>(
+        &mut self,
+        resource: &Resource<R>,
+    ) -> Result<&mut R, ResourceTableError> {
+        self.0
+            .get_mut(resource.rep() as usize)
+            .ok_or(ResourceTableError::NotPresent)?
+            .downcast_mut()
+            .ok_or(ResourceTableError::WrongType)
+    }
+
     pub fn delete<R: Any>(&mut self, resource: Resource<R>) -> Result<R, ResourceTableError> {
         *(self
-            .items
-            .remove(&resource.rep())
+            .0
+            .try_remove(resource.rep() as usize)
             .ok_or(ResourceTableError::NotPresent)?
             .downcast()
             .map_err(|_| ResourceTableError::WrongType)?)
