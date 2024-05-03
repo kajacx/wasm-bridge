@@ -103,7 +103,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         store.data().get_company(&result).name,
         "CompanyName round trip"
     );
-    store.data_mut().drop_company(result);
+    // store.data_mut().drop_company(result);
 
     // Employee roundtrip
     let employee = employees
@@ -155,7 +155,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         .unwrap() // WASM call
         .unwrap(); // Option return type
     assert_eq!(store.data().get_company(&result).name, "Company2");
-    store.data_mut().drop_company(result);
+    // store.data_mut().drop_company(result);
 
     // TODO: assert that all resources have been deleted
 

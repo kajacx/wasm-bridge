@@ -69,16 +69,18 @@ pub fn expand(input: &Config, target: CompilationTarget) -> Result<TokenStream> 
                             // let table_clone = table.clone();
                             inst.func_wrap(
                                 &format!("[resource-new]{}", #resource_name),
-                                move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<u32> {
+                                move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<(u32,)> {
                                     // Ok(rep.0)
-                                    Ok(0)
+                                    // Ok(0)
+                                    Ok(rep)
                                 },
                             )?;
                             inst.func_wrap(
                                 &format!("[resource-rep]{}", #resource_name),
-                                move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<u32> {
+                                move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<(u32,)> {
                                     // Ok(rep.0)
-                                    Ok(0)
+                                    // Ok(0)
+                                    Ok(rep)
                                 },
                             )?;
                             inst.func_wrap(
