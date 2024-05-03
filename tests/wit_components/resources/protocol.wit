@@ -4,6 +4,7 @@ interface companies {
   resource company {
     constructor(name: string, max-salary: u32);
     get-name: func() -> string;
+    set-name: func(name: string);
     get-max-salary: func() -> u32;
   }
 }
@@ -22,6 +23,7 @@ interface employees {
   resource employee {
     constructor(name: string, min-salary: u32);
     get-name: func() -> string;
+    set-name: func(name: string);
     get-min-salary: func() -> u32;
   }
 }

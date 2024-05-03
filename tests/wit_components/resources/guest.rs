@@ -1,3 +1,5 @@
+use std::cell::Cell;
+
 wit_bindgen::generate!({
     path: "../protocol.wit",
     world: "resources",
@@ -5,6 +7,7 @@ wit_bindgen::generate!({
 
 use component_test::wit_protocol::companies::Company;
 use exports::component_test::wit_protocol::employees::Employee;
+use exports::component_test::wit_protocol::employees::GuestEmployee;
 
 struct MyEmployees;
 
@@ -14,10 +17,16 @@ impl exports::component_test::wit_protocol::employees::Guest for MyEmployees {
 
 impl exports::component_test::wit_protocol::guest_fns::Guest for MyEmployees {
     fn company_roundtrip(company: Company) -> Company {
+        let name = company.get_name();
+        let name = name + " round";
+        company.set_name(&name);
         component_test::wit_protocol::host_fns::company_roundtrip(company)
     }
 
     fn employee_roundtrip(employee: Employee) -> Employee {
+        let name = employee.get::<MyEmployee>().get_name();
+        let name = name + " round trip";
+        employee.get::<MyEmployee>().set_name(name);
         employee
     }
 
@@ -29,17 +38,26 @@ impl exports::component_test::wit_protocol::guest_fns::Guest for MyEmployees {
 }
 
 pub struct MyEmployee {
-    name: String,
+    name: Cell<String>,
     min_salary: u32,
 }
 
 impl exports::component_test::wit_protocol::employees::GuestEmployee for MyEmployee {
     fn new(name: String, min_salary: u32) -> Self {
-        Self { name, min_salary }
+        Self {
+            name: Cell::new(name),
+            min_salary,
+        }
     }
 
     fn get_name(&self) -> String {
-        self.name.clone()
+        let name = self.name.take();
+        self.name.set(name.clone());
+        name
+    }
+
+    fn set_name(&self, name: String) {
+        self.name.set(name)
     }
 
     fn get_min_salary(&self) -> u32 {
