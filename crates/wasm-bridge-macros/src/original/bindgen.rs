@@ -36,23 +36,26 @@ pub fn expand(input: &Config, target: CompilationTarget) -> Result<TokenStream> 
     // God forgive me ...
     if target == CompilationTarget::Js {
         let world = &input.resolve.worlds[input.world];
+
         let mut to_add = quote! {};
-        // panic!("What is world? {:?}", world.imports);
+        let mut import_included = false;
+
         for (_wkey, import) in &world.exports {
             if let WorldItem::Interface(id) = *import {
                 let iface = &input.resolve.interfaces[id];
-                // if id.index() != 0 {
 
                 for (fn_name, func) in &iface.functions {
                     if let FunctionKind::Constructor(_) = func.kind {
-                        // panic!(
-                        //     "WHUT? {:?}, {:?}",
-                        //     input.resolve.packages[world.package.unwrap()].name,
-                        //     fn_name
-                        // );
+                        if !import_included {
+                            to_add.extend(quote!(
+                                use wasm_bridge::component::__internal::anyhow::Context;
+                            ));
+                            import_included = true;
+                        }
 
                         let package = &input.resolve.packages
                             [world.package.expect("would should have a package")];
+
                         let instance_name = format!(
                             "[export]{}:{}/{}",
                             package.name.namespace,
@@ -64,28 +67,29 @@ pub fn expand(input: &Config, target: CompilationTarget) -> Result<TokenStream> 
 
                         let add_impl = quote! {
                             let mut inst = linker.instance(#instance_name)?;
-                            // let table = wasm_bridge::component::SharedTable::<()>::new();
+                            let table = wasm_bridge::component::SharedTable::<u32>::new();
 
-                            // let table_clone = table.clone();
+                            let table_clone = table.clone();
                             inst.func_wrap(
                                 &format!("[resource-new]{}", #resource_name),
                                 move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<(u32,)> {
-                                    // Ok(rep.0)
-                                    // Ok(0)
-                                    Ok(rep)
+                                    Ok((table_clone.insert(rep.0),))
                                 },
                             )?;
+
+                            let table_clone = table.clone();
                             inst.func_wrap(
                                 &format!("[resource-rep]{}", #resource_name),
                                 move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<(u32,)> {
-                                    // Ok(rep.0)
-                                    // Ok(0)
-                                    Ok(rep)
+                                    Ok((*(table_clone.get(rep.0).context("get repr in table")?),))
                                 },
                             )?;
+
+                            let table_clone = table.clone();
                             inst.func_wrap(
                                 &format!("[resource-drop]{}", #resource_name),
                                 move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<()> {
+                                    table_clone.remove(rep.0).context("remove repr from table")?;
                                     Ok(())
                                 },
                             )?;
