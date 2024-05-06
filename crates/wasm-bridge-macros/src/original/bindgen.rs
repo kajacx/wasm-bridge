@@ -105,6 +105,7 @@ pub fn expand(input: &Config, target: CompilationTarget) -> Result<TokenStream> 
             }
         }
 
+        // TODO: this adds it twice if there are multiple "add_to_linker" methods
         let regex =
             Regex::new("let\\s+mut\\s+inst\\s*=\\s*linker\\s*.\\s*instance\\s*\\(\\s*\"").unwrap();
         src = regex

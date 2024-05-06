@@ -101,6 +101,38 @@ pub fn bindgen_js(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let as_string = add_safe_instantiation(&as_string);
 
+    // Ok, it's time to go absolutely insane and pass resource address to methods
+    let regex = Regex::new(
+        &r#"pub\s+fn\s+(call_\w+)\s*<S\s*:\s*wasm_bridge\s*::\s*AsContextMut\s*>\s*\(\s*
+&self\s*,\s*
+mut\s+store\s*:\s*S\s*,\s*
+arg0\s*:\s*wasm_bridge\s*::\s*component\s*::\s*ResourceAny\s*,\s*
+([^-]*?)
+\)\s*->\s*wasm_bridge\s*::\s*Result\s*<([^{]+)>\s*\{\s*
+let\s+callee\s*=\s*unsafe\s*\{\s*
+wasm_bridge\s*::\s*component\s*::\s*TypedFunc\s*::\s*<\s*
+\(\s*wasm_bridge\s*::\s*component\s*::\s*ResourceAny\s*,
+([^;]+;)"#
+            .replace('\n', ""), // let\\s*\\(\\s*ret0\\s*,([^=]*?)\\)\\s*=
+                                // \\s*callee\\s*.\\s*call\\s*\\(\\s*store\\s*.\\s*as_context_mut\\s*\\(\\s*\\)\\s*,\\s([^;]+;)"#,
+    )
+    .unwrap();
+    let as_string = regex.replace_all(
+        &as_string,
+        r#"pub fn call $1<S: wasm_bridge::AsContextMut>(
+        &self,
+        mut store: S
+        arg0: wasm_bridge::component::ResourceAny,
+        $2
+    ) -> wasm_bridge::Result<$3> {
+        let callee = unsafe {
+            wasm_bridge::component::TypedFunc::<
+                (u32, $3
+        let arg0 = super::super::super::__WASM_BRIDGE_REPR_TABLE.get(arg0).context("TODO: User error message")?;
+        $4
+        "#,
+    );
+
     // eprintln!("bindgen JS IMPL: {}", as_string.deref());
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
