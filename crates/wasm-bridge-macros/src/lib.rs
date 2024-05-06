@@ -127,16 +127,16 @@ self\s*\.\s*funcs\s*\.\s*method_
                 arg0: wasm_bridge::component::ResourceAny,
                 $2
             ) -> wasm_bridge::Result<$3> {
+                use wasm_bridge::component::__internal::anyhow::Context;
                 let callee = unsafe {
                     wasm_bridge::component::TypedFunc::<
                         (u32, $4
                         self.funcs.method_$5
-                let arg0 = *super::super::super::super::__WASM_BRIDGE_REPR_TABLE.get(arg0.rep()).expect("TODO: User error message");
+                let arg0 = *super::super::super::super::__WASM_BRIDGE_REPR_TABLE.get(arg0.rep()).context("resource repr to address")?;
                 "#,
         );
-    // let as_string = regex.replace_all(&as_string, "COMPILE ERROR LOL");
 
-    eprintln!("bindgen JS IMPL: {}", as_string.deref());
+    // eprintln!("bindgen JS IMPL: {}", as_string.deref());
     proc_macro::TokenStream::from_str(&as_string).unwrap()
 }
 

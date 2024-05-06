@@ -12,8 +12,7 @@ done
 
 for test in wit_components/*; do
   test=$(echo "$test" | sed 's#wit_components/##')
-  # FIXME: re-add resources test once it works
-  if [ "$test" != "README.md" ] && [ "$test" != "resources" ]; then
+  if [ "$test" != "README.md" ]; then
     sh skeletons/wit_components/run_test.sh "$test"
   fi
 done
