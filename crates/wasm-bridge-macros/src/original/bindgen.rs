@@ -83,6 +83,7 @@ pub fn expand(input: &Config, target: CompilationTarget) -> Result<TokenStream> 
                             inst.func_wrap(
                                 &format!("[resource-rep]{}", #resource_name),
                                 move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<(u32,)> {
+                                    wasm_bridge::helpers::println(format!("[[REP]] arg: {}", rep.0));
                                     let result = *(super::super::super::__WASM_BRIDGE_REPR_TABLE.get(rep.0).context("get repr in table")?);
                                     wasm_bridge::helpers::println(format!("[[REP]] arg: {} result: {result}", rep.0));
                                     Ok((result,))
@@ -109,7 +110,7 @@ pub fn expand(input: &Config, target: CompilationTarget) -> Result<TokenStream> 
         let regex =
             Regex::new("let\\s+mut\\s+inst\\s*=\\s*linker\\s*.\\s*instance\\s*\\(\\s*\"").unwrap();
         src = regex
-            .replace_all(&src, format!("{to_add} let mut inst = linker.instance(\""))
+            .replace(&src, format!("{to_add} let mut inst = linker.instance(\""))
             .to_string();
     }
 

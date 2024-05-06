@@ -24,6 +24,12 @@ pub struct ResourceAny {
     pub(crate) id: u32,
 }
 
+impl ResourceAny {
+    pub fn rep(&self) -> u32 {
+        self.id
+    }
+}
+
 pub struct ResourceType;
 
 impl ResourceType {
