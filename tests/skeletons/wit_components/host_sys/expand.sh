@@ -1,4 +1,4 @@
 #!/usr/bin/sh
 set -e
 
-cargo expand > expanded.rs
+cargo expand --lib --tests > expanded.rs
