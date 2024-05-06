@@ -20,7 +20,7 @@ fi
 cp $test/guest.rs instance/guest/src/lib.rs
 
 # expand the code
-cd instance/guest && ./expand.sh && cd ../..
+cd instance/guest && cargo expand --target wasm32-unknown-unknown > expanded.rs && cd ../..
 
 # build the guest
 cd instance/guest && cargo component build --target wasm32-unknown-unknown && cd ../..

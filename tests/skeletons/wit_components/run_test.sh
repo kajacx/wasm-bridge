@@ -18,8 +18,8 @@ cp $test/host.rs instance/host_sys/src/host.rs
 cp $test/host.rs instance/host_js/src/host.rs
 
 # expand the code
-cd instance/host_sys && ./expand.sh && cd ../..
-cd instance/host_js && ./expand.sh && cd ../..
+cd instance/host_sys && cargo expand --lib --tests > expanded.rs && cd ../..
+cd instance/host_js && cargo expand --tests --target wasm32-unknown-unknown > expanded.rs && cd ../..
 
 # run the sys host test
 cd instance/host_sys && cargo test --lib -- --nocapture && cd ../..
