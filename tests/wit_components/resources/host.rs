@@ -126,6 +126,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         employees.call_get_name(&mut store, result).unwrap(),
         "EmployeeName round trip"
     );
+    wasm_bridge::helpers::println(format!("*** CALL NAME SUCCESS ***"));
 
     // Find job - no job found
     let employee = employees
@@ -141,9 +142,11 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
         max_salary: 30_000,
     });
 
+    wasm_bridge::helpers::println("CALL FIRST FIND JOB");
     let result = guest_fns
         .call_find_job(&mut store, employee, &[company1])
         .unwrap();
+    wasm_bridge::helpers::println("CALLED FIRST FIND JOB");
     assert!(result.is_none());
 
     // Find job - job found

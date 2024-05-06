@@ -23,6 +23,9 @@ pub use make_closure::*;
 mod resources;
 pub use resources::*;
 
+mod resource_table;
+pub use resource_table::*;
+
 mod shared_table;
 pub use shared_table::*;
 
