@@ -1,5 +1,15 @@
 # wasm-bridge change log
 
+## [0.5.0] YYYY-MM-DD
+
+### <b style="color: red">Breaking changes:</b>
+
+- Updated to `wasmtime` version `20.0` and `cargo component` to version `0.11.0`.
+
+### Added
+
+- Resource support.
+
 ## [0.4.0] 2024-04-14
 
 ### <b style="color: red">Breaking changes:</b>
