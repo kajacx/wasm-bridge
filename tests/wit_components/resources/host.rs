@@ -74,8 +74,8 @@ impl component_test::wit_protocol::host_fns::Host for State {
 
 impl ResourcesImports for State {
     fn log(&mut self, message: String) -> Result<()> {
-        wasm_bridge::helpers::console_log("--- GUEST SAYS: ---");
-        wasm_bridge::helpers::console_log(message);
+        wasm_bridge::helpers::println("--- GUEST SAYS: ---");
+        wasm_bridge::helpers::println(message);
         Ok(())
     }
 }

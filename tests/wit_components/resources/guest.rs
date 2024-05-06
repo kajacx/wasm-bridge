@@ -52,8 +52,10 @@ impl exports::component_test::wit_protocol::employees::GuestEmployee for MyEmplo
     }
 
     fn get_name(&self) -> String {
+        log("CALLING GET NAME ON EMPLOYEE");
         let name = self.name.take();
         self.name.set(name.clone());
+        log("NAME GOT");
         name
     }
 

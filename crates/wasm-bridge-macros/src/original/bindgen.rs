@@ -73,7 +73,9 @@ pub fn expand(input: &Config, target: CompilationTarget) -> Result<TokenStream> 
                             inst.func_wrap(
                                 &format!("[resource-new]{}", #resource_name),
                                 move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<(u32,)> {
-                                    Ok((table_clone.insert(rep.0),))
+                                    let result = table_clone.insert(rep.0);
+                                    wasm_bridge::helpers::println(format!("NEW arg: {} result: {result}", rep.0));
+                                    Ok((result,))
                                 },
                             )?;
 
@@ -81,7 +83,9 @@ pub fn expand(input: &Config, target: CompilationTarget) -> Result<TokenStream> 
                             inst.func_wrap(
                                 &format!("[resource-rep]{}", #resource_name),
                                 move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<(u32,)> {
-                                    Ok((*(table_clone.get(rep.0).context("get repr in table")?),))
+                                    let result = *(table_clone.get(rep.0).context("get repr in table")?);
+                                    wasm_bridge::helpers::println(format!("REP arg: {} result: {result}", rep.0));
+                                    Ok((result,))
                                 },
                             )?;
 
@@ -89,6 +93,7 @@ pub fn expand(input: &Config, target: CompilationTarget) -> Result<TokenStream> 
                             inst.func_wrap(
                                 &format!("[resource-drop]{}", #resource_name),
                                 move |mut caller: wasm_bridge::StoreContextMut<'_, T>, rep: (u32,)| -> wasm_bridge::Result<()> {
+                                    wasm_bridge::helpers::println("DROP");
                                     table_clone.remove(rep.0).context("remove repr from table")?;
                                     Ok(())
                                 },
