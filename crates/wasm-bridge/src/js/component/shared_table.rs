@@ -1,13 +1,13 @@
 use slab::Slab;
-use std::{ops::Deref, rc::Rc};
+use std::ops::Deref;
 use try_lock::{Locked, TryLock};
 
-#[derive(Clone, Debug)]
-pub struct SharedTable<T>(Rc<TryLock<Slab<T>>>);
+#[derive(Debug)]
+pub struct SharedTable<T>(TryLock<Slab<T>>);
 
 impl<T> SharedTable<T> {
-    pub fn new() -> Self {
-        Self::default()
+    pub const fn new() -> Self {
+        Self(TryLock::new(Slab::new()))
     }
 
     pub fn insert(&self, value: T) -> u32 {
@@ -40,7 +40,7 @@ impl<'a, T> Deref for ValueAccess<'a, T> {
 
 impl<T> Default for SharedTable<T> {
     fn default() -> Self {
-        Self(Rc::new(TryLock::new(Slab::default())))
+        Self(TryLock::new(Slab::default()))
     }
 }
 

@@ -5,7 +5,7 @@ use slab::Slab;
 use super::Resource;
 
 // TODO: unify with wasi's resource table?
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ResourceTable(Slab<Box<dyn Any>>);
 
 impl ResourceTable {

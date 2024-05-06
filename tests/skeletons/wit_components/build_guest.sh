@@ -17,8 +17,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # copy the guest code
-# FIXME: uncomment this after the code is debugged
-# cp $test/guest.rs instance/guest/src/lib.rs
+cp $test/guest.rs instance/guest/src/lib.rs
 
 # expand the code
 cd instance/guest && ./expand.sh && cd ../..
