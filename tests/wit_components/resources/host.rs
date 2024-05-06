@@ -74,8 +74,7 @@ impl component_test::wit_protocol::host_fns::Host for State {
 
 impl ResourcesImports for State {
     fn log(&mut self, message: String) -> Result<()> {
-        wasm_bridge::helpers::println("--- GUEST SAYS: ---");
-        wasm_bridge::helpers::println(message);
+        wasm_bridge::helpers::println(format!("GUEST SAYS: {message}"));
         Ok(())
     }
 }
@@ -122,6 +121,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let result = guest_fns
         .call_employee_roundtrip(&mut store, employee)
         .unwrap();
+    wasm_bridge::helpers::println(format!("EMPLOYEE REP ON HOST: {result:?}"));
     assert_eq!(
         employees.call_get_name(&mut store, result).unwrap(),
         "EmployeeName round trip"

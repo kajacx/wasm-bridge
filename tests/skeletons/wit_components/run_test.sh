@@ -17,6 +17,10 @@ cp -r skeletons/wit_components/host_js instance
 cp $test/host.rs instance/host_sys/src/host.rs
 cp $test/host.rs instance/host_js/src/host.rs
 
+# expand the code
+cd instance/host_sys && ./expand.sh && cd ../..
+cd instance/host_js && ./expand.sh && cd ../..
+
 # run the sys host test
 cd instance/host_sys && cargo test --lib -- --nocapture && cd ../..
 if [ $? -ne 0 ]; then

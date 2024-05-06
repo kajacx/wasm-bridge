@@ -17,7 +17,11 @@ if [ $? -ne 0 ]; then
 fi
 
 # copy the guest code
-cp $test/guest.rs instance/guest/src/lib.rs
+# FIXME: uncomment this after the code is debugged
+# cp $test/guest.rs instance/guest/src/lib.rs
+
+# expand the code
+cd instance/guest && ./expand.sh && cd ../..
 
 # build the guest
 cd instance/guest && cargo component build --target wasm32-unknown-unknown && cd ../..
