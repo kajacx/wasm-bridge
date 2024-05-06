@@ -611,6 +611,18 @@ impl<T> Linker<T> {
     }
 }
 
+pub mod helpers {
+    use std::fmt::Debug;
+
+    pub fn println(value: impl Debug) {
+        println!("{value:?}");
+    }
+
+    pub fn eprintln(value: impl Debug) {
+        eprintln!("{value:?}");
+    }
+}
+
 #[cfg(feature = "component-model")]
 pub mod component {
     pub use wasmtime::component::*;
