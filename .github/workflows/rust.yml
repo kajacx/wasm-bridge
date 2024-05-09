@@ -32,9 +32,9 @@ jobs:
         run: cargo install --version 0.12.1 wasm-pack
 
       - name: Install cargo component
-        # run: cargo install --version 0.11.0 cargo-component
+        run: cargo install --locked --version 0.11.0 cargo-component
         # There are issues with dependecies not following semver, see https://github.com/bytecodealliance/cargo-component/issues/293
-        run cargo install --git https://github.com/kajacx/cargo-component.git --rev 4c53ea0cc7b4423028f406a1a609ac72c04002c8 cargo-component
+        # run: cargo install --git https://github.com/kajacx/cargo-component.git --rev 4c53ea0cc7b4423028f406a1a609ac72c04002c8 cargo-component
 
       - name: Install cargo expand
         run: cargo install cargo-expand
