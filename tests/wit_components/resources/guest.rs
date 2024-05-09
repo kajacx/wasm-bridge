@@ -30,7 +30,7 @@ impl exports::component_test::wit_protocol::guest_fns::Guest for MyEmployees {
         employee
     }
 
-    fn find_job(employee: EmployeeRes, companies: Vec<CompanyRes>) -> Option<CompanyRes> {
+    fn method_find_job(employee: EmployeeRes, companies: Vec<CompanyRes>) -> Option<CompanyRes> {
         companies
             .into_iter()
             .find(|company| employee.get::<MyEmployee>().min_salary <= company.get_max_salary())

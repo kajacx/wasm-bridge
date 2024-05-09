@@ -143,7 +143,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     });
 
     let result = guest_fns
-        .call_find_job(&mut store, employee, &[company1])
+        .call_method_find_job(&mut store, employee, &[company1])
         .unwrap();
     assert!(result.is_none());
 
@@ -162,7 +162,7 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     });
 
     let result = guest_fns
-        .call_find_job(&mut store, employee, &[company1, company2])
+        .call_method_find_job(&mut store, employee, &[company1, company2])
         .unwrap() // WASM call
         .unwrap(); // Option return type
     assert_eq!(store.data().get_company(&result).name, "Company2");

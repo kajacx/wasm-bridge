@@ -35,7 +35,7 @@ interface guest-fns {
   employee-roundtrip: func(employee: employee-res) -> employee-res;
   company-roundtrip: func(company: company-res) -> company-res;
 
-  find-job: func(employee: employee-res, companies: list<company-res>) -> option<company-res>;
+  method-find-job: func(employee: employee-res, companies: list<company-res>) -> option<company-res>;
 }
 
 world resources {
