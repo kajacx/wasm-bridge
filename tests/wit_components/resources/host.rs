@@ -7,7 +7,7 @@ wasm_bridge::component::bindgen!({
     path: "../protocol.wit",
     world: "resources",
     with: {
-        "component-test:wit-protocol/companies/company": MyCompany
+        "component-test:wit-protocol/companies/company-res": MyCompany
     }
 });
 
@@ -40,7 +40,7 @@ impl State {
     }
 }
 
-impl component_test::wit_protocol::companies::HostCompany for State {
+impl component_test::wit_protocol::companies::HostCompanyRes for State {
     fn new(&mut self, name: String, max_salary: u32) -> Result<Resource<MyCompany>> {
         Ok(self.new_company(MyCompany { name, max_salary }))
     }
@@ -96,7 +96,9 @@ pub fn run_test(component_bytes: &[u8]) -> Result<()> {
     let (instance, _) = Resources::instantiate(&mut store, &component, &linker).unwrap();
     instance.call_simple(&mut store).unwrap();
 
-    let employees = instance.component_test_wit_protocol_employees().employee();
+    let employees = instance
+        .component_test_wit_protocol_employees()
+        .employee_res();
     let guest_fns = instance.component_test_wit_protocol_guest_fns();
 
     // Company roundtrip

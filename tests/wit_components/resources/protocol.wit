@@ -1,7 +1,7 @@
 package component-test:wit-protocol;
 
 interface companies {
-  resource company {
+  resource company-res {
     constructor(name: string, max-salary: u32);
     get-name: func() -> string;
     set-name: func(name: string);
@@ -11,16 +11,16 @@ interface companies {
 
 interface host-fns {
   // use employees.{employee};
-  use companies.{company};
+  use companies.{company-res};
 
   // Cannot use guest resources in host imported functions, see
   // https://bytecodealliance.zulipchat.com/#narrow/stream/327223-wit-bindgen/topic/.E2.9C.94.20Guest.20resource.20gets.20duplicated
   // employee-roundtrip: func(employee: employee) -> employee;
-  company-roundtrip: func(company: company) -> company;
+  company-roundtrip: func(company: company-res) -> company-res;
 }
 
 interface employees {
-  resource employee {
+  resource employee-res {
     constructor(name: string, min-salary: u32);
     get-name: func() -> string;
     set-name: func(name: string);
@@ -29,13 +29,13 @@ interface employees {
 }
 
 interface guest-fns {
-  use employees.{employee};
-  use companies.{company};
+  use employees.{employee-res};
+  use companies.{company-res};
 
-  employee-roundtrip: func(employee: employee) -> employee;
-  company-roundtrip: func(company: company) -> company;
+  employee-roundtrip: func(employee: employee-res) -> employee-res;
+  company-roundtrip: func(company: company-res) -> company-res;
 
-  find-job: func(employee: employee, companies: list<company>) -> option<company>;
+  find-job: func(employee: employee-res, companies: list<company-res>) -> option<company-res>;
 }
 
 world resources {
