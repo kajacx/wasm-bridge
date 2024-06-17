@@ -6,19 +6,19 @@ use super::Resource;
 
 // TODO: unify with wasi's resource table?
 #[derive(Default, Debug)]
-pub struct ResourceTable(Slab<Box<dyn Any>>);
+pub struct ResourceTable(Slab<Box<dyn Any + Send>>);
 
 impl ResourceTable {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn push<R: Any>(&mut self, value: R) -> Result<Resource<R>, ResourceTableError> {
+    pub fn push<R: Any + Send>(&mut self, value: R) -> Result<Resource<R>, ResourceTableError> {
         let index = self.0.insert(Box::new(value));
         Ok(Resource::new_own(index as u32))
     }
 
-    pub fn get<R: Any>(&self, resource: &Resource<R>) -> Result<&R, ResourceTableError> {
+    pub fn get<R: Any + Send>(&self, resource: &Resource<R>) -> Result<&R, ResourceTableError> {
         self.0
             .get(resource.rep() as usize)
             .ok_or(ResourceTableError::NotPresent)?
@@ -26,7 +26,7 @@ impl ResourceTable {
             .ok_or(ResourceTableError::WrongType)
     }
 
-    pub fn get_mut<R: Any>(
+    pub fn get_mut<R: Any + Send>(
         &mut self,
         resource: &Resource<R>,
     ) -> Result<&mut R, ResourceTableError> {
@@ -37,7 +37,10 @@ impl ResourceTable {
             .ok_or(ResourceTableError::WrongType)
     }
 
-    pub fn delete<R: Any>(&mut self, resource: Resource<R>) -> Result<R, ResourceTableError> {
+    pub fn delete<R: Any + Send>(
+        &mut self,
+        resource: Resource<R>,
+    ) -> Result<R, ResourceTableError> {
         Ok(*(self
             .0
             .try_remove(resource.rep() as usize)
